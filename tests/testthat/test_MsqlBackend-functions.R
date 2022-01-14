@@ -21,3 +21,50 @@ test_that(".insert_data et al work", {
     expect_equal(as.list(peaksData(mm8_sps)), pks)
     dbDisconnect(db)
 })
+
+test_that("createMsqlBackendDatabase works", {
+    cn <- dbConnect(SQLite(), tempfile())
+
+    expect_false(createMsqlBackendDatabase(cn))
+
+    expect_error(createMsqlBackendDatabase("b", "b"), "valid connection")
+    expect_true(createMsqlBackendDatabase(cn, mm8_file))
+
+    dbDisconnect(cn)
+
+    cn <- dbConnect(SQLite(), tempfile())
+    expect_error(createMsqlBackendDatabase(cn, "not existing"), "not found")
+
+    dbDisconnect(cn)
+})
+
+test_that("MsqlBackend works", {
+    res <- MsqlBackend()
+    expect_s4_class(res, "MsqlBackend")
+})
+
+test_that(".fetch_peaks_sql works", {
+    res <- .fetch_peaks_sql(MsqlBackend(), columns = "intensity")
+    expect_true(is.data.frame(res))
+    expect_true(nrow(res) == 0)
+    expect_identical(colnames(res), c("spectrum_id_", "intensity"))
+
+    res <- .fetch_peaks_sql(mm8_be, columns = c("mz"))
+    expect_true(is.data.frame(res))
+    expect_identical(colnames(res), c("spectrum_id_", "mz"))
+})
+
+test_that(".fetch_spectra_data_sql works", {
+    res <- .fetch_spectra_data_sql(mm8_be, columns = c("rtime", "msLevel"))
+    expect_true(is.data.frame(res))
+    expect_identical(colnames(res), c("rtime", "msLevel"))
+    expect_identical(length(mm8_be), nrow(res))
+})
+
+test_that(".spectra_data_sql works", {
+    res <- .spectra_data_sql(mm8_be, c("rtime", "msLevel", "mz"))
+    expect_s4_class(res, "DataFrame")
+    expect_identical(colnames(res), c("rtime", "msLevel", "mz"))
+    expect_identical(length(mm8_be), nrow(res))
+    expect_s4_class(res$mz, "NumericList")
+})

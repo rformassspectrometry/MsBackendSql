@@ -1,11 +1,8 @@
-#' @rdname MsBackendMassbankSql
+#' @rdname MsqlBackend
 #'
-#' @export MsBackendMassbankSql
-MsBackendMassbankSql <- function() {
-    if (!requireNamespace("DBI", quietly = TRUE))
-        stop("'MsBackendMassbankSql' requires package 'DBI'. Please ",
-             "install with 'install.packages(\"DBI\")'")
-    new("MsBackendMassbankSql")
+#' @export MsqlBackend
+MsqlBackend <- function() {
+    new("MsqlBackend")
 }
 
 #' @importFrom DBI dbListTables
@@ -17,16 +14,13 @@ MsBackendMassbankSql <- function() {
             return("'dbcon' is expected to be a connection to a database")
         tables <- dbListTables(x)
         if (!all(c("msms_spectrum", "msms_spectrum_peak") %in% tables))
-            return(paste0("Database lacks some required tables. Is 'dbcon' a",
-                          " connection to a MassBank database?"))
+            return("Database lacks some required tables.")
     }
     NULL
 }
 
-.valid_local_data <- function(x, y) {
-    if (nrow(x) && nrow(x) != length(y))
-        "Number of rows in local data and number of spectra don't match"
-    else NULL
+.dbcon <- function(x) {
+    x@dbcon
 }
 
 #' Returns the spectra data, from the database and eventually filling with
@@ -44,63 +38,38 @@ MsBackendMassbankSql <- function() {
 #'
 #' @importFrom S4Vectors extractCOLS
 #'
-#' @importFrom methods as
+#' @importFrom S4Vectors make_zero_col_DFrame
+#'
+#' @importFrom methods as callNextMethod getMethod
 #'
 #' @author Johannes Rainer
 #'
 #' @noRd
-.spectra_data_massbank_sql <- function(x, columns = spectraVariables(x)) {
-    local_cols <- intersect(columns, colnames(x@localData))
-    db_cols <- intersect(x@spectraVariables, columns)
-    db_cols <- db_cols[!db_cols %in% local_cols]
+.spectra_data_sql <- function(x, columns = spectraVariables(x)) {
+    res <- getMethod("spectraData", "MsBackendCached")(x, columns = columns)
+    if (is.null(res))
+        res <- make_zero_col_DFrame(length(x))
+    ## Define what needs to be still retrieved.
+    db_cols <- intersect(columns, x@spectraVariables)
+    db_cols <- db_cols[!db_cols %in% c("mz", "intensity", colnames(res))]
     mz_cols <- intersect(columns, c("mz", "intensity"))
-    core_cols <- intersect(columns, names(Spectra:::.SPECTRA_DATA_COLUMNS))
-    core_cols <- core_cols[!core_cols %in% c(db_cols, mz_cols, local_cols)]
-    res <- NULL
-    ## Get data from database
-    if (length(db_cols)) {
-        res <- DataFrame(.fetch_spectra_data_sql(x, columns = db_cols))
-        if (any(colnames(res) == "synonym"))
-            res$synonym <- CharacterList(res$synonym, compress = FALSE)
-    }
+
+    if (length(db_cols))
+        res <- cbind(
+            res, as(.fetch_spectra_data_sql(x, columns = db_cols), "DataFrame"))
     ## Get m/z and intensity values
     if (length(mz_cols)) {
         pks <- .fetch_peaks_sql(x, columns = mz_cols)
-        f <- factor(pks$spectrum_id)
+        f <- factor(pks$spectrum_id_)
         if (any(mz_cols == "mz")) {
-            mzs <- split(pks$mz, f)
-            if (length(res))
-                res$mz <- NumericList(mzs[as.character(x@spectraIds)],
-                                      compress = FALSE)
-            else res <- DataFrame(
-                     mz = NumericList(mzs[as.character(x@spectraIds)],
-                                      compress = FALSE))
+            mzs <- unname(split(pks$mz, f)[as.character(x@spectraIds)])
+            res$mz <- NumericList(mzs, compress = FALSE)
         }
         if (any(mz_cols == "intensity")) {
-            ints <- split(pks$intensity, f)
-            if (length(res))
-                res$intensity <- NumericList(
-                    ints[as.character(x@spectraIds)], compress = FALSE)
-            else res <- DataFrame(
-                     intensity = NumericList(
-                         ints[as.character(x@spectraIds)], compress = FALSE))
+            ints <- unname(
+                split(pks$intensity, f)[as.character(x@spectraIds)])
+            res$intensity <- NumericList(ints, compress = FALSE)
         }
-    }
-    ## Get local data
-    if (length(local_cols)) {
-        if (length(res))
-            res <- cbind(res, extractCOLS(x@localData, local_cols))
-        else res <- extractCOLS(x@localData, local_cols)
-    }
-    ## Create missing core variables
-    if (length(core_cols)) {
-        tmp <- DataFrame(lapply(Spectra:::.SPECTRA_DATA_COLUMNS[core_cols],
-                                function(z, n) rep(as(NA, z), n), length(x)))
-        if (length(res))
-            res <- cbind(res, tmp)
-        else res <- tmp
-        if (any(core_cols == "dataStorage"))
-            res$dataStorage <- dataStorage(x)
     }
     if (!all(columns %in% colnames(res)))
         stop("Column(s) ", paste0(columns[!columns %in% names(res)],
@@ -109,7 +78,7 @@ MsBackendMassbankSql <- function() {
     extractCOLS(res, columns)
 }
 
-#' @importFrom DBI dbSendQuery dbBind dbFetch dbClearResult
+#' @importFrom DBI dbGetQuery
 #'
 #' @noRd
 .fetch_peaks_sql <- function(x, columns = c("mz", "intensity")) {
@@ -121,14 +90,13 @@ MsBackendMassbankSql <- function() {
                    paste0("'", unique(x@spectraIds), "'", collapse = ","),")"))
     } else {
         data.frame(spectrum_id_ = integer(), mz = numeric(),
-                   intensity = numeric())
+                   intensity = numeric())[, c("spectrum_id_", columns)]
     }
 }
 
 .fetch_spectra_data_sql <- function(x, columns = c("spectrum_id_")) {
     orig_columns <- columns
-    sql_columns <-
-        unique(c("spectrum_id_", columns))
+    sql_columns <- unique(c("spectrum_id_", columns))
     ## That turns out to be faster than dbBind if we use a field in the
     ## database that is unique (such as spectrum_id).
     res <- dbGetQuery(
@@ -173,6 +141,9 @@ MsBackendMassbankSql <- function() {
     suppressWarnings(res <- dbExecute(con, sql_b))
 }
 
+#' @importFrom DBI dbWriteTable
+#'
+#' @noRd
 .insert_spectra_variables <- function(con, data) {
     if (inherits(con, "MariaDBConnection") || inherits(con, "MySQLConnection"))
         .load_data_file(con, data, "msms_spectrum")
@@ -192,6 +163,8 @@ MsBackendMassbankSql <- function() {
 #'
 #' @importFrom data.table fwrite
 #'
+#' @importFrom DBI dbExecute
+#'
 #' @noRd
 .load_data_file <- function(con, data, name) {
     f <- tempfile()
@@ -199,15 +172,15 @@ MsBackendMassbankSql <- function() {
     if (length(logicals))
         for (i in logicals)
             data[, i] <- as.integer(data[, i])
-    message("writing file")
+    ## message("writing file")
     fwrite(data, file = f, row.names = FALSE, col.names = FALSE, sep = "\t",
            na = "\\N", eol = "\n", quote = FALSE, showProgress = FALSE)
-    message("connection valid ", dbIsValid(conm))
-    message("executing insert")
+    ## message("connection valid ", dbIsValid(conm))
+    ## message("executing insert")
     res <- dbExecute(
         con, paste0("LOAD DATA INFILE '", f, "' INTO TABLE ", name,
                     " FIELDS TERMINATED BY 0x09;"))
-    message("removing file")
+    ## message("removing file")
     res <- file.remove(f)
     if (!res)
         stop("failed to remove temporary file")
@@ -290,6 +263,8 @@ MsBackendMassbankSql <- function() {
 #'
 #' @importFrom progress progress_bar
 #'
+#' @importFrom BiocParallel bpparam
+#'
 #' @noRd
 .insert_data <- function(con, x, backend = MsBackendMzR(), chunksize = 10,
                          partitionBy = c("none", "spectrum", "chunk"),
@@ -327,7 +302,7 @@ MsBackendMassbankSql <- function() {
         gc()
         pb$tick(1)
     }
-    message("Done\nCreating indices ...")
+    message("Creating indices ... ", appendLF = FALSE)
     if (inherits(con, "MariaDBConnection")) {
         res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 1;")
         res <- dbExecute(con, "SET UNIQUE_CHECKS = 1;")
@@ -338,4 +313,19 @@ MsBackendMassbankSql <- function() {
                                      "msms_spectrum_peak (spectrum_id_)"))
     }
     message("Done")
+}
+
+#' @rdname MsqlBackend
+#'
+#' @importFrom Spectra MsBackendMzR
+#'
+#' @export
+createMsqlBackendDatabase <- function(dbcon, x = character(),
+                                      backend = MsBackendMzR(),
+                                      chunksize = 10L) {
+    if (!length(x)) return(FALSE)
+    if (!inherits(dbcon, "DBIConnection"))
+        stop("'dbcon' needs to be a valid connection to a database.")
+    .insert_data(dbcon, x, backend, chunksize = chunksize)
+    TRUE
 }

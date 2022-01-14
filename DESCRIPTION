@@ -1,6 +1,6 @@
 Package: MsqlBackend
 Title: SQL-based Mass Spectrometry Data Backend
-Version: 0.0.1
+Version: 0.0.2
 Authors@R:
     c(person(given = "RforMassSpectrometry Package Maintainer",
              email = "maintainer@rformassspectrometry.org",
@@ -20,12 +20,13 @@ Depends:
 Imports:
     BiocParallel,
     S4Vectors,
-    IRanges,
     methods,
     ProtGenerics,
-    MsCoreUtils,
     DBI,
-    utils
+    MsCoreUtils,
+    IRanges,
+    data.table,
+    progress
 Suggests:
     testthat,
     knitr (>= 1.1.0),
