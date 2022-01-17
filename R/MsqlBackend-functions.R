@@ -326,6 +326,7 @@ createMsqlBackendDatabase <- function(dbcon, x = character(),
     if (!length(x)) return(FALSE)
     if (!inherits(dbcon, "DBIConnection"))
         stop("'dbcon' needs to be a valid connection to a database.")
-    .insert_data(dbcon, x, backend, chunksize = chunksize)
+    .insert_data(dbcon, x, backend, chunksize = chunksize,
+                 partitionBy = "spectrum")
     TRUE
 }
