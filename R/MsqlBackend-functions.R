@@ -311,6 +311,8 @@ MsqlBackend <- function() {
     } else {
         res <- dbExecute(con, paste0("CREATE INDEX peak_spectrum_id on ",
                                      "msms_spectrum_peak (spectrum_id_)"))
+        res <- dbExecute(con, paste0("CREATE INDEX spectrum_spectrum_id on ",
+                                     "msms_spectrum (spectrum_id_)"))
     }
     message("Done")
 }
