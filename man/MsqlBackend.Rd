@@ -127,7 +127,9 @@ files) but might eventually be faster. While data can be stored in any SQL
 database, at present it is suggested to use MySQL/MariaDB databases. For
 \code{dbcon} being a connection to a MySQL/MariaDB database, the tables will use
 the \emph{ARIA} engine providing faster data access and will use table
-partitioning (using by default 10 partitions).
+partitioning (using by default 10 partitions). Note that, while inserting
+the data takes a considerable amount of time, also the subsequent creation
+of database indices can take very long (even longer than data insertion).
 \item \code{backendInitialize}: get access and initialize a \code{MsqlBackend} object.
 Parameter \code{object} is supposed to be a \code{MsqlBackend} instance, created e.g.
 with \code{MsqlBackend()}. Parameter \code{dbcon} is expected to be a connection to

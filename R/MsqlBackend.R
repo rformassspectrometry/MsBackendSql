@@ -39,7 +39,9 @@
 #'   database, at present it is suggested to use MySQL/MariaDB databases. For
 #'   `dbcon` being a connection to a MySQL/MariaDB database, the tables will use
 #'   the *ARIA* engine providing faster data access and will use table
-#'   partitioning (using by default 10 partitions).
+#'   partitioning (using by default 10 partitions). Note that, while inserting
+#'   the data takes a considerable amount of time, also the subsequent creation
+#'   of database indices can take very long (even longer than data insertion).
 #'
 #' - `backendInitialize`: get access and initialize a `MsqlBackend` object.
 #'   Parameter `object` is supposed to be a `MsqlBackend` instance, created e.g.

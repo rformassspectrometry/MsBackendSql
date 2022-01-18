@@ -302,19 +302,26 @@ MsqlBackend <- function() {
         gc()
         pb$tick(1)
     }
-    message("Creating indices ... ", appendLF = FALSE)
+    message("Creating indices (this can take, depending on the database's size",
+            " very long) ", appendLF = FALSE)
     if (inherits(con, "MariaDBConnection")) {
         res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 1;")
+        message(".", appendLF = FALSE)
         res <- dbExecute(con, "SET UNIQUE_CHECKS = 1;")
+        message(".", appendLF = FALSE)
         res <- dbExecute(con, "ALTER TABLE msms_spectrum ENABLE KEYS;")
+        message(".", appendLF = FALSE)
         res <- dbExecute(con, "ALTER TABLE msms_spectrum_peak ENABLE KEYS;")
+        message(".", appendLF = FALSE)
     } else {
         res <- dbExecute(con, paste0("CREATE INDEX peak_spectrum_id on ",
                                      "msms_spectrum_peak (spectrum_id_)"))
+        message(".", appendLF = FALSE)
         res <- dbExecute(con, paste0("CREATE INDEX spectrum_spectrum_id on ",
                                      "msms_spectrum (spectrum_id_)"))
+        message(".", appendLF = FALSE)
     }
-    message("Done")
+    message(" Done")
 }
 
 #' @rdname MsqlBackend
