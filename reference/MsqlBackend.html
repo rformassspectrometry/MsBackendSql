@@ -179,7 +179,9 @@ files) but might eventually be faster. While data can be stored in any SQL
 database, at present it is suggested to use MySQL/MariaDB databases. For
 <code>dbcon</code> being a connection to a MySQL/MariaDB database, the tables will use
 the <em>ARIA</em> engine providing faster data access and will use table
-partitioning (using by default 10 partitions).</p></li>
+partitioning (using by default 10 partitions). Note that, while inserting
+the data takes a considerable amount of time, also the subsequent creation
+of database indices can take very long (even longer than data insertion).</p></li>
 <li><p><code>backendInitialize</code>: get access and initialize a <code>MsqlBackend</code> object.
 Parameter <code>object</code> is supposed to be a <code>MsqlBackend</code> instance, created e.g.
 with <code>MsqlBackend()</code>. Parameter <code>dbcon</code> is expected to be a connection to
@@ -271,8 +273,10 @@ object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> [==========================================================] 1/1 (100%) in  1s</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating indices ... </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Done</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating indices (this can take, depending on the database's size very long) </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  Done</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span class="fu">dbDisconnect</span><span class="op">(</span><span class="va">dbc</span><span class="op">)</span></span>
 <span class="r-in"></span>
@@ -284,7 +288,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An object of class "MsqlBackend"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "dbcon":</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;SQLiteConnection&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmpsLd9qy/file9c864c0cbc4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmpYwFklf/file7ce7663e8d1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Extensions: TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "spectraIds":</span>
@@ -354,7 +358,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "version":</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.1"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpsLd9qy/file9c864c0cbc4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpYwFklf/file7ce7663e8d1</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Original data source</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span>
@@ -367,9 +371,9 @@ object.</p>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Data storage</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">dataStorage</span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpsLd9qy/file9c864c0cbc4" "/tmp/RtmpsLd9qy/file9c864c0cbc4"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpsLd9qy/file9c864c0cbc4" "/tmp/RtmpsLd9qy/file9c864c0cbc4"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpsLd9qy/file9c864c0cbc4" "/tmp/RtmpsLd9qy/file9c864c0cbc4"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpYwFklf/file7ce7663e8d1" "/tmp/RtmpYwFklf/file7ce7663e8d1"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpYwFklf/file7ce7663e8d1" "/tmp/RtmpYwFklf/file7ce7663e8d1"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpYwFklf/file7ce7663e8d1" "/tmp/RtmpYwFklf/file7ce7663e8d1"</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Access all spectra data</span></span>
 <span class="r-in"><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu">spectraData</span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span>
@@ -537,7 +541,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An object of class "MsqlBackend"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "dbcon":</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;SQLiteConnection&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmpsLd9qy/file9c864c0cbc4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmpYwFklf/file7ce7663e8d1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Extensions: TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "spectraIds":</span>
@@ -597,7 +601,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "version":</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.1"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpsLd9qy/file9c864c0cbc4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpYwFklf/file7ce7663e8d1</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span>
 <span class="r-in"><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span>
