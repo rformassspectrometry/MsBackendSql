@@ -20,7 +20,7 @@ createMsqlBackendDatabase."><!-- mathjax --><script src="https://cdnjs.cloudflar
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MsqlBackend</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.3</span>
       </span>
     </div>
 
@@ -81,7 +81,10 @@ dataStorage(object)
 [(x, i, j, ..., drop = FALSE)
 
 # S4 method for MsqlBackend
-peaksData(object)
+peaksData(object, columns = c("mz", "intensity"))
+
+# S4 method for MsqlBackend
+peaksVariables(object)
 
 # S4 method for MsqlBackend
 intensity(object) &lt;- value
@@ -134,15 +137,19 @@ memory.</p></dd>
 <dd><p>For <code>[</code>: ignored.</p></dd>
 <dt>drop</dt>
 <dd><p>For <code>[</code>: <code>logical(1)</code>, ignored.</p></dd>
+<dt>columns</dt>
+<dd><p>For <code>spectraData</code>: <code><a href="https://rdrr.io/r/base/character.html" class="external-link">character()</a></code> optionally defining a subset
+of spectra variables that should be returned. Defaults to
+<code>columns = spectraVariables(object)</code> hence all variables are returned.
+For <code>peaksData</code> accessor: optional <code>character</code> with requested columns in
+the individual <code>matrix</code> of the returned <code>list</code>. Defaults to
+<code>columns = c("mz", "intensity")</code> but all columns listed by
+<code>peaksVariables</code> would be supported.</p></dd>
 <dt>value</dt>
 <dd><p>For all setter methods: replacement value.</p></dd>
 <dt>name</dt>
 <dd><p>For <code>&lt;-</code>: <code>character(1)</code> with the name of the spectra variable
 to replace.</p></dd>
-<dt>columns</dt>
-<dd><p>For <code>spectraData</code>: <code><a href="https://rdrr.io/r/base/character.html" class="external-link">character()</a></code> optionally defining a subset
-of spectra variables that should be returned. Defaults to
-<code>columns = spectraVariables(object)</code> hence all variables are returned.</p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
@@ -219,9 +226,11 @@ spectra in <code>object</code> with the name of the database containing the data
 <li><p><code>mz&lt;-</code>: not supported.</p></li>
 <li><p><code>peaksData</code>: returns a <code>list</code> with the spectras' peak data. The length of
 the list is equal to the number of spectra in <code>object</code>. Each element of
-the list is a <code>matrix</code> with columns <code>"mz"</code> and <code>"intensity"</code>. For an empty
-spectrum, a <code>matrix</code> with 0 rows and two columns (named <code>mz</code> and
-<code>intensity</code>) is returned.</p></li>
+the list is a <code>matrix</code> with columns according to parameter <code>columns</code>. For
+an empty spectrum, a <code>matrix</code> with 0 rows is returned. Use
+<code>peaksVariables(object)</code> to list supported values for parameter <code>columns</code>.</p></li>
+<li><p><code>peaksVariables</code>: returns a <code>character</code> with the available peak variables,
+i.e. columns that could be queried with <code>peaksData</code>.</p></li>
 <li><p><code>reset</code>: <em>restores</em> an <code>MsqlBackend</code> by re-initializing it with the data
 from the database. Any subsetting or cached spectra variables will be lost.</p></li>
 <li><p><code>spectraData</code>: gets or general spectrum metadata.  <code>spectraData</code> returns
@@ -288,7 +297,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An object of class "MsqlBackend"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "dbcon":</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;SQLiteConnection&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmpYwFklf/file7ce7663e8d1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmphL78tO/file1463223a545d</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Extensions: TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "spectraIds":</span>
@@ -358,7 +367,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "version":</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.1"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpYwFklf/file7ce7663e8d1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmphL78tO/file1463223a545d</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Original data source</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span>
@@ -371,9 +380,9 @@ object.</p>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Data storage</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">dataStorage</span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpYwFklf/file7ce7663e8d1" "/tmp/RtmpYwFklf/file7ce7663e8d1"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpYwFklf/file7ce7663e8d1" "/tmp/RtmpYwFklf/file7ce7663e8d1"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpYwFklf/file7ce7663e8d1" "/tmp/RtmpYwFklf/file7ce7663e8d1"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmphL78tO/file1463223a545d" "/tmp/RtmphL78tO/file1463223a545d"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmphL78tO/file1463223a545d" "/tmp/RtmphL78tO/file1463223a545d"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmphL78tO/file1463223a545d" "/tmp/RtmphL78tO/file1463223a545d"</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Access all spectra data</span></span>
 <span class="r-in"><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu">spectraData</span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span>
@@ -541,7 +550,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> An object of class "MsqlBackend"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "dbcon":</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;SQLiteConnection&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmpYwFklf/file7ce7663e8d1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmphL78tO/file1463223a545d</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Extensions: TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "spectraIds":</span>
@@ -601,7 +610,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Slot "version":</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.1"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpYwFklf/file7ce7663e8d1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmphL78tO/file1463223a545d</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span>
 <span class="r-in"><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span>
@@ -624,11 +633,13 @@ object.</p>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by RforMassSpectrometry Package Maintainer, Johannes Rainer.</p>
+  <p></p><p>Developed by RforMassSpectrometry Package Maintainer, Johannes
+Rainer.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>
+2.0.2.9000.</p>
 </div>
 
       </footer></div>
