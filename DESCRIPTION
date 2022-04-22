@@ -1,6 +1,6 @@
 Package: MsqlBackend
 Title: SQL-based Mass Spectrometry Data Backend
-Version: 0.0.2
+Version: 0.0.3
 Authors@R:
     c(person(given = "RforMassSpectrometry Package Maintainer",
              email = "maintainer@rformassspectrometry.org",
@@ -16,7 +16,7 @@ Description: SQL-based mass spectrometry (MS) data backend supporting also
 	     remote MS data sets to the Spectra package.
 Depends:
     R (>= 4.0),
-    Spectra (>= 1.0)
+    Spectra (>= 1.5.17)
 Imports:
     BiocParallel,
     S4Vectors,

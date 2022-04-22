@@ -68,3 +68,8 @@ test_that(".spectra_data_sql works", {
     expect_identical(length(mm8_be), nrow(res))
     expect_s4_class(res$mz, "NumericList")
 })
+
+test_that(".available_peaks_variables works", {
+    res <- .available_peaks_variables(mm8_be)
+    expect_equal(res, c("mz", "intensity"))
+})

@@ -9,6 +9,7 @@
 \alias{dataStorage,MsqlBackend-method}
 \alias{[,MsqlBackend-method}
 \alias{peaksData,MsqlBackend-method}
+\alias{peaksVariables,MsqlBackend-method}
 \alias{intensity<-,MsqlBackend-method}
 \alias{mz<-,MsqlBackend-method}
 \alias{$<-,MsqlBackend-method}
@@ -35,7 +36,9 @@ createMsqlBackendDatabase(
 
 \S4method{[}{MsqlBackend}(x, i, j, ..., drop = FALSE)
 
-\S4method{peaksData}{MsqlBackend}(object)
+\S4method{peaksData}{MsqlBackend}(object, columns = c("mz", "intensity"))
+
+\S4method{peaksVariables}{MsqlBackend}(object)
 
 \S4method{intensity}{MsqlBackend}(object) <- value
 
@@ -79,14 +82,18 @@ memory.}
 
 \item{drop}{For \code{[}: \code{logical(1)}, ignored.}
 
+\item{columns}{For \code{spectraData}: \code{character()} optionally defining a subset
+of spectra variables that should be returned. Defaults to
+\code{columns = spectraVariables(object)} hence all variables are returned.
+For \code{peaksData} accessor: optional \code{character} with requested columns in
+the individual \code{matrix} of the returned \code{list}. Defaults to
+\code{columns = c("mz", "intensity")} but all columns listed by
+\code{peaksVariables} would be supported.}
+
 \item{value}{For all setter methods: replacement value.}
 
 \item{name}{For \verb{<-}: \code{character(1)} with the name of the spectra variable
 to replace.}
-
-\item{columns}{For \code{spectraData}: \code{character()} optionally defining a subset
-of spectra variables that should be returned. Defaults to
-\code{columns = spectraVariables(object)} hence all variables are returned.}
 }
 \value{
 See documentation of respective function.
@@ -169,9 +176,11 @@ spectra in \code{object} with the name of the database containing the data.
 \item \verb{mz<-}: not supported.
 \item \code{peaksData}: returns a \code{list} with the spectras' peak data. The length of
 the list is equal to the number of spectra in \code{object}. Each element of
-the list is a \code{matrix} with columns \code{"mz"} and \code{"intensity"}. For an empty
-spectrum, a \code{matrix} with 0 rows and two columns (named \code{mz} and
-\code{intensity}) is returned.
+the list is a \code{matrix} with columns according to parameter \code{columns}. For
+an empty spectrum, a \code{matrix} with 0 rows is returned. Use
+\code{peaksVariables(object)} to list supported values for parameter \code{columns}.
+\item \code{peaksVariables}: returns a \code{character} with the available peak variables,
+i.e. columns that could be queried with \code{peaksData}.
 \item \code{reset}: \emph{restores} an \code{MsqlBackend} by re-initializing it with the data
 from the database. Any subsetting or cached spectra variables will be lost.
 \item \code{spectraData}: gets or general spectrum metadata.  \code{spectraData} returns

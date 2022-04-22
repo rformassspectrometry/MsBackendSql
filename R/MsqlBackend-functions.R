@@ -110,6 +110,19 @@ MsqlBackend <- function() {
     res[, orig_columns, drop = FALSE]
 }
 
+#' Get columns from the msms_spectrum_peak database table (dropping spectrum_id)
+#'
+#' @param x `MsqlBackend`
+#'
+#' @noRd
+.available_peaks_variables <- function(x) {
+    if (length(x@dbcon)) {
+        res <- dbGetQuery(
+            .dbcon(x), "select * from msms_spectrum_peak limit 1")
+        colnames(res)[!colnames(res) %in% c("spectrum_id_", "peak_id")]
+    } else character()
+}
+
 ##
 ## Insertion of data below.
 ##

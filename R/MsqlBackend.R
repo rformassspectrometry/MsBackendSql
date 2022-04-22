@@ -81,9 +81,12 @@
 #'
 #' - `peaksData`: returns a `list` with the spectras' peak data. The length of
 #'   the list is equal to the number of spectra in `object`. Each element of
-#'   the list is a `matrix` with columns `"mz"` and `"intensity"`. For an empty
-#'   spectrum, a `matrix` with 0 rows and two columns (named `mz` and
-#'   `intensity`) is returned.
+#'   the list is a `matrix` with columns according to parameter `columns`. For
+#'   an empty spectrum, a `matrix` with 0 rows is returned. Use
+#'   `peaksVariables(object)` to list supported values for parameter `columns`.
+#'
+#' - `peaksVariables`: returns a `character` with the available peak variables,
+#'   i.e. columns that could be queried with `peaksData`.
 #'
 #' - `reset`: *restores* an `MsqlBackend` by re-initializing it with the data
 #'   from the database. Any subsetting or cached spectra variables will be lost.
@@ -126,6 +129,10 @@
 #' @param columns For `spectraData`: `character()` optionally defining a subset
 #'     of spectra variables that should be returned. Defaults to
 #'     `columns = spectraVariables(object)` hence all variables are returned.
+#'     For `peaksData` accessor: optional `character` with requested columns in
+#'     the individual `matrix` of the returned `list`. Defaults to
+#'     `columns = c("mz", "intensity")` but all columns listed by
+#'     `peaksVariables` would be supported.
 #'
 #' @param drop For `[`: `logical(1)`, ignored.
 #'
@@ -319,17 +326,28 @@ setMethod("[", "MsqlBackend", function(x, i, j, ..., drop = FALSE) {
 #' @exportMethod peaksData
 #'
 #' @rdname MsqlBackend
-setMethod("peaksData", "MsqlBackend", function(object) {
-    pks <- .fetch_peaks_sql(object)
-    f <- as.factor(pks$spectrum_id_)        # using levels does not work because we can have duplicates
-    pks <- unname(split.data.frame(pks, f)[as.character(object@spectraIds)])
-    lapply(pks, function(z) {
-        if (nrow(z))
-            as.matrix(z[, 2:3], rownames.force = FALSE)
-        else matrix(ncol = 2, nrow = 0,
-                    dimnames = list(character(), c("mz", "intensity")))
+setMethod(
+    "peaksData", "MsqlBackend",
+    function(object, columns = c("mz", "intensity")) {
+        pks <- .fetch_peaks_sql(object, columns)
+        f <- as.factor(pks$spectrum_id_)        # using levels does not work because we can have duplicates
+        pks <- unname(split.data.frame(pks, f)[as.character(object@spectraIds)])
+        idx <- seq_along(columns) + 1
+        lapply(pks, function(z) {
+            if (nrow(z))
+                as.matrix(z[, idx, drop = FALSE], rownames.force = FALSE)
+            else matrix(NA_real_, ncol = length(columns), nrow = 0,
+                        dimnames = list(character(), columns))
+        })
     })
-})
+
+#' @importMethodsFrom Spectra peaksVariables
+#'
+#' @exportMethod peaksVariables
+#'
+#' @rdname MsqlBackend
+setMethod("peaksVariables", "MsqlBackend",
+          function(object) .available_peaks_variables(object))
 
 #' @exportMethod intensity<-
 #'
