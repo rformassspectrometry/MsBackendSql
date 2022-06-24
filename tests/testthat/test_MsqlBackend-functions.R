@@ -73,3 +73,12 @@ test_that(".available_peaks_variables works", {
     res <- .available_peaks_variables(mm8_be)
     expect_equal(res, c("mz", "intensity"))
 })
+
+test_that(".has_local_variable works", {
+    res <- .has_local_variable(mm8_be, c("other_id"))
+    expect_false(res)
+    tmp <- mm8_be
+    tmp$other_id <- "a"
+    res <- .has_local_variable(tmp, c("other_id"))
+    expect_true(res)
+})

@@ -352,3 +352,7 @@ createMsqlBackendDatabase <- function(dbcon, x = character(),
                  partitionBy = "spectrum")
     TRUE
 }
+
+.has_local_variable <- function(x, variable = character()) {
+    all(variable %in% colnames(x@localData))
+}

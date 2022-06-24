@@ -110,3 +110,19 @@ test_that("spectraNames,spectraNames<-,MsqlBackend", {
 
     expect_error(spectraNames(mm8_be) <- 1:20, "does not support")
 })
+
+test_that("filterMsLevel,MsqlBackend works", {
+    res <- filterMsLevel(mm8_be)
+    expect_equal(res, mm8_be)
+
+    res <- filterMsLevel(mm8_be, msLevel = 1:2)
+    expect_equal(res, mm8_be)
+
+    res <- filterMsLevel(mm8_be, msLevel = 3)
+    expect_true(length(res) == 0)
+
+    tmp <- mm8_be
+    tmp$msLevel <- rep(1:2, 99)
+    res <- filterMsLevel(tmp, msLevel = 1L)
+    expect_true(length(res) == (length(tmp) / 2))
+})

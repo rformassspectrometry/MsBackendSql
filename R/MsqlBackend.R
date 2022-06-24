@@ -59,7 +59,13 @@
 #' order as well as index replication is supported.
 #'
 #' In addition, `MsqlBackend` supports all other filtering methods available
-#' through [MsBackendCached()].
+#' through [MsBackendCached()]. Implementation of filter functions optimized
+#' for `MsqlBackend` objects are:
+#'
+#' - `filterMsLevel`: filter the object based on the MS levels specified with
+#'   parameter `msLevel`. The function does the filtering using SQL queries.
+#'   If `"msLevel"` is a *local* variable stored within the object (and hence
+#'   in memory) the default implementation in `MsBackendCached` is used instead.
 #'
 #' @section Accessing and *modifying* data:
 #'
@@ -139,6 +145,9 @@
 #' @param i For `[`: `integer` or `logical` to subset the object.
 #'
 #' @param j For `[`: ignored.
+#'
+#' @param msLevel For `filterMsLevel`: `integer` specifying the MS levels to
+#'     filter the data.
 #'
 #' @param name For `<-`: `character(1)` with the name of the spectra variable
 #'     to replace.
@@ -418,3 +427,26 @@ setReplaceMethod("spectraNames", "MsqlBackend",
                      stop(class(object)[1],
                           " does not support replacing spectra names (IDs).")
 })
+
+#' @importMethodsFrom Spectra filterMsLevel
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterMsLevel
+setMethod(
+    "filterMsLevel", "MsqlBackend",
+    function(object, msLevel = integer()) {
+        if (!length(msLevel))
+            return(object)
+        if(.has_local_variable(object, "msLevel"))
+            callNextMethod()
+        else {
+            qry <- paste0("select spectrum_id_ from msms_spectrum where ",
+                          "msLevel in (", paste0(msLevel, collapse = ","),")")
+            if (length(object) < 2000000)
+                qry <- paste0(qry, " and spectrum_id_ in (",
+                              paste0(object@spectraIds, collapse = ","),")")
+            ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
+            object[object@spectraIds %in% ids]
+        }
+    })

@@ -17,6 +17,7 @@
 \alias{reset,MsqlBackend-method}
 \alias{spectraNames,MsqlBackend-method}
 \alias{spectraNames<-,MsqlBackend-method}
+\alias{filterMsLevel,MsqlBackend-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsqlBackend()
@@ -25,8 +26,7 @@ createMsqlBackendDatabase(
   dbcon,
   x = character(),
   backend = MsBackendMzR(),
-  chunksize = 10L,
-  tempfile = tempfile()
+  chunksize = 10L
 )
 
 \S4method{show}{MsBackendCached}(object)
@@ -54,6 +54,8 @@ createMsqlBackendDatabase(
 \S4method{spectraNames}{MsqlBackend}(object)
 
 \S4method{spectraNames}{MsqlBackend}(object) <- value
+
+\S4method{filterMsLevel}{MsqlBackend}(object, msLevel = integer())
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -72,9 +74,6 @@ data inserted to the database. With \code{chunksize = 5} data from 5 files
 will be imported (in parallel) and inserted to the database. Thus, higher
 values might result in faster database creation, but require also more
 memory.}
-
-\item{tempfile}{\code{character(1)} optionally specifying a temporary file where
-data can be cached.}
 
 \item{object}{A \code{MsqlBackend} instance.}
 
@@ -98,6 +97,9 @@ the individual \code{matrix} of the returned \code{list}. Defaults to
 
 \item{name}{For \verb{<-}: \code{character(1)} with the name of the spectra variable
 to replace.}
+
+\item{msLevel}{For \code{filterMsLevel}: \code{integer} specifying the MS levels to
+filter the data.}
 }
 \value{
 See documentation of respective function.
@@ -160,7 +162,14 @@ resetting the object with the \code{reset} function. Subsetting in arbitrary
 order as well as index replication is supported.
 
 In addition, \code{MsqlBackend} supports all other filtering methods available
-through \code{\link[=MsBackendCached]{MsBackendCached()}}.
+through \code{\link[=MsBackendCached]{MsBackendCached()}}. Implementation of filter functions optimized
+for \code{MsqlBackend} objects are:
+\itemize{
+\item \code{filterMsLevel}: filter the object based on the MS levels specified with
+parameter \code{msLevel}. The function does the filtering using SQL queries.
+If \code{"msLevel"} is a \emph{local} variable stored within the object (and hence
+in memory) the default implementation in \code{MsBackendCached} is used instead.
+}
 }
 
 \section{Accessing and \emph{modifying} data}{
