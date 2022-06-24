@@ -25,7 +25,8 @@ createMsqlBackendDatabase(
   dbcon,
   x = character(),
   backend = MsBackendMzR(),
-  chunksize = 10L
+  chunksize = 10L,
+  tempfile = tempfile()
 )
 
 \S4method{show}{MsBackendCached}(object)
@@ -71,6 +72,9 @@ data inserted to the database. With \code{chunksize = 5} data from 5 files
 will be imported (in parallel) and inserted to the database. Thus, higher
 values might result in faster database creation, but require also more
 memory.}
+
+\item{tempfile}{\code{character(1)} optionally specifying a temporary file where
+data can be cached.}
 
 \item{object}{A \code{MsqlBackend} instance.}
 

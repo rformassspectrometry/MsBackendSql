@@ -191,7 +191,7 @@ MsqlBackend <- function() {
     ## message("connection valid ", dbIsValid(conm))
     ## message("executing insert")
     res <- dbExecute(
-        con, paste0("LOAD DATA INFILE '", f, "' INTO TABLE ", name,
+        con, paste0("LOAD DATA LOCAL INFILE '", f, "' INTO TABLE ", name,
                     " FIELDS TERMINATED BY 0x09;"))
     ## message("removing file")
     res <- file.remove(f)
