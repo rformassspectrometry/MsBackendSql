@@ -483,22 +483,30 @@ setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
             qry <- paste0("select spectrum_id_ from msms_spectrum where ",
                           "(rtime >= ", rt[1L], " and rtime <= ", rt[2L],
                           " and msLevel in (", msl, ")) or msLevel not in (",
-                          msl, ");")
+                          msl, ")")
         } else {
             qry <- paste0("select spectrum_id_ from msms_spectrum where ",
-                          "rtime >= ", rt[1L], " and rtime <= ", rt[2L], ";")
+                          "rtime >= ", rt[1L], " and rtime <= ", rt[2L], "")
         }
+        qry <- .query_ids(object, qry)
         ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
         object[object@spectraIds %in% ids]
     }
 })
+
+## setMethod("filterDataOrigin", "MsqlBackend", function(object,
+##                                                       dataOrigin = character()){
+
+## })
 
 #' Helper function to add filter for IDs
 #'
 #' @noRd
 .query_ids <- function(x, qry) {
     if (length(x) < 2000000)
-        paste0(qry, " and spectrum_id_ in (",
-               paste0(x@spectraIds, collapse = ","),")")
+        qry <- sub(" where",
+                   paste0(" where spectrum_id_ in (",
+                          paste0(x@spectraIds, collapse = ","),") and"),
+                   qry, fixed = TRUE)
     qry
 }

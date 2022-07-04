@@ -153,4 +153,9 @@ test_that("filterRt,MsqlBackend works", {
     expect_true(all(rtime(res_2) >= 200 & rtime(res_2) <= 210))
     expect_false(all(rtime(res) >= 200 & rtime(res) <= 210))
     expect_equal(filterMsLevel(res, 1), filterMsLevel(tmt_be, 1))
+
+    res2 <- filterRt(res, rt = c(205, 210), msLevel. = 1)
+    res2_1 <- filterMsLevel(res2, 1)
+    expect_true(all(rtime(res2_1) >= 205 & rtime(res2_1) <= 210))
+    expect_equal(filterMsLevel(res2, 2), filterMsLevel(res, 2))
 })
