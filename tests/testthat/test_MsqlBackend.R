@@ -161,12 +161,12 @@ test_that("filterRt,MsqlBackend works", {
 })
 
 test_that("filterDataOrigin works", {
-    res <- filterDataOrigin(mm_be, mm8_file)
-    expect_true(all(res$dataOrigin == mm8_file))
+    res <- filterDataOrigin(mm_be, normalizePath(mm8_file))
+    expect_true(all(res$dataOrigin == normalizePath(mm8_file)))
 
-    res <- filterDataOrigin(mm_be, mm14_file)
-    expect_true(all(res$dataOrigin == mm14_file))
+    res <- filterDataOrigin(mm_be, normalizePath(mm14_file))
+    expect_true(all(res$dataOrigin == normalizePath(mm14_file)))
 
-    res <- filterDataOrigin(mm_be, c(mm14_file, mm8_file))
-    expect_equal(unique(dataOrigin(res)), c(mm14_file, mm8_file))
+    res <- filterDataOrigin(mm_be, normalizePath(c(mm14_file, mm8_file)))
+    expect_equal(unique(dataOrigin(res)), normalizePath(c(mm14_file, mm8_file)))
 })
