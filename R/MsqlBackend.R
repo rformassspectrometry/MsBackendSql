@@ -76,6 +76,13 @@
 #'   `precursorMz` within the m/z value range provided with parameter `mz` (i.e.
 #'   all spectra with a precursor m/z `>= mz[1L]` and `<= mz[2L]`).
 #'
+#' - filterPrecursorMzValues`: filters the data keeping only spectra with
+#'   precursor m/z values matching the value(s) provided with parameter `mz`.
+#'   Parameters `ppm` and `tolerance` allow to specify acceptable differences
+#'   between compared values. Lengths of `ppm` and `tolerance` can be either `1`
+#'   or equal to `length(mz)` to use different values for ppm and tolerance for
+#'   each provided m/z value.
+#'
 #' - `filterRt`: filter the object keeping only spectra with retention times
 #'   within the specified retention time range (parameter `rt`). Optional
 #'   parameter `msLevel.` allows to restrict the retention time filter only on
@@ -174,15 +181,25 @@
 #'
 #' @param mz For `filterPrecursorMzRange`: `numeric(2)` with the desired lower
 #'     and upper limit of the precursor m/z range.
+#'     For `filterPrecursorMzValues`: `numeric` with the m/z value(s) to filter
+#'     the object.
 #'
 #' @param name For `<-`: `character(1)` with the name of the spectra variable
 #'     to replace.
 #'
 #' @param object A `MsqlBackend` instance.
 #'
+#' @param ppm For `filterPrecursorMzValues`: `numeric` with the m/z-relative
+#'     maximal acceptable difference for a m/z value to be considered matching.
+#'     Can be of length 1 or equal to `length(mz)`.
+#'
 #' @param rt For `filterRt`: `numeric(2)` with the lower and upper retention
 #'     time. Spectra with a retention time `>= rt[1]` and `<= rt[2]` are
 #'     returned.
+#'
+#' @param tolerance For `filterPrecursorMzValues`: `numeric` with the absolute
+#'     difference for m/z values to be considered matching. Can be of length 1
+#'     or equal to `length(mz)`.
 #'
 #' @param value For all setter methods: replacement value.
 #'
@@ -286,11 +303,11 @@ setValidity("MsqlBackend", function(object) {
     else msg
 })
 
-#' @rdname MsqlBackend
-#'
 #' @importMethodsFrom Spectra show
 #'
 #' @exportMethod show
+#'
+#' @rdname MsqlBackend
 setMethod("show", "MsqlBackend", function(object) {
     callNextMethod()
     if (!is.null(.dbcon(object))) {
@@ -546,18 +563,22 @@ setMethod("filterPrecursorMzRange", "MsqlBackend", function(object,
     } else object
 })
 
-.subset_query <- function(object, qry) {
-            ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
-            object[object@spectraIds %in% ids]
-}
-
-#' Helper function to create the SQL query to fetch IDs
+#' @importMethodsFrom Spectra filterPrecursorMzValues
 #'
-#' @noRd
-.id_query <- function(x) {
-    qry <- paste0("select spectrum_id_ from msms_spectrum where ")
-    if (length(x) < 2000000)
-        qry <- paste0(qry, "spectrum_id_ in (",
-                      paste0(x@spectraIds, collapse = ","), ") and ")
-    qry
-}
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterPrecursorMzValues
+setMethod(
+    "filterPrecursorMzValues", "MsqlBackend",
+    function(object, mz = numeric(), ppm = 20, tolerance = 0) {
+        if (length(mz)) {
+            if (.has_local_variable(object, "precursorMz"))
+                callNextMethod()
+            else {
+                qry <- paste0(.id_query(object),
+                              .precursor_mz_query(mz, ppm, tolerance))
+                object <- .subset_query(object, qry)
+                object
+            }
+        } else object
+    })

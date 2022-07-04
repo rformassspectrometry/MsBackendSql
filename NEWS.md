@@ -6,6 +6,7 @@
 - Add `filterRt` method.
 - Add `filterDataOrigin` method.
 - Add `filterPrecursorMzRange` method.
+- Add `filterPrecursorMzValues` method.
 
 ## Changes in 0.0.4
 

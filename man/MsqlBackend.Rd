@@ -4,7 +4,7 @@
 \alias{MsqlBackend}
 \alias{createMsqlBackendDatabase}
 \alias{MsqlBackend-class}
-\alias{show,MsBackendCached-method}
+\alias{show,MsqlBackend-method}
 \alias{backendInitialize,MsqlBackend-method}
 \alias{dataStorage,MsqlBackend-method}
 \alias{[,MsqlBackend-method}
@@ -21,6 +21,7 @@
 \alias{filterRt,MsqlBackend-method}
 \alias{filterDataOrigin,MsqlBackend-method}
 \alias{filterPrecursorMzRange,MsqlBackend-method}
+\alias{filterPrecursorMzValues,MsqlBackend-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsqlBackend()
@@ -32,7 +33,7 @@ createMsqlBackendDatabase(
   chunksize = 10L
 )
 
-\S4method{show}{MsBackendCached}(object)
+\S4method{show}{MsqlBackend}(object)
 
 \S4method{backendInitialize}{MsqlBackend}(object, dbcon, ...)
 
@@ -65,6 +66,8 @@ createMsqlBackendDatabase(
 \S4method{filterDataOrigin}{MsqlBackend}(object, dataOrigin = character())
 
 \S4method{filterPrecursorMzRange}{MsqlBackend}(object, mz = numeric())
+
+\S4method{filterPrecursorMzValues}{MsqlBackend}(object, mz = numeric(), ppm = 20, tolerance = 0)
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -120,7 +123,17 @@ returned.}
 values to which the data should be subsetted.}
 
 \item{mz}{For \code{filterPrecursorMzRange}: \code{numeric(2)} with the desired lower
-and upper limit of the precursor m/z range.}
+and upper limit of the precursor m/z range.
+For \code{filterPrecursorMzValues}: \code{numeric} with the m/z value(s) to filter
+the object.}
+
+\item{ppm}{For \code{filterPrecursorMzValues}: \code{numeric} with the m/z-relative
+maximal acceptable difference for a m/z value to be considered matching.
+Can be of length 1 or equal to \code{length(mz)}.}
+
+\item{tolerance}{For \code{filterPrecursorMzValues}: \code{numeric} with the absolute
+difference for m/z values to be considered matching. Can be of length 1
+or equal to \code{length(mz)}.}
 }
 \value{
 See documentation of respective function.
@@ -197,6 +210,8 @@ in memory) the default implementation in \code{MsBackendCached} is used instead.
 \item \code{filterPrecursorMzRange}: filters the data keeping only spectra with a
 \code{precursorMz} within the m/z value range provided with parameter \code{mz} (i.e.
 all spectra with a precursor m/z \verb{>= mz[1L]} and \verb{<= mz[2L]}).
+\item filterPrecursorMzValues\verb{: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter }mz\verb{. Parameters }ppm\code{and}tolerance\verb{allow to specify acceptable differences between compared values. Lengths of}ppm\code{and}tolerance\verb{can be either}1\verb{or equal to}length(mz)` to use different values for ppm and tolerance for
+each provided m/z value.
 \item \code{filterRt}: filter the object keeping only spectra with retention times
 within the specified retention time range (parameter \code{rt}). Optional
 parameter \code{msLevel.} allows to restrict the retention time filter only on

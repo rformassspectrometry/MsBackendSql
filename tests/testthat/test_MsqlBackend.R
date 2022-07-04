@@ -181,3 +181,37 @@ test_that("filterPrecursorMzRange works", {
 
     expect_equal(filterPrecursorMzRange(tmt_be), tmt_be)
 })
+
+test_that("filterPrecursorMzValues works", {
+    tmt_be2 <- tmt_be
+    tmt_be2$precursorMz <- tmt_be$precursorMz
+    pmz <- c(620.1, 404.25, 417.7, 506.6)
+
+    res <- filterPrecursorMzValues(tmt_be, pmz, tolerance = 0.1)
+    res_2 <- filterPrecursorMzValues(tmt_be2, pmz, tolerance = 0.1)
+    expect_equal(length(res), length(res_2))
+    expect_equal(precursorMz(res), precursorMz(res_2))
+
+    res_3 <- filterPrecursorMzValues(tmt_mzr, pmz, tolerance = 0.1)
+    expect_equal(length(res), length(res_3))
+    expect_equal(precursorMz(res), precursorMz(res_3))
+
+    res <- filterPrecursorMzValues(tmt_be, sort(pmz), tolerance = 0.1)
+    res_2 <- filterPrecursorMzValues(tmt_be2, sort(pmz), tolerance = 0.1)
+    res_3 <- filterPrecursorMzValues(tmt_mzr, sort(pmz), tolerance = 0.1)
+    expect_equal(precursorMz(res), precursorMz(res_2))
+    expect_equal(precursorMz(res), precursorMz(res_3))
+
+    pmz <- c(456.3, 503.7815)
+    res <- filterPrecursorMzValues(tmt_be, pmz)
+    res_2 <- filterPrecursorMzValues(tmt_be2, pmz)
+    res_3 <- filterPrecursorMzValues(tmt_mzr, pmz)
+    expect_equal(precursorMz(res), precursorMz(res_2))
+    expect_equal(precursorMz(res), precursorMz(res_3))
+
+    res <- filterPrecursorMzValues(tmt_be, pmz[c(2, 1)])
+    res_2 <- filterPrecursorMzValues(tmt_be2, pmz[c(2, 1)])
+    res_3 <- filterPrecursorMzValues(tmt_mzr, pmz[c(2, 1)])
+    expect_equal(precursorMz(res), precursorMz(res_2))
+    expect_equal(precursorMz(res), precursorMz(res_3))
+})
