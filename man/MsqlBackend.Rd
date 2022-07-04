@@ -18,6 +18,7 @@
 \alias{spectraNames,MsqlBackend-method}
 \alias{spectraNames<-,MsqlBackend-method}
 \alias{filterMsLevel,MsqlBackend-method}
+\alias{filterRt,MsqlBackend-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsqlBackend()
@@ -56,6 +57,8 @@ createMsqlBackendDatabase(
 \S4method{spectraNames}{MsqlBackend}(object) <- value
 
 \S4method{filterMsLevel}{MsqlBackend}(object, msLevel = integer())
+
+\S4method{filterRt}{MsqlBackend}(object, rt = numeric(), msLevel. = integer())
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -100,6 +103,12 @@ to replace.}
 
 \item{msLevel}{For \code{filterMsLevel}: \code{integer} specifying the MS levels to
 filter the data.}
+
+\item{rt}{For \code{filterRt}: \code{numeric(2)} with the lower and upper retention
+time. Spectra with a retention time \verb{>= rt[1]} and \verb{<= rt[2]} are
+returned.}
+
+\item{msLevel.}{For \verb{filterRt: }integer\verb{with the MS level(s) on which the retention time filter should be applied (all spectra from other MS levels are considered for the filter and are returned *as is*). If not specified, the retention time filter is applied to all MS levels in}object`.}
 }
 \value{
 See documentation of respective function.
@@ -169,6 +178,10 @@ for \code{MsqlBackend} objects are:
 parameter \code{msLevel}. The function does the filtering using SQL queries.
 If \code{"msLevel"} is a \emph{local} variable stored within the object (and hence
 in memory) the default implementation in \code{MsBackendCached} is used instead.
+\item \code{filterRt}: filter the object keeping only spectra with retention times
+within the specified retention time range (parameter \code{rt}). Optional
+parameter \code{msLevel.} allows to restrict the retention time filter only on
+the provided MS level(s) returning all spectra from other MS levels.
 }
 }
 

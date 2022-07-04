@@ -126,3 +126,31 @@ test_that("filterMsLevel,MsqlBackend works", {
     res <- filterMsLevel(tmp, msLevel = 1L)
     expect_true(length(res) == (length(tmp) / 2))
 })
+
+test_that("filterRt,MsqlBackend works", {
+    res <- filterRt(mm8_be)
+    expect_equal(res, mm8_be)
+
+    res <- filterRt(mm8_be, rt = c(1000, 2000))
+    expect_true(length(res) == 0)
+
+    res <- filterRt(mm8_be, rt = c(10, 20))
+    expect_true(all(res$rtime > 10 & res$rtime < 20))
+
+    res <- filterRt(mm8_be, rt = c(10, 20), msLevel. = 2)
+    expect_equal(res, mm8_be)
+
+    tmp <- mm8_be
+    tmp$msLevel <- sample(1:3, length(tmp), replace = TRUE)
+    res <- filterRt(tmp, rt = c(10, 20), msLevel. = 3)
+    res_3 <- filterMsLevel(res, 3)
+    expect_true(all(rtime(res_3) >= 10 & rtime(res_3) <= 20))
+    expect_equal(filterMsLevel(res, c(1, 2)), filterMsLevel(tmp, c(1, 2)))
+
+    ## TMT
+    res <- filterRt(tmt_be, rt = c(200, 210), msLevel. = 2)
+    res_2 <- filterMsLevel(res, 2)
+    expect_true(all(rtime(res_2) >= 200 & rtime(res_2) <= 210))
+    expect_false(all(rtime(res) >= 200 & rtime(res) <= 210))
+    expect_equal(filterMsLevel(res, 1), filterMsLevel(tmt_be, 1))
+})

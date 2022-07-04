@@ -67,6 +67,11 @@
 #'   If `"msLevel"` is a *local* variable stored within the object (and hence
 #'   in memory) the default implementation in `MsBackendCached` is used instead.
 #'
+#' - `filterRt`: filter the object keeping only spectra with retention times
+#'   within the specified retention time range (parameter `rt`). Optional
+#'   parameter `msLevel.` allows to restrict the retention time filter only on
+#'   the provided MS level(s) returning all spectra from other MS levels.
+#'
 #' @section Accessing and *modifying* data:
 #'
 #' The functions listed here are specifically implemented for `MsqlBackend`. In
@@ -149,10 +154,20 @@
 #' @param msLevel For `filterMsLevel`: `integer` specifying the MS levels to
 #'     filter the data.
 #'
+#' @param msLevel. For `filterRt: `integer` with the MS level(s) on which the
+#'     retention time filter should be applied (all spectra from other MS levels
+#'     are considered for the filter and are returned *as is*). If not
+#'     specified, the retention time filter is applied to all MS levels in
+#'     `object`.
+#'
 #' @param name For `<-`: `character(1)` with the name of the spectra variable
 #'     to replace.
 #'
 #' @param object A `MsqlBackend` instance.
+#'
+#' @param rt For `filterRt`: `numeric(2)` with the lower and upper retention
+#'     time. Spectra with a retention time `>= rt[1]` and `<= rt[2]` are
+#'     returned.
 #'
 #' @param value For all setter methods: replacement value.
 #'
@@ -443,10 +458,47 @@ setMethod(
         else {
             qry <- paste0("select spectrum_id_ from msms_spectrum where ",
                           "msLevel in (", paste0(msLevel, collapse = ","),")")
-            if (length(object) < 2000000)
-                qry <- paste0(qry, " and spectrum_id_ in (",
-                              paste0(object@spectraIds, collapse = ","),")")
+            qry <- .query_ids(object, qry)
             ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
             object[object@spectraIds %in% ids]
         }
     })
+
+#' @importMethodsFrom Spectra filterRt
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterRt
+setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
+                                              msLevel. = integer()) {
+    if (!length(rt))
+        return(object)
+    rt <- range(rt)
+    if (.has_local_variable(object, c("msLevel", "rtime")) |
+        (.has_local_variable(object, "msLevel") & length(msLevel.)))
+        callNextMethod()
+    else {
+        if (length(msLevel.)) {
+            msl <- paste0(msLevel., collapse = ",")
+            qry <- paste0("select spectrum_id_ from msms_spectrum where ",
+                          "(rtime >= ", rt[1L], " and rtime <= ", rt[2L],
+                          " and msLevel in (", msl, ")) or msLevel not in (",
+                          msl, ");")
+        } else {
+            qry <- paste0("select spectrum_id_ from msms_spectrum where ",
+                          "rtime >= ", rt[1L], " and rtime <= ", rt[2L], ";")
+        }
+        ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
+        object[object@spectraIds %in% ids]
+    }
+})
+
+#' Helper function to add filter for IDs
+#'
+#' @noRd
+.query_ids <- function(x, qry) {
+    if (length(x) < 2000000)
+        paste0(qry, " and spectrum_id_ in (",
+               paste0(x@spectraIds, collapse = ","),")")
+    qry
+}

@@ -10,6 +10,12 @@ mm8_db <- dbConnect(SQLite(), tempfile())
 createMsqlBackendDatabase(mm8_db, mm8_file)
 mm8_be <- backendInitialize(MsqlBackend(), mm8_db)
 
+tmt_file <- proteomics(full.names = TRUE)[4L]
+tmt_sps <- Spectra(tmt_file)
+tmt_db <- dbConnect(SQLite(), tempfile())
+createMsqlBackendDatabase(tmt_db, tmt_file)
+tmt_be <- backendInitialize(MsqlBackend(), tmt_db)
+
 test_check("MsqlBackend")
 
 dbDisconnect(mm8_db)

@@ -3,6 +3,7 @@
 ## Changes in 0.0.5
 
 - Add `filterMsLevel` method.
+- Add `filterRt` method.
 
 ## Changes in 0.0.4
 
