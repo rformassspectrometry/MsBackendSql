@@ -464,11 +464,9 @@ setMethod(
         if(.has_local_variable(object, "msLevel"))
             callNextMethod()
         else {
-            qry <- paste0("select spectrum_id_ from msms_spectrum where ",
+            qry <- paste0(.id_query(object),
                           "msLevel in (", paste0(msLevel, collapse = ","),")")
-            qry <- .query_ids(object, qry)
-            ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
-            object[object@spectraIds %in% ids]
+            .subset_query(object, qry)
         }
     })
 
@@ -488,17 +486,15 @@ setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
     else {
         if (length(msLevel.)) {
             msl <- paste0(msLevel., collapse = ",")
-            qry <- paste0("select spectrum_id_ from msms_spectrum where ",
+            qry <- paste0(.id_query(object),
                           "(rtime >= ", rt[1L], " and rtime <= ", rt[2L],
                           " and msLevel in (", msl, ")) or msLevel not in (",
                           msl, ")")
         } else {
-            qry <- paste0("select spectrum_id_ from msms_spectrum where ",
+            qry <- paste0(.id_query(object),
                           "rtime >= ", rt[1L], " and rtime <= ", rt[2L], "")
         }
-        qry <- .query_ids(object, qry)
-        ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
-        object[object@spectraIds %in% ids]
+        .subset_query(object, qry)
     }
 })
 
@@ -514,12 +510,9 @@ setMethod("filterDataOrigin", "MsqlBackend", function(object,
     if (.has_local_variable(object, "dataOrigin"))
         callNextMethod()
     else {
-        qry <- paste0("select spectrum_id_ from msms_spectrum where ",
-                      "dataOrigin in (", paste0("'", dataOrigin, "'",
-                                                collapse = ","),")")
-        qry <- .query_ids(object, qry)
-        ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
-        object <- object[object@spectraIds %in% ids]
+        qry <- paste0(.id_query(object), "dataOrigin in (",
+                      paste0("'", dataOrigin, "'", collapse = ","),")")
+        object <- .subset_query(object, qry)
         ## Need to ensure the order is correct.
         if (length(dataOrigin) > 1L)
             object <- object[order(match(dataOrigin(object), dataOrigin))]
@@ -527,14 +520,32 @@ setMethod("filterDataOrigin", "MsqlBackend", function(object,
     }
 })
 
-#' Helper function to add filter for IDs
+setMethod("filterPrecursorMzRange", "MsqlBackend", function(object,
+                                                            mz = numeric()) {
+    if (length(mz)) {
+        if (.has_local_variable(object, "precursorMz"))
+            callNextMethod()
+        else {
+            mz <- range(mz)
+            qry <- paste0(.id_query(object), "precursorMz >= ", mz[1L],
+                          " and precursorMz <= ", mz[2L])
+            .subset_query(object, qry)
+        }
+    } else object
+})
+
+.subset_query <- function(object, qry) {
+            ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
+            object[object@spectraIds %in% ids]
+}
+
+#' Helper function to create the SQL query to fetch IDs
 #'
 #' @noRd
-.query_ids <- function(x, qry) {
+.id_query <- function(x) {
+    qry <- paste0("select spectrum_id_ from msms_spectrum where ")
     if (length(x) < 2000000)
-        qry <- sub(" where",
-                   paste0(" where spectrum_id_ in (",
-                          paste0(x@spectraIds, collapse = ","),") and"),
-                   qry, fixed = TRUE)
+        qry <- paste0(qry, "spectrum_id_ in (",
+                      paste0(x@spectraIds, collapse = ","), ") and ")
     qry
 }
