@@ -59,7 +59,34 @@
 #' order as well as index replication is supported.
 #'
 #' In addition, `MsqlBackend` supports all other filtering methods available
-#' through [MsBackendCached()].
+#' through [MsBackendCached()]. Implementation of filter functions optimized
+#' for `MsqlBackend` objects are:
+#'
+#' - `filterDataOrigin`: filter the object retaining spectra with `dataOrigin`
+#'   spectra variable values matching the provided ones with parameter
+#'   `dataOrigin`. The function returns the results in the order of the
+#'   values provided with parameter `dataOrigin`.
+#'
+#' - `filterMsLevel`: filter the object based on the MS levels specified with
+#'   parameter `msLevel`. The function does the filtering using SQL queries.
+#'   If `"msLevel"` is a *local* variable stored within the object (and hence
+#'   in memory) the default implementation in `MsBackendCached` is used instead.
+#'
+#' - `filterPrecursorMzRange`: filters the data keeping only spectra with a
+#'   `precursorMz` within the m/z value range provided with parameter `mz` (i.e.
+#'   all spectra with a precursor m/z `>= mz[1L]` and `<= mz[2L]`).
+#'
+#' - filterPrecursorMzValues`: filters the data keeping only spectra with
+#'   precursor m/z values matching the value(s) provided with parameter `mz`.
+#'   Parameters `ppm` and `tolerance` allow to specify acceptable differences
+#'   between compared values. Lengths of `ppm` and `tolerance` can be either `1`
+#'   or equal to `length(mz)` to use different values for ppm and tolerance for
+#'   each provided m/z value.
+#'
+#' - `filterRt`: filter the object keeping only spectra with retention times
+#'   within the specified retention time range (parameter `rt`). Optional
+#'   parameter `msLevel.` allows to restrict the retention time filter only on
+#'   the provided MS level(s) returning all spectra from other MS levels.
 #'
 #' @section Accessing and *modifying* data:
 #'
@@ -134,16 +161,45 @@
 #'     `columns = c("mz", "intensity")` but all columns listed by
 #'     `peaksVariables` would be supported.
 #'
+#' @param dataOrigin For `filterDataOrigin`: `character` with *data origin*
+#'     values to which the data should be subsetted.
+#'
 #' @param drop For `[`: `logical(1)`, ignored.
 #'
 #' @param i For `[`: `integer` or `logical` to subset the object.
 #'
 #' @param j For `[`: ignored.
 #'
+#' @param msLevel For `filterMsLevel`: `integer` specifying the MS levels to
+#'     filter the data.
+#'
+#' @param msLevel. For `filterRt: `integer` with the MS level(s) on which the
+#'     retention time filter should be applied (all spectra from other MS levels
+#'     are considered for the filter and are returned *as is*). If not
+#'     specified, the retention time filter is applied to all MS levels in
+#'     `object`.
+#'
+#' @param mz For `filterPrecursorMzRange`: `numeric(2)` with the desired lower
+#'     and upper limit of the precursor m/z range.
+#'     For `filterPrecursorMzValues`: `numeric` with the m/z value(s) to filter
+#'     the object.
+#'
 #' @param name For `<-`: `character(1)` with the name of the spectra variable
 #'     to replace.
 #'
 #' @param object A `MsqlBackend` instance.
+#'
+#' @param ppm For `filterPrecursorMzValues`: `numeric` with the m/z-relative
+#'     maximal acceptable difference for a m/z value to be considered matching.
+#'     Can be of length 1 or equal to `length(mz)`.
+#'
+#' @param rt For `filterRt`: `numeric(2)` with the lower and upper retention
+#'     time. Spectra with a retention time `>= rt[1]` and `<= rt[2]` are
+#'     returned.
+#'
+#' @param tolerance For `filterPrecursorMzValues`: `numeric` with the absolute
+#'     difference for m/z values to be considered matching. Can be of length 1
+#'     or equal to `length(mz)`.
 #'
 #' @param value For all setter methods: replacement value.
 #'
@@ -247,12 +303,12 @@ setValidity("MsqlBackend", function(object) {
     else msg
 })
 
-#' @rdname MsqlBackend
-#'
 #' @importMethodsFrom Spectra show
 #'
 #' @exportMethod show
-setMethod("show", "MsBackendCached", function(object) {
+#'
+#' @rdname MsqlBackend
+setMethod("show", "MsqlBackend", function(object) {
     callNextMethod()
     if (!is.null(.dbcon(object))) {
         info <- dbGetInfo(.dbcon(object))
@@ -418,3 +474,111 @@ setReplaceMethod("spectraNames", "MsqlBackend",
                      stop(class(object)[1],
                           " does not support replacing spectra names (IDs).")
 })
+
+#' @importMethodsFrom Spectra filterMsLevel
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterMsLevel
+setMethod(
+    "filterMsLevel", "MsqlBackend",
+    function(object, msLevel = integer()) {
+        if (!length(msLevel))
+            return(object)
+        if(.has_local_variable(object, "msLevel"))
+            callNextMethod()
+        else {
+            qry <- paste0(.id_query(object),
+                          "msLevel in (", paste0(msLevel, collapse = ","),")")
+            .subset_query(object, qry)
+        }
+    })
+
+#' @importMethodsFrom Spectra filterRt
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterRt
+setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
+                                              msLevel. = integer()) {
+    if (!length(rt))
+        return(object)
+    rt <- range(rt)
+    if (.has_local_variable(object, c("msLevel", "rtime")) |
+        (.has_local_variable(object, "msLevel") & length(msLevel.)))
+        callNextMethod()
+    else {
+        if (length(msLevel.)) {
+            msl <- paste0(msLevel., collapse = ",")
+            qry <- paste0(.id_query(object),
+                          "(rtime >= ", rt[1L], " and rtime <= ", rt[2L],
+                          " and msLevel in (", msl, ")) or msLevel not in (",
+                          msl, ")")
+        } else {
+            qry <- paste0(.id_query(object),
+                          "rtime >= ", rt[1L], " and rtime <= ", rt[2L], "")
+        }
+        .subset_query(object, qry)
+    }
+})
+
+#' @importMethodsFrom Spectra filterDataOrigin dataOrigin
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterDataOrigin
+setMethod("filterDataOrigin", "MsqlBackend", function(object,
+                                                      dataOrigin = character()){
+    if (!length(dataOrigin))
+        return(object)
+    if (.has_local_variable(object, "dataOrigin"))
+        callNextMethod()
+    else {
+        qry <- paste0(.id_query(object), "dataOrigin in (",
+                      paste0("'", dataOrigin, "'", collapse = ","),")")
+        object <- .subset_query(object, qry)
+        ## Need to ensure the order is correct.
+        if (length(dataOrigin) > 1L)
+            object <- object[order(match(dataOrigin(object), dataOrigin))]
+        object
+    }
+})
+
+#' @importMethodsFrom Spectra filterPrecursorMzRange
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterPrecursorMzRange
+setMethod("filterPrecursorMzRange", "MsqlBackend", function(object,
+                                                            mz = numeric()) {
+    if (length(mz)) {
+        if (.has_local_variable(object, "precursorMz"))
+            callNextMethod()
+        else {
+            mz <- range(mz)
+            qry <- paste0(.id_query(object), "precursorMz >= ", mz[1L],
+                          " and precursorMz <= ", mz[2L])
+            .subset_query(object, qry)
+        }
+    } else object
+})
+
+#' @importMethodsFrom Spectra filterPrecursorMzValues
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterPrecursorMzValues
+setMethod(
+    "filterPrecursorMzValues", "MsqlBackend",
+    function(object, mz = numeric(), ppm = 20, tolerance = 0) {
+        if (length(mz)) {
+            if (.has_local_variable(object, "precursorMz"))
+                callNextMethod()
+            else {
+                qry <- paste0(.id_query(object),
+                              .precursor_mz_query(mz, ppm, tolerance))
+                object <- .subset_query(object, qry)
+                object
+            }
+        } else object
+    })

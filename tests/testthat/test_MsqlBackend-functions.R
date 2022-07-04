@@ -73,3 +73,31 @@ test_that(".available_peaks_variables works", {
     res <- .available_peaks_variables(mm8_be)
     expect_equal(res, c("mz", "intensity"))
 })
+
+test_that(".has_local_variable works", {
+    res <- .has_local_variable(mm8_be, c("other_id"))
+    expect_false(res)
+    tmp <- mm8_be
+    tmp$other_id <- "a"
+    res <- .has_local_variable(tmp, c("other_id"))
+    expect_true(res)
+})
+
+test_that(".precursor_mz_query works", {
+    res <- .precursor_mz_query(10, ppm = 0, tolerance = 0.1)
+    expect_equal(res, "precursorMz >= 9.9 and precursorMz <= 10.1")
+
+    res <- .precursor_mz_query(c(20, 10, 5), ppm = 0, tolerance = 0.1)
+    expect_equal(res, paste0("precursorMz >= 19.9 and precursorMz <= 20.1 or ",
+                             "precursorMz >= 9.9 and precursorMz <= 10.1 or ",
+                             "precursorMz >= 4.9 and precursorMz <= 5.1"))
+
+    res <- .precursor_mz_query(c(20, 10, 5), ppm = 100,
+                               tolerance = c(0.1, 0.2, 0.1))
+    expect_equal(res, paste0("precursorMz >= ", 20 - ppm(20, 100) - 0.1,
+                             " and precursorMz <= ", 20 + ppm(20, 100) + 0.1,
+                             " or precursorMz >= ", 10 - ppm(10, 100) - 0.2,
+                             " and precursorMz <= ", 10 + ppm(10, 100) + 0.2,
+                             " or precursorMz >= ", 5 - ppm(5, 100) - 0.1,
+                             " and precursorMz <= ", 5 + ppm(5, 100) + 0.1))
+})

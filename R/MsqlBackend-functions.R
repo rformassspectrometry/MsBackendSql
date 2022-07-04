@@ -316,7 +316,7 @@ MsqlBackend <- function() {
         pb$tick(1)
     }
     message("Creating indices (this can take, depending on the database's size",
-            " very long) ", appendLF = FALSE)
+            ", very long) ", appendLF = FALSE)
     if (inherits(con, "MariaDBConnection")) {
         res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 1;")
         message(".", appendLF = FALSE)
@@ -351,4 +351,37 @@ createMsqlBackendDatabase <- function(dbcon, x = character(),
     .insert_data(dbcon, x, backend, chunksize = chunksize,
                  partitionBy = "spectrum")
     TRUE
+}
+
+.has_local_variable <- function(x, variable = character()) {
+    all(variable %in% colnames(x@localData))
+}
+
+.subset_query <- function(object, qry) {
+            ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
+            object[object@spectraIds %in% ids]
+}
+
+.precursor_mz_query <- function(mz, ppm = 20, tolerance = 0) {
+    lmz <- length(mz)
+    if (length(ppm) != lmz)
+        ppm <- rep(ppm[1L], lmz)
+    if (length(tolerance) != lmz)
+        tolerance <- rep(tolerance[1L], lmz)
+    mzdiff <- ppm(mz, ppm) + tolerance
+    mzr <- rep(mz, each = 2) + c(-1, 1) * rep(mzdiff, each = 2)
+    qry <- paste0("precursorMz", c(" >= ", " <= "), mzr, c(" and ", " or "),
+                  collapse = "")
+    substring(qry, 1, nchar(qry) - 4)
+}
+
+#' Helper function to create the SQL query to fetch IDs
+#'
+#' @noRd
+.id_query <- function(x) {
+    qry <- paste0("select spectrum_id_ from msms_spectrum where ")
+    if (length(x) < 2000000)
+        qry <- paste0(qry, "spectrum_id_ in (",
+                      paste0(x@spectraIds, collapse = ","), ") and ")
+    qry
 }

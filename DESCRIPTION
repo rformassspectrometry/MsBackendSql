@@ -1,6 +1,6 @@
 Package: MsqlBackend
 Title: SQL-based Mass Spectrometry Data Backend
-Version: 0.0.4
+Version: 0.0.5
 Authors@R:
     c(person(given = "RforMassSpectrometry Package Maintainer",
              email = "maintainer@rformassspectrometry.org",
@@ -43,4 +43,4 @@ BugReports: https://github.com/RforMassSpectrometry/MsqlBackend/issues
 URL: https://github.com/RforMassSpectrometry/MsqlBackend
 biocViews: Infrastructure, MassSpectrometry, Metabolomics, DataImport
 Roxygen: list(markdown=TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0

@@ -1,5 +1,13 @@
 # MsqlBackend 0.0
 
+## Changes in 0.0.5
+
+- Add `filterMsLevel` method.
+- Add `filterRt` method.
+- Add `filterDataOrigin` method.
+- Add `filterPrecursorMzRange` method.
+- Add `filterPrecursorMzValues` method.
+
 ## Changes in 0.0.4
 
 - Add optional parameter `tempfile`.

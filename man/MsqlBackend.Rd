@@ -4,7 +4,7 @@
 \alias{MsqlBackend}
 \alias{createMsqlBackendDatabase}
 \alias{MsqlBackend-class}
-\alias{show,MsBackendCached-method}
+\alias{show,MsqlBackend-method}
 \alias{backendInitialize,MsqlBackend-method}
 \alias{dataStorage,MsqlBackend-method}
 \alias{[,MsqlBackend-method}
@@ -17,6 +17,11 @@
 \alias{reset,MsqlBackend-method}
 \alias{spectraNames,MsqlBackend-method}
 \alias{spectraNames<-,MsqlBackend-method}
+\alias{filterMsLevel,MsqlBackend-method}
+\alias{filterRt,MsqlBackend-method}
+\alias{filterDataOrigin,MsqlBackend-method}
+\alias{filterPrecursorMzRange,MsqlBackend-method}
+\alias{filterPrecursorMzValues,MsqlBackend-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsqlBackend()
@@ -25,11 +30,10 @@ createMsqlBackendDatabase(
   dbcon,
   x = character(),
   backend = MsBackendMzR(),
-  chunksize = 10L,
-  tempfile = tempfile()
+  chunksize = 10L
 )
 
-\S4method{show}{MsBackendCached}(object)
+\S4method{show}{MsqlBackend}(object)
 
 \S4method{backendInitialize}{MsqlBackend}(object, dbcon, ...)
 
@@ -54,6 +58,16 @@ createMsqlBackendDatabase(
 \S4method{spectraNames}{MsqlBackend}(object)
 
 \S4method{spectraNames}{MsqlBackend}(object) <- value
+
+\S4method{filterMsLevel}{MsqlBackend}(object, msLevel = integer())
+
+\S4method{filterRt}{MsqlBackend}(object, rt = numeric(), msLevel. = integer())
+
+\S4method{filterDataOrigin}{MsqlBackend}(object, dataOrigin = character())
+
+\S4method{filterPrecursorMzRange}{MsqlBackend}(object, mz = numeric())
+
+\S4method{filterPrecursorMzValues}{MsqlBackend}(object, mz = numeric(), ppm = 20, tolerance = 0)
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -72,9 +86,6 @@ data inserted to the database. With \code{chunksize = 5} data from 5 files
 will be imported (in parallel) and inserted to the database. Thus, higher
 values might result in faster database creation, but require also more
 memory.}
-
-\item{tempfile}{\code{character(1)} optionally specifying a temporary file where
-data can be cached.}
 
 \item{object}{A \code{MsqlBackend} instance.}
 
@@ -98,6 +109,31 @@ the individual \code{matrix} of the returned \code{list}. Defaults to
 
 \item{name}{For \verb{<-}: \code{character(1)} with the name of the spectra variable
 to replace.}
+
+\item{msLevel}{For \code{filterMsLevel}: \code{integer} specifying the MS levels to
+filter the data.}
+
+\item{rt}{For \code{filterRt}: \code{numeric(2)} with the lower and upper retention
+time. Spectra with a retention time \verb{>= rt[1]} and \verb{<= rt[2]} are
+returned.}
+
+\item{msLevel.}{For \verb{filterRt: }integer\verb{with the MS level(s) on which the retention time filter should be applied (all spectra from other MS levels are considered for the filter and are returned *as is*). If not specified, the retention time filter is applied to all MS levels in}object`.}
+
+\item{dataOrigin}{For \code{filterDataOrigin}: \code{character} with \emph{data origin}
+values to which the data should be subsetted.}
+
+\item{mz}{For \code{filterPrecursorMzRange}: \code{numeric(2)} with the desired lower
+and upper limit of the precursor m/z range.
+For \code{filterPrecursorMzValues}: \code{numeric} with the m/z value(s) to filter
+the object.}
+
+\item{ppm}{For \code{filterPrecursorMzValues}: \code{numeric} with the m/z-relative
+maximal acceptable difference for a m/z value to be considered matching.
+Can be of length 1 or equal to \code{length(mz)}.}
+
+\item{tolerance}{For \code{filterPrecursorMzValues}: \code{numeric} with the absolute
+difference for m/z values to be considered matching. Can be of length 1
+or equal to \code{length(mz)}.}
 }
 \value{
 See documentation of respective function.
@@ -160,7 +196,27 @@ resetting the object with the \code{reset} function. Subsetting in arbitrary
 order as well as index replication is supported.
 
 In addition, \code{MsqlBackend} supports all other filtering methods available
-through \code{\link[=MsBackendCached]{MsBackendCached()}}.
+through \code{\link[=MsBackendCached]{MsBackendCached()}}. Implementation of filter functions optimized
+for \code{MsqlBackend} objects are:
+\itemize{
+\item \code{filterDataOrigin}: filter the object retaining spectra with \code{dataOrigin}
+spectra variable values matching the provided ones with parameter
+\code{dataOrigin}. The function returns the results in the order of the
+values provided with parameter \code{dataOrigin}.
+\item \code{filterMsLevel}: filter the object based on the MS levels specified with
+parameter \code{msLevel}. The function does the filtering using SQL queries.
+If \code{"msLevel"} is a \emph{local} variable stored within the object (and hence
+in memory) the default implementation in \code{MsBackendCached} is used instead.
+\item \code{filterPrecursorMzRange}: filters the data keeping only spectra with a
+\code{precursorMz} within the m/z value range provided with parameter \code{mz} (i.e.
+all spectra with a precursor m/z \verb{>= mz[1L]} and \verb{<= mz[2L]}).
+\item filterPrecursorMzValues\verb{: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter }mz\verb{. Parameters }ppm\code{and}tolerance\verb{allow to specify acceptable differences between compared values. Lengths of}ppm\code{and}tolerance\verb{can be either}1\verb{or equal to}length(mz)` to use different values for ppm and tolerance for
+each provided m/z value.
+\item \code{filterRt}: filter the object keeping only spectra with retention times
+within the specified retention time range (parameter \code{rt}). Optional
+parameter \code{msLevel.} allows to restrict the retention time filter only on
+the provided MS level(s) returning all spectra from other MS levels.
+}
 }
 
 \section{Accessing and \emph{modifying} data}{
