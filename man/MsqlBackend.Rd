@@ -19,6 +19,7 @@
 \alias{spectraNames<-,MsqlBackend-method}
 \alias{filterMsLevel,MsqlBackend-method}
 \alias{filterRt,MsqlBackend-method}
+\alias{filterDataOrigin,MsqlBackend-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsqlBackend()
@@ -59,6 +60,8 @@ createMsqlBackendDatabase(
 \S4method{filterMsLevel}{MsqlBackend}(object, msLevel = integer())
 
 \S4method{filterRt}{MsqlBackend}(object, rt = numeric(), msLevel. = integer())
+
+\S4method{filterDataOrigin}{MsqlBackend}(object, dataOrigin = character())
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -109,6 +112,9 @@ time. Spectra with a retention time \verb{>= rt[1]} and \verb{<= rt[2]} are
 returned.}
 
 \item{msLevel.}{For \verb{filterRt: }integer\verb{with the MS level(s) on which the retention time filter should be applied (all spectra from other MS levels are considered for the filter and are returned *as is*). If not specified, the retention time filter is applied to all MS levels in}object`.}
+
+\item{dataOrigin}{For \code{filterDataOrigin}: \code{character} with \emph{data origin}
+values to which the data should be subsetted.}
 }
 \value{
 See documentation of respective function.
@@ -174,6 +180,10 @@ In addition, \code{MsqlBackend} supports all other filtering methods available
 through \code{\link[=MsBackendCached]{MsBackendCached()}}. Implementation of filter functions optimized
 for \code{MsqlBackend} objects are:
 \itemize{
+\item \code{filterDataOrigin}: filter the object retaining spectra with \code{dataOrigin}
+spectra variable values matching the provided ones with parameter
+\code{dataOrigin}. The function returns the results in the order of the
+values provided with parameter \code{dataOrigin}.
 \item \code{filterMsLevel}: filter the object based on the MS levels specified with
 parameter \code{msLevel}. The function does the filtering using SQL queries.
 If \code{"msLevel"} is a \emph{local} variable stored within the object (and hence

@@ -62,6 +62,11 @@
 #' through [MsBackendCached()]. Implementation of filter functions optimized
 #' for `MsqlBackend` objects are:
 #'
+#' - `filterDataOrigin`: filter the object retaining spectra with `dataOrigin`
+#'   spectra variable values matching the provided ones with parameter
+#'   `dataOrigin`. The function returns the results in the order of the
+#'   values provided with parameter `dataOrigin`.
+#'
 #' - `filterMsLevel`: filter the object based on the MS levels specified with
 #'   parameter `msLevel`. The function does the filtering using SQL queries.
 #'   If `"msLevel"` is a *local* variable stored within the object (and hence
@@ -144,6 +149,9 @@
 #'     the individual `matrix` of the returned `list`. Defaults to
 #'     `columns = c("mz", "intensity")` but all columns listed by
 #'     `peaksVariables` would be supported.
+#'
+#' @param dataOrigin For `filterDataOrigin`: `character` with *data origin*
+#'     values to which the data should be subsetted.
 #'
 #' @param drop For `[`: `logical(1)`, ignored.
 #'
@@ -494,10 +502,30 @@ setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
     }
 })
 
-## setMethod("filterDataOrigin", "MsqlBackend", function(object,
-##                                                       dataOrigin = character()){
-
-## })
+#' @importMethodsFrom Spectra filterDataOrigin dataOrigin
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterDataOrigin
+setMethod("filterDataOrigin", "MsqlBackend", function(object,
+                                                      dataOrigin = character()){
+    if (!length(dataOrigin))
+        return(object)
+    if (.has_local_variable(object, "dataOrigin"))
+        callNextMethod()
+    else {
+        qry <- paste0("select spectrum_id_ from msms_spectrum where ",
+                      "dataOrigin in (", paste0("'", dataOrigin, "'",
+                                                collapse = ","),")")
+        qry <- .query_ids(object, qry)
+        ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
+        object <- object[object@spectraIds %in% ids]
+        ## Need to ensure the order is correct.
+        if (length(dataOrigin) > 1L)
+            object <- object[order(match(dataOrigin(object), dataOrigin))]
+        object
+    }
+})
 
 #' Helper function to add filter for IDs
 #'

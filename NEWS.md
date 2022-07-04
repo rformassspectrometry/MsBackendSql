@@ -4,6 +4,7 @@
 
 - Add `filterMsLevel` method.
 - Add `filterRt` method.
+- Add `filterDataOrigin` method.
 
 ## Changes in 0.0.4
 
