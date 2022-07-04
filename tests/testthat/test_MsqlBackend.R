@@ -170,3 +170,14 @@ test_that("filterDataOrigin works", {
     res <- filterDataOrigin(mm_be, normalizePath(c(mm14_file, mm8_file)))
     expect_equal(unique(dataOrigin(res)), normalizePath(c(mm14_file, mm8_file)))
 })
+
+test_that("filterPrecursorMzRange works", {
+    res <- filterPrecursorMzRange(tmt_be, c(660, 670))
+    tmp <- tmt_be
+    tmp$precursorMz <- precursorMz(tmt_be)
+    res_2 <- filterPrecursorMzRange(tmp, c(660, 670))
+    expect_equal(peaksData(res), peaksData(res_2))
+    expect_true(all(precursorMz(res) >= 660 & precursorMz(res) <= 670))
+
+    expect_equal(filterPrecursorMzRange(tmt_be), tmt_be)
+})

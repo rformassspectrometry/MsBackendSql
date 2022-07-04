@@ -20,6 +20,7 @@
 \alias{filterMsLevel,MsqlBackend-method}
 \alias{filterRt,MsqlBackend-method}
 \alias{filterDataOrigin,MsqlBackend-method}
+\alias{filterPrecursorMzRange,MsqlBackend-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsqlBackend()
@@ -62,6 +63,8 @@ createMsqlBackendDatabase(
 \S4method{filterRt}{MsqlBackend}(object, rt = numeric(), msLevel. = integer())
 
 \S4method{filterDataOrigin}{MsqlBackend}(object, dataOrigin = character())
+
+\S4method{filterPrecursorMzRange}{MsqlBackend}(object, mz = numeric())
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -115,6 +118,9 @@ returned.}
 
 \item{dataOrigin}{For \code{filterDataOrigin}: \code{character} with \emph{data origin}
 values to which the data should be subsetted.}
+
+\item{mz}{For \code{filterPrecursorMzRange}: \code{numeric(2)} with the desired lower
+and upper limit of the precursor m/z range.}
 }
 \value{
 See documentation of respective function.
@@ -188,6 +194,9 @@ values provided with parameter \code{dataOrigin}.
 parameter \code{msLevel}. The function does the filtering using SQL queries.
 If \code{"msLevel"} is a \emph{local} variable stored within the object (and hence
 in memory) the default implementation in \code{MsBackendCached} is used instead.
+\item \code{filterPrecursorMzRange}: filters the data keeping only spectra with a
+\code{precursorMz} within the m/z value range provided with parameter \code{mz} (i.e.
+all spectra with a precursor m/z \verb{>= mz[1L]} and \verb{<= mz[2L]}).
 \item \code{filterRt}: filter the object keeping only spectra with retention times
 within the specified retention time range (parameter \code{rt}). Optional
 parameter \code{msLevel.} allows to restrict the retention time filter only on

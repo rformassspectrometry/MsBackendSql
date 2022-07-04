@@ -72,6 +72,10 @@
 #'   If `"msLevel"` is a *local* variable stored within the object (and hence
 #'   in memory) the default implementation in `MsBackendCached` is used instead.
 #'
+#' - `filterPrecursorMzRange`: filters the data keeping only spectra with a
+#'   `precursorMz` within the m/z value range provided with parameter `mz` (i.e.
+#'   all spectra with a precursor m/z `>= mz[1L]` and `<= mz[2L]`).
+#'
 #' - `filterRt`: filter the object keeping only spectra with retention times
 #'   within the specified retention time range (parameter `rt`). Optional
 #'   parameter `msLevel.` allows to restrict the retention time filter only on
@@ -167,6 +171,9 @@
 #'     are considered for the filter and are returned *as is*). If not
 #'     specified, the retention time filter is applied to all MS levels in
 #'     `object`.
+#'
+#' @param mz For `filterPrecursorMzRange`: `numeric(2)` with the desired lower
+#'     and upper limit of the precursor m/z range.
 #'
 #' @param name For `<-`: `character(1)` with the name of the spectra variable
 #'     to replace.
@@ -284,7 +291,7 @@ setValidity("MsqlBackend", function(object) {
 #' @importMethodsFrom Spectra show
 #'
 #' @exportMethod show
-setMethod("show", "MsBackendCached", function(object) {
+setMethod("show", "MsqlBackend", function(object) {
     callNextMethod()
     if (!is.null(.dbcon(object))) {
         info <- dbGetInfo(.dbcon(object))
@@ -520,6 +527,11 @@ setMethod("filterDataOrigin", "MsqlBackend", function(object,
     }
 })
 
+#' @importMethodsFrom Spectra filterPrecursorMzRange
+#'
+#' @rdname MsqlBackend
+#'
+#' @exportMethod filterPrecursorMzRange
 setMethod("filterPrecursorMzRange", "MsqlBackend", function(object,
                                                             mz = numeric()) {
     if (length(mz)) {
