@@ -390,7 +390,7 @@ setMethod(
         pks <- unname(split.data.frame(pks, f)[as.character(object@spectraIds)])
         idx <- seq_along(columns) + 1
         lapply(pks, function(z) {
-            if (nrow(z))
+            if (length(z) && nrow(z))
                 as.matrix(z[, idx, drop = FALSE], rownames.force = FALSE)
             else matrix(NA_real_, ncol = length(columns), nrow = 0,
                         dimnames = list(character(), columns))
