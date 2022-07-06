@@ -135,6 +135,8 @@
 #'   the database (converted to `character`). Replacing spectra names with
 #'   `spectraNames<-` is not supported.
 #'
+#' - `uniqueMsLevels`: returns the unique MS levels of all spectra in `object`.
+#'
 #' @section Implementation notes:
 #'
 #' Internally, the `MsqlBackend` class contains only the primary keys for all
@@ -499,14 +501,14 @@ setReplaceMethod("spectraNames", "MsqlBackend",
                           " does not support replacing spectra names (IDs).")
 })
 
-#' @importMethodsFrom Spectra filterMsLevel
+#' @importMethodsFrom Spectra filterMsLevel uniqueMsLevels
 #'
 #' @rdname MsqlBackend
 #'
 #' @exportMethod filterMsLevel
 setMethod(
     "filterMsLevel", "MsqlBackend",
-    function(object, msLevel = integer()) {
+    function(object, msLevel = uniqueMsLevels(object)) {
         if (!length(msLevel))
             return(object)
         if(.has_local_variable(object, "msLevel"))
@@ -606,3 +608,13 @@ setMethod(
             }
         } else object
     })
+
+#' @rdname MsqlBackend
+#'
+#' @exportMethod uniqueMsLevels
+setMethod("uniqueMsLevels", "MsqlBackend", function(object, ...) {
+    if (!is.null(.dbcon(object))) {
+        dbGetQuery(.dbcon(object),
+                   "select distinct msLevel from msms_spectrum")[, "msLevel"]
+    } else integer()
+})

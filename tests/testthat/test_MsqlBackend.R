@@ -237,3 +237,8 @@ test_that("filterPrecursorMzValues works", {
     expect_equal(precursorMz(res), precursorMz(res_2))
     expect_equal(precursorMz(res), precursorMz(res_3))
 })
+
+test_that("uniqueMsLevels,MsqlBackend works", {
+    expect_equal(uniqueMsLevels(tmt_be), unique(msLevel(tmt_be)))
+    expect_equal(uniqueMsLevels(MsqlBackend()), integer())
+})
