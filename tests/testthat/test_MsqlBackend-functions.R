@@ -54,6 +54,18 @@ test_that(".fetch_peaks_sql works", {
     expect_identical(colnames(res), c("spectrum_id_", "mz"))
 })
 
+test_that(".fetch_peaks_sql_blob works", {
+    res <- .fetch_peaks_sql_blob(MsqlBackend(), columns = "intensity")
+    expect_true(is.data.frame(res))
+    expect_true(nrow(res) == 0)
+    expect_identical(colnames(res), c("spectrum_id_", "intensity"))
+
+    res <- .fetch_peaks_sql_blob(mm8_be_blob, columns = "mz")
+    expect_true(is.data.frame(res))
+    expect_identical(colnames(res), c("spectrum_id_", "mz"))
+    expect_true(is.list(res$mz))
+})
+
 test_that(".fetch_spectra_data_sql works", {
     res <- .fetch_spectra_data_sql(mm8_be, columns = c("rtime", "msLevel"))
     expect_true(is.data.frame(res))
@@ -67,6 +79,28 @@ test_that(".spectra_data_sql works", {
     expect_identical(colnames(res), c("rtime", "msLevel", "mz"))
     expect_identical(length(mm8_be), nrow(res))
     expect_s4_class(res$mz, "NumericList")
+
+    tmp <- mm8_be[c(3, 2, 2, 3, 1, 10, 1)]
+    res <- .spectra_data_sql(tmp, c("rtime", "msLevel", "mz"))
+    expect_identical(colnames(res), c("rtime", "msLevel", "mz"))
+    expect_identical(length(tmp), nrow(res))
+    expect_s4_class(res$mz, "NumericList")
+
+    tmp_sps <- mm8_sps[c(3, 2, 2, 3, 1, 10, 1)]
+    expect_equal(tmp_sps$mz, res$mz)
+    expect_equal(tmp_sps$rtime, res$rtime)
+    expect_equal(tmp_sps$intensity, tmp$intensity)
+
+    ## blob
+    tmp <- mm8_be_blob[c(3, 2, 2, 3, 1, 10, 1)]
+    res <- .spectra_data_sql(tmp, c("rtime", "msLevel", "mz"))
+    expect_identical(colnames(res), c("rtime", "msLevel", "mz"))
+    expect_identical(length(tmp), nrow(res))
+    expect_s4_class(res$mz, "NumericList")
+
+    expect_equal(tmp_sps$mz, res$mz)
+    expect_equal(tmp_sps$rtime, res$rtime)
+    expect_equal(tmp_sps$intensity, tmp$intensity)
 })
 
 test_that(".available_peaks_variables works", {

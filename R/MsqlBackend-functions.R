@@ -13,7 +13,8 @@ MsqlBackend <- function() {
         if (!inherits(x, "DBIConnection"))
             return("'dbcon' is expected to be a connection to a database")
         tables <- dbListTables(x)
-        if (!all(c("msms_spectrum", "msms_spectrum_peak") %in% tables))
+        if (!all(c("msms_spectrum", "msms_spectrum_peak") %in% tables |
+                 c("msms_spectrum", "msms_spectrum_peak_blob") %in% tables))
             return("Database lacks some required tables.")
     }
     NULL
@@ -59,15 +60,21 @@ MsqlBackend <- function() {
             res, as(.fetch_spectra_data_sql(x, columns = db_cols), "DataFrame"))
     ## Get m/z and intensity values
     if (length(mz_cols)) {
-        pks <- .fetch_peaks_sql(x, columns = mz_cols)
+        pks <-  x@peak_fun(x, columns = mz_cols)
         f <- factor(pks$spectrum_id_)
         if (any(mz_cols == "mz")) {
-            mzs <- unname(split(pks$mz, f)[as.character(x@spectraIds)])
+            if (is.numeric(pks$mz))
+                mzs <- unname(split(pks$mz, f)[as.character(x@spectraIds)])
+            else
+                mzs <- pks$mz[match(x@spectraIds, pks$spectrum_id_)]
             res$mz <- NumericList(mzs, compress = FALSE)
         }
         if (any(mz_cols == "intensity")) {
-            ints <- unname(
-                split(pks$intensity, f)[as.character(x@spectraIds)])
+            if (is.numeric(pks$intensity))
+                ints <- unname(
+                    split(pks$intensity, f)[as.character(x@spectraIds)])
+            else
+                ints <- pks$intensity[match(x@spectraIds, pks$spectrum_id_)]
             res$intensity <- NumericList(ints, compress = FALSE)
         }
     }
@@ -94,6 +101,26 @@ MsqlBackend <- function() {
     }
 }
 
+.fetch_peaks_sql_blob <- function(x, columns = c("mz", "intensity")) {
+    if (length(x@dbcon)) {
+        res <- dbGetQuery(
+            x@dbcon,
+            paste0("select spectrum_id_,", paste(columns, collapse = ","),
+                   " from msms_spectrum_peak_blob where spectrum_id_ in (",
+                   paste0("'", unique(x@spectraIds), "'", collapse = ","),")"))
+        if (any(colnames(res) == "mz"))
+             res$mz <- lapply(res$mz, unserialize)
+        if (any(colnames(res) == "intensity"))
+            res$intensity <- lapply(res$intensity, unserialize)
+        res
+    } else {
+        res <- data.frame(spectrum_id_ = integer())
+        res$mz <- list()
+        res$intensity <- list()
+        res[, c("spectrum_id_", columns)]
+    }
+}
+
 .fetch_spectra_data_sql <- function(x, columns = c("spectrum_id_")) {
     orig_columns <- columns
     sql_columns <- unique(c("spectrum_id_", columns))
@@ -117,8 +144,11 @@ MsqlBackend <- function() {
 #' @noRd
 .available_peaks_variables <- function(x) {
     if (length(x@dbcon)) {
+        tbl <- "msms_spectrum_peak"
+        if (any(dbListTables(.dbcon(x)) == "msms_spectrum_peak_blob"))
+            tbl <- "msms_spectrum_peak_blob"
         res <- dbGetQuery(
-            .dbcon(x), "select * from msms_spectrum_peak limit 1")
+            .dbcon(x), paste0("select * from ", tbl, " limit 1"))
         colnames(res)[!colnames(res) %in% c("spectrum_id_", "peak_id")]
     } else character()
 }
@@ -148,6 +178,22 @@ MsqlBackend <- function() {
                             "INDEX (spectrum_id_)) ENGINE=ARIA ",
                             "PARTITION BY HASH (partition_) PARTITIONS ",
                             partitionNumber, ";")
+    } else
+        sql_b <- paste0(sql_b, ");")
+    suppressWarnings(res <- dbExecute(con, sql_a))
+    suppressWarnings(res <- dbExecute(con, sql_b))
+}
+
+.initialize_tables_blob <- function(con, cols, ...) {
+    sql_a <- paste0("CREATE TABLE msms_spectrum (",
+                    paste(names(cols), cols, collapse = ", "),
+                    ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
+    sql_b <- paste0("CREATE TABLE msms_spectrum_peak_blob (mz MEDIUMBLOB, ",
+                    "intensity MEDIUMBLOB, spectrum_id_ INTEGER")
+    ## MySQL/MariaDB supports partitioning
+    if (inherits(con, "MariaDBConnection")) {
+        sql_a <- paste0(sql_a, " ENGINE=ARIA;")
+        sql_b <- paste0(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
     } else
         sql_b <- paste0(sql_b, ");")
     suppressWarnings(res <- dbExecute(con, sql_a))
@@ -237,6 +283,30 @@ MsqlBackend <- function() {
     spectrum_id[length(spectrum_id)]
 }
 
+#' store m/z and intensity values as BLOB.
+#'
+#' @noRd
+.insert_backend_blob <- function(con, x, index = 0L, ...) {
+    sv <- spectraVariables(x)
+    sv <- sv[!sv %in% c("mz", "intensity")]
+    spd <- as.data.frame(spectraData(x, columns = sv))
+    spectrum_id <- seq(index + 1L, index + nrow(spd))
+    spd$spectrum_id_ <- spectrum_id
+    .insert_spectra_variables(con, spd)
+    pks <- peaksData(x)
+    template <- data.frame(matrix(ncol = 0, nrow = 1))
+    pks_table <- do.call(rbind, lapply(pks, function(z) {
+        template$mz <- list(serialize(z[, 1], NULL))
+        template$intensity <- list(serialize(z[, 2], NULL))
+        template
+    }))
+    pks_table$spectrum_id_ <- spectrum_id
+    dbWriteTable(con, name = "msms_spectrum_peak_blob",
+                 value = pks_table, append = TRUE)
+    spectrum_id[length(spectrum_id)]
+}
+
+
 #' Insert data sequentially from files provided by x and adds it to a database
 #'
 #' @details
@@ -274,6 +344,10 @@ MsqlBackend <- function() {
 #' @param x `character` with the raw data files from which the data should be
 #'     imported.
 #'
+#' @param blob `logical(1)` whether m/z and intensity values should be stored
+#'     as BLOB in the database. If `TRUE` `partitionBy` and `partitionNumber`
+#'     are ignored.
+#'
 #' @importFrom progress progress_bar
 #'
 #' @importFrom BiocParallel bpparam
@@ -281,7 +355,7 @@ MsqlBackend <- function() {
 #' @noRd
 .insert_data <- function(con, x, backend = MsBackendMzR(), chunksize = 10,
                          partitionBy = c("none", "spectrum", "chunk"),
-                         partitionNumber = 10) {
+                         partitionNumber = 10, blob = FALSE) {
     partitionBy <- match.arg(partitionBy)
     ## initialize backend and initialize database.
     be <- backendInitialize(backend, x[1L])
@@ -291,7 +365,13 @@ MsqlBackend <- function() {
     if (inherits(con, "MySQLConnection"))
         cols <- vapply(spd, function(z) dbDataType(con, z), character(1))
     else cols <- dbDataType(con, spd)
-    .initialize_tables(con, cols, partitionBy, partitionNumber)
+    if (blob) {
+        .initialize_tables_blob(con, cols)
+        peak_table <- "msms_spectrum_peak_blob"
+    } else {
+        .initialize_tables(con, cols, partitionBy, partitionNumber)
+        peak_table <- "msms_spectrum_peak"
+    }
     ## Loop over x to insert data.
     index <- 0
     message("Importing data ... ")
@@ -306,11 +386,15 @@ MsqlBackend <- function() {
         res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
         res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
         res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
-        res <- dbExecute(con, "ALTER TABLE msms_spectrum_peak DISABLE KEYS;")
+        res <- dbExecute(con,
+                         paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
     }
     for (i in seq_along(chunks)) {
         be <- backendInitialize(backend, x[chunks[[i]]], BPPARAM = bpparam())
-        index <- .insert_backend(con, be, index = index, partitionBy, i)
+        if (blob)
+            index <- .insert_backend_blob(con, be, index = index, partitionBy,i)
+        else
+            index <- .insert_backend(con, be, index = index, partitionBy, i)
         rm(be)
         gc()
         pb$tick(1)
@@ -324,16 +408,23 @@ MsqlBackend <- function() {
         message(".", appendLF = FALSE)
         res <- dbExecute(con, "ALTER TABLE msms_spectrum ENABLE KEYS;")
         message(".", appendLF = FALSE)
-        res <- dbExecute(con, "ALTER TABLE msms_spectrum_peak ENABLE KEYS;")
+        res <- dbExecute(con, paste0("ALTER TABLE ",peak_table," ENABLE KEYS;"))
         message(".", appendLF = FALSE)
     } else {
         res <- dbExecute(con, paste0("CREATE INDEX peak_spectrum_id on ",
-                                     "msms_spectrum_peak (spectrum_id_)"))
+                                     peak_table, " (spectrum_id_)"))
         message(".", appendLF = FALSE)
         res <- dbExecute(con, paste0("CREATE INDEX spectrum_spectrum_id on ",
                                      "msms_spectrum (spectrum_id_)"))
         message(".", appendLF = FALSE)
     }
+    ## create remaining indices
+    res <- dbExecute(con, paste0("CREATE INDEX spectrum_rtime on ",
+                                  "msms_spectrum (rtime)"))
+    res <- dbExecute(con, paste0("CREATE INDEX spectrum_precursor_mz on ",
+                                  "msms_spectrum (precursorMz)"))
+    res <- dbExecute(con, paste0("CREATE INDEX spectrum_ms_level on ",
+                                  "msms_spectrum (msLevel)"))
     message(" Done")
 }
 
@@ -344,12 +435,12 @@ MsqlBackend <- function() {
 #' @export
 createMsqlBackendDatabase <- function(dbcon, x = character(),
                                       backend = MsBackendMzR(),
-                                      chunksize = 10L) {
+                                      chunksize = 10L, blob = TRUE) {
     if (!length(x)) return(FALSE)
     if (!inherits(dbcon, "DBIConnection"))
         stop("'dbcon' needs to be a valid connection to a database.")
     .insert_data(dbcon, x, backend, chunksize = chunksize,
-                 partitionBy = "spectrum")
+                 partitionBy = "spectrum", blob = blob)
     TRUE
 }
 

@@ -35,13 +35,21 @@
 #'   same time (if `backend` supports it even in parallel) and this data is then
 #'   inserted into the database. Larger chunk sizes will require more memory and
 #'   also larger disk space (as data import is performed through temporary
-#'   files) but might eventually be faster. While data can be stored in any SQL
-#'   database, at present it is suggested to use MySQL/MariaDB databases. For
-#'   `dbcon` being a connection to a MySQL/MariaDB database, the tables will use
-#'   the *ARIA* engine providing faster data access and will use table
-#'   partitioning (using by default 10 partitions). Note that, while inserting
-#'   the data takes a considerable amount of time, also the subsequent creation
-#'   of database indices can take very long (even longer than data insertion).
+#'   files) but might eventually be faster. Parameter `blob` allows to define
+#'   whether m/z and intensity values from a spectrum should be stored as a
+#'   *BLOB* SQL data type in the database (`blob = TRUE`, the default) or if
+#'   individual m/z and intensity values for each peak should be stored
+#'   separately (`blob = FALSE`). The latter case results in a much larger
+#'   database and slower performance of the `peaksData` function, but would
+#'   allow to define custom (manual) SQL queries on individual peak values.
+#'   While data can be stored in any SQL database, at present it is suggested
+#'   to use MySQL/MariaDB databases. For `dbcon` being a connection to a
+#'   MySQL/MariaDB database, the tables will use the *ARIA* engine providing
+#'   faster data access and will use table partitioning for `blob = FALSE`
+#'   (using by default 10 partitions). Note that, while inserting the data
+#'   takes a considerable amount of time, also the subsequent creation
+#'   of database indices can take very long (even longer than data insertion for
+#'   `blob = FALSE`).
 #'
 #' - `backendInitialize`: get access and initialize a `MsqlBackend` object.
 #'   Parameter `object` is supposed to be a `MsqlBackend` instance, created e.g.
@@ -144,6 +152,11 @@
 #'
 #' @param backend For `createMsqlBackendDatabase`: MS backend that can be used
 #'     to import MS data from the raw files specified with parameter `x`.
+#'
+#' @param blob For `createMsqlBackendDatabase`: `logical(1)` whether individual
+#'     m/z and intensity values should be stored separately (`blob = FALSE`) or
+#'     if the m/z and intensity values for each spectrum should be stored as
+#'     a single *BLOB* SQL data type (`blob = TRUE`, the default).
 #'
 #' @param chunksize For `createMsqlBackendDatabase`: `integer(1)` defining the
 #'     number of input that should be processed per iteration. With
@@ -287,12 +300,14 @@ setClass(
     slots = c(
         dbcon = "DBIConnectionOrNULL",
         spectraIds = "integer",
-        .tables = "list"),
+        .tables = "list",
+        peak_fun = "function"),
     prototype = prototype(
         dbcon = NULL,
         spectraIds = integer(),
         .tables = list(),
-        readonly = TRUE, version = "0.1"))
+        peak_fun = .fetch_peaks_sql,
+        readonly = TRUE, version = "0.2"))
 
 #' @importFrom methods .valueClassTest is new validObject
 #'
@@ -337,6 +352,9 @@ setMethod("backendInitialize", "MsqlBackend",
     object@.tables <- list(
         msms_spectrum = colnames(
             dbGetQuery(dbcon, "select * from msms_spectrum limit 0")))
+    ## Whether  m/z and intensity values are stored as BLOBs
+    if (any(dbListTables(dbcon) == "msms_spectrum_peak_blob"))
+        object@peak_fun = .fetch_peaks_sql_blob
     ## Initialize cached backend
     object <- callNextMethod(
         object, nspectra = length(object@spectraIds),
@@ -385,16 +403,22 @@ setMethod("[", "MsqlBackend", function(x, i, j, ..., drop = FALSE) {
 setMethod(
     "peaksData", "MsqlBackend",
     function(object, columns = c("mz", "intensity")) {
-        pks <- .fetch_peaks_sql(object, columns)
-        f <- as.factor(pks$spectrum_id_)        # using levels does not work because we can have duplicates
-        pks <- unname(split.data.frame(pks, f)[as.character(object@spectraIds)])
-        idx <- seq_along(columns) + 1
-        lapply(pks, function(z) {
-            if (nrow(z))
-                as.matrix(z[, idx, drop = FALSE], rownames.force = FALSE)
-            else matrix(NA_real_, ncol = length(columns), nrow = 0,
-                        dimnames = list(character(), columns))
-        })
+        pks <- object@peak_fun(object, columns)
+        if (is.list(pks$mz) | is.list(pks$intensity)) {
+            res <- do.call(mapply, args = c(pks[columns],
+                                            list(FUN = base::cbind)))
+            res[match(object@spectraIds, pks$spectrum_id_)]
+        } else {
+            f <- as.factor(pks$spectrum_id_)        # using levels does not work because we can have duplicates
+            pks <- unname(split.data.frame(pks, f)[as.character(object@spectraIds)])
+            idx <- seq_along(columns) + 1
+            lapply(pks, function(z) {
+                if (length(z) && nrow(z))
+                    as.matrix(z[, idx, drop = FALSE], rownames.force = FALSE)
+                else matrix(NA_real_, ncol = length(columns), nrow = 0,
+                            dimnames = list(character(), columns))
+            })
+        }
     })
 
 #' @importMethodsFrom Spectra peaksVariables
@@ -505,9 +529,9 @@ setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
         return(object)
     rt <- range(rt)
     if (.has_local_variable(object, c("msLevel", "rtime")) |
-        (.has_local_variable(object, "msLevel") & length(msLevel.)))
+        (.has_local_variable(object, "msLevel") & length(msLevel.))) {
         callNextMethod()
-    else {
+    } else {
         if (length(msLevel.)) {
             msl <- paste0(msLevel., collapse = ",")
             qry <- paste0(.id_query(object),
