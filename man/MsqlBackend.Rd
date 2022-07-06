@@ -22,6 +22,7 @@
 \alias{filterDataOrigin,MsqlBackend-method}
 \alias{filterPrecursorMzRange,MsqlBackend-method}
 \alias{filterPrecursorMzValues,MsqlBackend-method}
+\alias{uniqueMsLevels,MsqlBackend-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsqlBackend()
@@ -60,7 +61,7 @@ createMsqlBackendDatabase(
 
 \S4method{spectraNames}{MsqlBackend}(object) <- value
 
-\S4method{filterMsLevel}{MsqlBackend}(object, msLevel = integer())
+\S4method{filterMsLevel}{MsqlBackend}(object, msLevel = uniqueMsLevels(object))
 
 \S4method{filterRt}{MsqlBackend}(object, rt = numeric(), msLevel. = integer())
 
@@ -69,6 +70,8 @@ createMsqlBackendDatabase(
 \S4method{filterPrecursorMzRange}{MsqlBackend}(object, mz = numeric())
 
 \S4method{filterPrecursorMzValues}{MsqlBackend}(object, mz = numeric(), ppm = 20, tolerance = 0)
+
+\S4method{uniqueMsLevels}{MsqlBackend}(object, ...)
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -264,6 +267,7 @@ a \code{DataFrame} with the same number of rows as there are spectra in
 the number of spectra in \code{object} with the primary keys of the spectra from
 the database (converted to \code{character}). Replacing spectra names with
 \verb{spectraNames<-} is not supported.
+\item \code{uniqueMsLevels}: returns the unique MS levels of all spectra in \code{object}.
 }
 }
 
