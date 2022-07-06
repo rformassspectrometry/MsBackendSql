@@ -419,11 +419,11 @@ MsqlBackend <- function() {
         message(".", appendLF = FALSE)
     }
     ## create remaining indices
-    res <- dbExectute(con, paste0("CREATE INDEX spectrum_rtime on ",
+    res <- dbExecute(con, paste0("CREATE INDEX spectrum_rtime on ",
                                   "msms_spectrum (rtime)"))
-    res <- dbExectute(con, paste0("CREATE INDEX spectrum_precursor_mz on ",
+    res <- dbExecute(con, paste0("CREATE INDEX spectrum_precursor_mz on ",
                                   "msms_spectrum (precursorMz)"))
-    res <- dbExectute(con, paste0("CREATE INDEX spectrum_ms_level on ",
+    res <- dbExecute(con, paste0("CREATE INDEX spectrum_ms_level on ",
                                   "msms_spectrum (msLevel)"))
     message(" Done")
 }
