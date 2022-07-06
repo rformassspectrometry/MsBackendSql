@@ -20,7 +20,7 @@ createMsqlBackendDatabase."><!-- mathjax --><script src="https://cdnjs.cloudflar
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MsqlBackend</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
       </span>
     </div>
 
@@ -65,10 +65,11 @@ createMsqlBackendDatabase(
   dbcon,
   x = character(),
   backend = MsBackendMzR(),
-  chunksize = 10L
+  chunksize = 10L,
+  blob = TRUE
 )
 
-# S4 method for MsBackendCached
+# S4 method for MsqlBackend
 show(object)
 
 # S4 method for MsqlBackend
@@ -105,20 +106,41 @@ reset(object)
 spectraNames(object)
 
 # S4 method for MsqlBackend
-spectraNames(object) &lt;- value</code></pre></div>
+spectraNames(object) &lt;- value
+
+# S4 method for MsqlBackend
+filterMsLevel(object, msLevel = integer())
+
+# S4 method for MsqlBackend
+filterRt(object, rt = numeric(), msLevel. = integer())
+
+# S4 method for MsqlBackend
+filterDataOrigin(object, dataOrigin = character())
+
+# S4 method for MsqlBackend
+filterPrecursorMzRange(object, mz = numeric())
+
+# S4 method for MsqlBackend
+filterPrecursorMzValues(object, mz = numeric(), ppm = 20, tolerance = 0)</code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>dbcon</dt>
 <dd><p>Connection to a database.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>For <code>createMsqlBackendDatabase</code>: <code>character</code> with the names of the
 raw data files from which the data should be imported. For other methods
 an <code>MsqlBaackend</code> instance.</p></dd>
+
+
 <dt>backend</dt>
 <dd><p>For <code>createMsqlBackendDatabase</code>: MS backend that can be used
 to import MS data from the raw files specified with parameter <code>x</code>.</p></dd>
+
+
 <dt>chunksize</dt>
 <dd><p>For <code>createMsqlBackendDatabase</code>: <code>integer(1)</code> defining the
 number of input that should be processed per iteration. With
@@ -127,16 +149,35 @@ data inserted to the database. With <code>chunksize = 5</code> data from 5 files
 will be imported (in parallel) and inserted to the database. Thus, higher
 values might result in faster database creation, but require also more
 memory.</p></dd>
+
+
+<dt>blob</dt>
+<dd><p>For <code>createMsqlBackendDatabase</code>: <code>logical(1)</code> whether individual
+m/z and intensity values should be stored separately (<code>blob = FALSE</code>) or
+if the m/z and intensity values for each spectrum should be stored as
+a single <em>BLOB</em> SQL data type (<code>blob = TRUE</code>, the default).</p></dd>
+
+
 <dt>object</dt>
 <dd><p>A <code>MsqlBackend</code> instance.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>For <code>[</code>: ignored.</p></dd>
+
+
 <dt>i</dt>
 <dd><p>For <code>[</code>: <code>integer</code> or <code>logical</code> to subset the object.</p></dd>
+
+
 <dt>j</dt>
 <dd><p>For <code>[</code>: ignored.</p></dd>
+
+
 <dt>drop</dt>
 <dd><p>For <code>[</code>: <code>logical(1)</code>, ignored.</p></dd>
+
+
 <dt>columns</dt>
 <dd><p>For <code>spectraData</code>: <code><a href="https://rdrr.io/r/base/character.html" class="external-link">character()</a></code> optionally defining a subset
 of spectra variables that should be returned. Defaults to
@@ -145,15 +186,61 @@ For <code>peaksData</code> accessor: optional <code>character</code> with reques
 the individual <code>matrix</code> of the returned <code>list</code>. Defaults to
 <code>columns = c("mz", "intensity")</code> but all columns listed by
 <code>peaksVariables</code> would be supported.</p></dd>
+
+
 <dt>value</dt>
 <dd><p>For all setter methods: replacement value.</p></dd>
+
+
 <dt>name</dt>
 <dd><p>For <code>&lt;-</code>: <code>character(1)</code> with the name of the spectra variable
 to replace.</p></dd>
+
+
+<dt>msLevel</dt>
+<dd><p>For <code>filterMsLevel</code>: <code>integer</code> specifying the MS levels to
+filter the data.</p></dd>
+
+
+<dt>rt</dt>
+<dd><p>For <code>filterRt</code>: <code>numeric(2)</code> with the lower and upper retention
+time. Spectra with a retention time <code>&gt;= rt[1]</code> and <code>&lt;= rt[2]</code> are
+returned.</p></dd>
+
+
+<dt>msLevel.</dt>
+<dd><p>For <code>filterRt: </code>integer<code>with the MS level(s) on which the retention time filter should be applied (all spectra from other MS levels are considered for the filter and are returned *as is*). If not specified, the retention time filter is applied to all MS levels in</code>object`.</p></dd>
+
+
+<dt>dataOrigin</dt>
+<dd><p>For <code>filterDataOrigin</code>: <code>character</code> with <em>data origin</em>
+values to which the data should be subsetted.</p></dd>
+
+
+<dt>mz</dt>
+<dd><p>For <code>filterPrecursorMzRange</code>: <code>numeric(2)</code> with the desired lower
+and upper limit of the precursor m/z range.
+For <code>filterPrecursorMzValues</code>: <code>numeric</code> with the m/z value(s) to filter
+the object.</p></dd>
+
+
+<dt>ppm</dt>
+<dd><p>For <code>filterPrecursorMzValues</code>: <code>numeric</code> with the m/z-relative
+maximal acceptable difference for a m/z value to be considered matching.
+Can be of length 1 or equal to <code>length(mz)</code>.</p></dd>
+
+
+<dt>tolerance</dt>
+<dd><p>For <code>filterPrecursorMzValues</code>: <code>numeric</code> with the absolute
+difference for m/z values to be considered matching. Can be of length 1
+or equal to <code>length(mz)</code>.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>See documentation of respective function.</p>
+    
+
+<p>See documentation of respective function.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -182,13 +269,21 @@ the default <code>chunksize = 10L</code> data is imported from 10 files in <code
 same time (if <code>backend</code> supports it even in parallel) and this data is then
 inserted into the database. Larger chunk sizes will require more memory and
 also larger disk space (as data import is performed through temporary
-files) but might eventually be faster. While data can be stored in any SQL
-database, at present it is suggested to use MySQL/MariaDB databases. For
-<code>dbcon</code> being a connection to a MySQL/MariaDB database, the tables will use
-the <em>ARIA</em> engine providing faster data access and will use table
-partitioning (using by default 10 partitions). Note that, while inserting
-the data takes a considerable amount of time, also the subsequent creation
-of database indices can take very long (even longer than data insertion).</p></li>
+files) but might eventually be faster. Parameter <code>blob</code> allows to define
+whether m/z and intensity values from a spectrum should be stored as a
+<em>BLOB</em> SQL data type in the database (<code>blob = TRUE</code>, the default) or if
+individual m/z and intensity values for each peak should be stored
+separately (<code>blob = FALSE</code>). The latter case results in a much larger
+database and slower performance of the <code>peaksData</code> function, but would
+allow to define custom (manual) SQL queries on individual peak values.
+While data can be stored in any SQL database, at present it is suggested
+to use MySQL/MariaDB databases. For <code>dbcon</code> being a connection to a
+MySQL/MariaDB database, the tables will use the <em>ARIA</em> engine providing
+faster data access and will use table partitioning for <code>blob = FALSE</code>
+(using by default 10 partitions). Note that, while inserting the data
+takes a considerable amount of time, also the subsequent creation
+of database indices can take very long (even longer than data insertion for
+<code>blob = FALSE</code>).</p></li>
 <li><p><code>backendInitialize</code>: get access and initialize a <code>MsqlBackend</code> object.
 Parameter <code>object</code> is supposed to be a <code>MsqlBackend</code> instance, created e.g.
 with <code>MsqlBackend()</code>. Parameter <code>dbcon</code> is expected to be a connection to
@@ -207,8 +302,25 @@ by any subsetting operation. Any subsetting operation can be <em>undone</em> by
 resetting the object with the <code>reset</code> function. Subsetting in arbitrary
 order as well as index replication is supported.</p>
 <p>In addition, <code>MsqlBackend</code> supports all other filtering methods available
-through <code>MsBackendCached()</code>.</p>
-    </div>
+through <code>MsBackendCached()</code>. Implementation of filter functions optimized
+for <code>MsqlBackend</code> objects are:</p><ul><li><p><code>filterDataOrigin</code>: filter the object retaining spectra with <code>dataOrigin</code>
+spectra variable values matching the provided ones with parameter
+<code>dataOrigin</code>. The function returns the results in the order of the
+values provided with parameter <code>dataOrigin</code>.</p></li>
+<li><p><code>filterMsLevel</code>: filter the object based on the MS levels specified with
+parameter <code>msLevel</code>. The function does the filtering using SQL queries.
+If <code>"msLevel"</code> is a <em>local</em> variable stored within the object (and hence
+in memory) the default implementation in <code>MsBackendCached</code> is used instead.</p></li>
+<li><p><code>filterPrecursorMzRange</code>: filters the data keeping only spectra with a
+<code>precursorMz</code> within the m/z value range provided with parameter <code>mz</code> (i.e.
+all spectra with a precursor m/z <code>&gt;= mz[1L]</code> and <code>&lt;= mz[2L]</code>).</p></li>
+<li><p>filterPrecursorMzValues<code>: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter </code>mz<code>. Parameters </code>ppm<code>and</code>tolerance<code>allow to specify acceptable differences between compared values. Lengths of</code>ppm<code>and</code>tolerance<code>can be either</code>1<code>or equal to</code>length(mz)` to use different values for ppm and tolerance for
+each provided m/z value.</p></li>
+<li><p><code>filterRt</code>: filter the object keeping only spectra with retention times
+within the specified retention time range (parameter <code>rt</code>). Optional
+parameter <code>msLevel.</code> allows to restrict the retention time filter only on
+the provided MS level(s) returning all spectra from other MS levels.</p></li>
+</ul></div>
     <div id="accessing-and-modifying-data">
     <h2>Accessing and <em>modifying</em> data</h2>
     
@@ -282,7 +394,7 @@ object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> [==========================================================] 1/1 (100%) in  1s</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating indices (this can take, depending on the database's size very long) </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating indices (this can take, depending on the database's size, very long) </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  Done</span>
@@ -294,80 +406,23 @@ object.</p>
 <span class="r-in"><span class="va">be</span> <span class="op">&lt;-</span> <span class="fu">backendInitialize</span><span class="op">(</span><span class="fu">MsqlBackend</span><span class="op">(</span><span class="op">)</span>, <span class="va">dbc</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">be</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> An object of class "MsqlBackend"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "dbcon":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;SQLiteConnection&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmphL78tO/file1463223a545d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Extensions: TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "spectraIds":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [1]   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [19]  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [37]  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [55]  55  56  57  58  59  60  61  62  63  64  65  66  67  68  69  70  71  72</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [73]  73  74  75  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [91]  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 106 107 108</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [109] 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [127] 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [145] 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [163] 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [181] 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot ".tables":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $msms_spectrum</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "msLevel"                  "rtime"                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "acquisitionNum"           "scanIndex"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "dataStorage"              "dataOrigin"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "centroided"               "smoothed"                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "polarity"                 "precScanNum"             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "precursorMz"              "precursorIntensity"      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "precursorCharge"          "collisionEnergy"         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "isolationWindowLowerMz"   "isolationWindowTargetMz" </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "isolationWindowUpperMz"   "peaksCount"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "totIonCurrent"            "basePeakMZ"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21] "basePeakIntensity"        "ionisationEnergy"        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [23] "lowMZ"                    "highMZ"                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "mergedScan"               "mergedResultScanNum"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [27] "mergedResultStartScanNum" "mergedResultEndScanNum"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [29] "injectionTime"            "filterString"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [31] "spectrumId"               "ionMobilityDriftTime"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] "scanWindowLowerLimit"     "scanWindowUpperLimit"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [35] "spectrum_id_"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "spectraVariables":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "msLevel"                  "rtime"                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "acquisitionNum"           "scanIndex"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "dataStorage"              "dataOrigin"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "centroided"               "smoothed"                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "polarity"                 "precScanNum"             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "precursorMz"              "precursorIntensity"      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "precursorCharge"          "collisionEnergy"         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "isolationWindowLowerMz"   "isolationWindowTargetMz" </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "isolationWindowUpperMz"   "peaksCount"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "totIonCurrent"            "basePeakMZ"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21] "basePeakIntensity"        "ionisationEnergy"        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [23] "lowMZ"                    "highMZ"                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "mergedScan"               "mergedResultScanNum"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [27] "mergedResultStartScanNum" "mergedResultEndScanNum"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [29] "injectionTime"            "filterString"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [31] "spectrumId"               "ionMobilityDriftTime"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] "scanWindowLowerLimit"     "scanWindowUpperLimit"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [35] "spectrum_id_"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "localData":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> data frame with 0 columns and 198 rows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "nspectra":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 198</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "readonly":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "version":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.1"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmphL78tO/file1463223a545d</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MsqlBackend with 198 spectra</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       msLevel precursorMz  polarity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;integer&gt;   &lt;numeric&gt; &lt;integer&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ...       ...         ...       ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpKLudJW/filed01737dfc4e</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Original data source</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span>
@@ -380,9 +435,9 @@ object.</p>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Data storage</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">dataStorage</span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmphL78tO/file1463223a545d" "/tmp/RtmphL78tO/file1463223a545d"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmphL78tO/file1463223a545d" "/tmp/RtmphL78tO/file1463223a545d"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmphL78tO/file1463223a545d" "/tmp/RtmphL78tO/file1463223a545d"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpKLudJW/filed01737dfc4e" "/tmp/RtmpKLudJW/filed01737dfc4e"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpKLudJW/filed01737dfc4e" "/tmp/RtmpKLudJW/filed01737dfc4e"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpKLudJW/filed01737dfc4e" "/tmp/RtmpKLudJW/filed01737dfc4e"</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Access all spectra data</span></span>
 <span class="r-in"><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu">spectraData</span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span>
@@ -547,70 +602,18 @@ object.</p>
 <span class="r-in"><span class="co">## Subset the object to spectra in arbitrary order</span></span>
 <span class="r-in"><span class="va">be_sub</span> <span class="op">&lt;-</span> <span class="va">be</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">100</span><span class="op">)</span><span class="op">]</span></span>
 <span class="r-in"><span class="va">be_sub</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> An object of class "MsqlBackend"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "dbcon":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;SQLiteConnection&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Path: /tmp/RtmphL78tO/file1463223a545d</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Extensions: TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "spectraIds":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]   5   1   1   2   4 100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot ".tables":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $msms_spectrum</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "msLevel"                  "rtime"                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "acquisitionNum"           "scanIndex"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "dataStorage"              "dataOrigin"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "centroided"               "smoothed"                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "polarity"                 "precScanNum"             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "precursorMz"              "precursorIntensity"      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "precursorCharge"          "collisionEnergy"         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "isolationWindowLowerMz"   "isolationWindowTargetMz" </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "isolationWindowUpperMz"   "peaksCount"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "totIonCurrent"            "basePeakMZ"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21] "basePeakIntensity"        "ionisationEnergy"        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [23] "lowMZ"                    "highMZ"                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "mergedScan"               "mergedResultScanNum"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [27] "mergedResultStartScanNum" "mergedResultEndScanNum"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [29] "injectionTime"            "filterString"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [31] "spectrumId"               "ionMobilityDriftTime"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] "scanWindowLowerLimit"     "scanWindowUpperLimit"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [35] "spectrum_id_"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "spectraVariables":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "msLevel"                  "rtime"                   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "acquisitionNum"           "scanIndex"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "dataStorage"              "dataOrigin"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "centroided"               "smoothed"                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "polarity"                 "precScanNum"             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "precursorMz"              "precursorIntensity"      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "precursorCharge"          "collisionEnergy"         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "isolationWindowLowerMz"   "isolationWindowTargetMz" </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "isolationWindowUpperMz"   "peaksCount"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "totIonCurrent"            "basePeakMZ"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21] "basePeakIntensity"        "ionisationEnergy"        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [23] "lowMZ"                    "highMZ"                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "mergedScan"               "mergedResultScanNum"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [27] "mergedResultStartScanNum" "mergedResultEndScanNum"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [29] "injectionTime"            "filterString"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [31] "spectrumId"               "ionMobilityDriftTime"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] "scanWindowLowerLimit"     "scanWindowUpperLimit"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [35] "spectrum_id_"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "localData":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> data frame with 0 columns and 6 rows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "nspectra":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "readonly":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Slot "version":</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "0.1"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmphL78tO/file1463223a545d</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MsqlBackend with 6 spectra</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     msLevel precursorMz  polarity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;integer&gt;   &lt;numeric&gt; &lt;integer&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpKLudJW/filed01737dfc4e</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span>
 <span class="r-in"><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span>
@@ -633,13 +636,11 @@ object.</p>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by RforMassSpectrometry Package Maintainer, Johannes
-Rainer.</p>
+  <p></p><p>Developed by RforMassSpectrometry Package Maintainer, Johannes Rainer.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>
-2.0.2.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.9000.</p>
 </div>
 
       </footer></div>
