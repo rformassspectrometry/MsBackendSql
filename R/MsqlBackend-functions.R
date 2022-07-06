@@ -193,7 +193,7 @@ MsqlBackend <- function() {
     ## MySQL/MariaDB supports partitioning
     if (inherits(con, "MariaDBConnection")) {
         sql_a <- paste0(sql_a, " ENGINE=ARIA;")
-        sql_b <- paste0(sql_b, ", INDEX (spectrum_id_)) ENGINE=ARIA;")
+        sql_b <- paste0(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
     } else
         sql_b <- paste0(sql_b, ");")
     suppressWarnings(res <- dbExecute(con, sql_a))
@@ -418,6 +418,13 @@ MsqlBackend <- function() {
                                      "msms_spectrum (spectrum_id_)"))
         message(".", appendLF = FALSE)
     }
+    ## create remaining indices
+    res <- dbExectute(con, paste0("CREATE INDEX spectrum_rtime on ",
+                                  "msms_spectrum (rtime)"))
+    res <- dbExectute(con, paste0("CREATE INDEX spectrum_precursor_mz on ",
+                                  "msms_spectrum (precursorMz)"))
+    res <- dbExectute(con, paste0("CREATE INDEX spectrum_ms_level on ",
+                                  "msms_spectrum (msLevel)"))
     message(" Done")
 }
 

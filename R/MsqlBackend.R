@@ -529,9 +529,9 @@ setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
         return(object)
     rt <- range(rt)
     if (.has_local_variable(object, c("msLevel", "rtime")) |
-        (.has_local_variable(object, "msLevel") & length(msLevel.)))
+        (.has_local_variable(object, "msLevel") & length(msLevel.))) {
         callNextMethod()
-    else {
+    } else {
         if (length(msLevel.)) {
             msl <- paste0(msLevel., collapse = ",")
             qry <- paste0(.id_query(object),
