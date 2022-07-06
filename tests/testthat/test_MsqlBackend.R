@@ -49,6 +49,28 @@ test_that("peaksData,MsqlBackend works", {
     expect_true(all(colnames(res_2[[1]]) == c("intensity", "mz")))
     expect_equal(res[[1]][, "mz"], res_2[[1]][, "mz"])
     expect_equal(res[[1]][, "intensity"], res_2[[1]][, "intensity"])
+
+    ## blob
+    idx <- c(4L, 12L, 100L, 14L)
+    res <- mm8_be_blob[idx]
+    expect_identical(peaksData(res), peaksData(mm8_sps@backend[idx]))
+
+    idx <- c(2L, 5L, 1L, 2L, 5L)
+    res <- mm8_be_blob[idx]
+    expect_identical(peaksData(res), peaksData(mm8_sps@backend[idx]))
+
+    res <- peaksData(mm8_be_blob)
+    res_2 <- peaksData(mm8_be_blob, "mz")
+    expect_true(colnames(res_2[[1]]) == "mz")
+    expect_equal(res[[1]][, "mz"], res_2[[1]][, "mz"])
+
+    res_2 <- peaksData(mm8_be_blob, c("intensity", "mz"))
+    expect_true(all(colnames(res_2[[1]]) == c("intensity", "mz")))
+    expect_equal(res[[1]][, "mz"], res_2[[1]][, "mz"])
+    expect_equal(res[[1]][, "intensity"], res_2[[1]][, "intensity"])
+
+    res_2 <- peaksData(mm8_be_blob[idx], c("intensity"))
+    expect_equal(res_2, peaksData(mm8_sps@backend[idx], "intensity"))
 })
 
 test_that("peaksVariables,MsqlBackend works", {

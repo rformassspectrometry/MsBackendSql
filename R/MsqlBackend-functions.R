@@ -13,7 +13,8 @@ MsqlBackend <- function() {
         if (!inherits(x, "DBIConnection"))
             return("'dbcon' is expected to be a connection to a database")
         tables <- dbListTables(x)
-        if (!all(c("msms_spectrum", "msms_spectrum_peak") %in% tables))
+        if (!all(c("msms_spectrum", "msms_spectrum_peak") %in% tables |
+                 c("msms_spectrum", "msms_spectrum_peak_blob") %in% tables))
             return("Database lacks some required tables.")
     }
     NULL
@@ -59,15 +60,21 @@ MsqlBackend <- function() {
             res, as(.fetch_spectra_data_sql(x, columns = db_cols), "DataFrame"))
     ## Get m/z and intensity values
     if (length(mz_cols)) {
-        pks <- .fetch_peaks_sql(x, columns = mz_cols)
+        pks <-  x@peak_fun(x, columns = mz_cols)
         f <- factor(pks$spectrum_id_)
         if (any(mz_cols == "mz")) {
-            mzs <- unname(split(pks$mz, f)[as.character(x@spectraIds)])
+            if (is.numeric(pks$mz))
+                mzs <- unname(split(pks$mz, f)[as.character(x@spectraIds)])
+            else
+                mzs <- pks$mz[match(x@spectraIds, pks$spectrum_id_)]
             res$mz <- NumericList(mzs, compress = FALSE)
         }
         if (any(mz_cols == "intensity")) {
-            ints <- unname(
-                split(pks$intensity, f)[as.character(x@spectraIds)])
+            if (is.numeric(pks$intensity))
+                ints <- unname(
+                    split(pks$intensity, f)[as.character(x@spectraIds)])
+            else
+                ints <- pks$intensity[match(x@spectraIds, pks$spectrum_id_)]
             res$intensity <- NumericList(ints, compress = FALSE)
         }
     }
@@ -94,6 +101,26 @@ MsqlBackend <- function() {
     }
 }
 
+.fetch_peaks_sql_blob <- function(x, columns = c("mz", "intensity")) {
+    if (length(x@dbcon)) {
+        res <- dbGetQuery(
+            x@dbcon,
+            paste0("select spectrum_id_,", paste(columns, collapse = ","),
+                   " from msms_spectrum_peak_blob where spectrum_id_ in (",
+                   paste0("'", unique(x@spectraIds), "'", collapse = ","),")"))
+        if (any(colnames(res) == "mz"))
+             res$mz <- lapply(res$mz, unserialize)
+        if (any(colnames(res) == "intensity"))
+            res$intensity <- lapply(res$intensity, unserialize)
+        res
+    } else {
+        res <- data.frame(spectrum_id_ = integer())
+        res$mz <- list()
+        res$intensity <- list()
+        res[, c("spectrum_id_", columns)]
+    }
+}
+
 .fetch_spectra_data_sql <- function(x, columns = c("spectrum_id_")) {
     orig_columns <- columns
     sql_columns <- unique(c("spectrum_id_", columns))
@@ -117,8 +144,11 @@ MsqlBackend <- function() {
 #' @noRd
 .available_peaks_variables <- function(x) {
     if (length(x@dbcon)) {
+        tbl <- "msms_spectrum_peak"
+        if (any(dbListTables(.dbcon(x)) == "msms_spectrum_peak_blob"))
+            tbl <- "msms_spectrum_peak_blob"
         res <- dbGetQuery(
-            .dbcon(x), "select * from msms_spectrum_peak limit 1")
+            .dbcon(x), paste0("select * from ", tbl, " limit 1"))
         colnames(res)[!colnames(res) %in% c("spectrum_id_", "peak_id")]
     } else character()
 }
@@ -158,8 +188,8 @@ MsqlBackend <- function() {
     sql_a <- paste0("CREATE TABLE msms_spectrum (",
                     paste(names(cols), cols, collapse = ", "),
                     ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
-    sql_b <- paste0("CREATE TABLE msms_spectrum_peak_blob (mz BLOB, intensity ",
-                    "BLOB, spectrum_id_ INTEGER")
+    sql_b <- paste0("CREATE TABLE msms_spectrum_peak_blob (mz MEDIUMBLOB, ",
+                    "intensity MEDIUMBLOB, spectrum_id_ INTEGER")
     ## MySQL/MariaDB supports partitioning
     if (inherits(con, "MariaDBConnection")) {
         sql_a <- paste0(sql_a, " ENGINE=ARIA;")
@@ -398,12 +428,12 @@ MsqlBackend <- function() {
 #' @export
 createMsqlBackendDatabase <- function(dbcon, x = character(),
                                       backend = MsBackendMzR(),
-                                      chunksize = 10L, ...) {
+                                      chunksize = 10L, blob = TRUE) {
     if (!length(x)) return(FALSE)
     if (!inherits(dbcon, "DBIConnection"))
         stop("'dbcon' needs to be a valid connection to a database.")
     .insert_data(dbcon, x, backend, chunksize = chunksize,
-                 partitionBy = "spectrum", ...)
+                 partitionBy = "spectrum", blob = blob)
     TRUE
 }
 

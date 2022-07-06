@@ -30,7 +30,8 @@ createMsqlBackendDatabase(
   dbcon,
   x = character(),
   backend = MsBackendMzR(),
-  chunksize = 10L
+  chunksize = 10L,
+  blob = TRUE
 )
 
 \S4method{show}{MsqlBackend}(object)
@@ -86,6 +87,11 @@ data inserted to the database. With \code{chunksize = 5} data from 5 files
 will be imported (in parallel) and inserted to the database. Thus, higher
 values might result in faster database creation, but require also more
 memory.}
+
+\item{blob}{For \code{createMsqlBackendDatabase}: \code{logical(1)} whether individual
+m/z and intensity values should be stored separately (\code{blob = FALSE}) or
+if the m/z and intensity values for each spectrum should be stored as
+a single \emph{BLOB} SQL data type (\code{blob = TRUE}, the default).}
 
 \item{object}{A \code{MsqlBackend} instance.}
 
@@ -170,13 +176,21 @@ the default \code{chunksize = 10L} data is imported from 10 files in \code{x} at
 same time (if \code{backend} supports it even in parallel) and this data is then
 inserted into the database. Larger chunk sizes will require more memory and
 also larger disk space (as data import is performed through temporary
-files) but might eventually be faster. While data can be stored in any SQL
-database, at present it is suggested to use MySQL/MariaDB databases. For
-\code{dbcon} being a connection to a MySQL/MariaDB database, the tables will use
-the \emph{ARIA} engine providing faster data access and will use table
-partitioning (using by default 10 partitions). Note that, while inserting
-the data takes a considerable amount of time, also the subsequent creation
-of database indices can take very long (even longer than data insertion).
+files) but might eventually be faster. Parameter \code{blob} allows to define
+whether m/z and intensity values from a spectrum should be stored as a
+\emph{BLOB} SQL data type in the database (\code{blob = TRUE}, the default) or if
+individual m/z and intensity values for each peak should be stored
+separately (\code{blob = FALSE}). The latter case results in a much larger
+database and slower performance of the \code{peaksData} function, but would
+allow to define custom (manual) SQL queries on individual peak values.
+While data can be stored in any SQL database, at present it is suggested
+to use MySQL/MariaDB databases. For \code{dbcon} being a connection to a
+MySQL/MariaDB database, the tables will use the \emph{ARIA} engine providing
+faster data access and will use table partitioning for \code{blob = FALSE}
+(using by default 10 partitions). Note that, while inserting the data
+takes a considerable amount of time, also the subsequent creation
+of database indices can take very long (even longer than data insertion for
+\code{blob = FALSE}).
 \item \code{backendInitialize}: get access and initialize a \code{MsqlBackend} object.
 Parameter \code{object} is supposed to be a \code{MsqlBackend} instance, created e.g.
 with \code{MsqlBackend()}. Parameter \code{dbcon} is expected to be a connection to
