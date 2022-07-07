@@ -392,7 +392,7 @@ MsqlBackend <- function() {
     for (i in seq_along(chunks)) {
         be <- backendInitialize(backend, x[chunks[[i]]], BPPARAM = bpparam())
         if (blob)
-            index <- .insert_backend_blob(con, be, index = index, partitionBy,i)
+            index <- .insert_backend_blob(con, be, index = index)
         else
             index <- .insert_backend(con, be, index = index, partitionBy, i)
         rm(be)
