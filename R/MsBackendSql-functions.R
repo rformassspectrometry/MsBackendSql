@@ -1,8 +1,8 @@
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
-#' @export MsqlBackend
-MsqlBackend <- function() {
-    new("MsqlBackend")
+#' @export MsBackendSql
+MsBackendSql <- function() {
+    new("MsBackendSql")
 }
 
 #' @importFrom DBI dbListTables
@@ -139,7 +139,7 @@ MsqlBackend <- function() {
 
 #' Get columns from the msms_spectrum_peak database table (dropping spectrum_id)
 #'
-#' @param x `MsqlBackend`
+#' @param x `MsBackendSql`
 #'
 #' @noRd
 .available_peaks_variables <- function(x) {
@@ -428,12 +428,12 @@ MsqlBackend <- function() {
     message(" Done")
 }
 
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
 #' @importFrom Spectra MsBackendMzR
 #'
 #' @export
-createMsqlBackendDatabase <- function(dbcon, x = character(),
+createMsBackendSqlDatabase <- function(dbcon, x = character(),
                                       backend = MsBackendMzR(),
                                       chunksize = 10L, blob = TRUE) {
     if (!length(x)) return(FALSE)

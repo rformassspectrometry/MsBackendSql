@@ -1,12 +1,12 @@
 test_that("backendInitialize works", {
-    expect_error(backendInitialize(MsqlBackend()), "required")
-    expect_error(backendInitialize(MsqlBackend(), dbcon = "file"), "connection")
+    expect_error(backendInitialize(MsBackendSql()), "required")
+    expect_error(backendInitialize(MsBackendSql(), dbcon = "file"), "connection")
 
-    be <- backendInitialize(MsqlBackend(), dbcon = mm8_db)
+    be <- backendInitialize(MsBackendSql(), dbcon = mm8_db)
 })
 
 test_that("dataStorage works", {
-    res <- dataStorage(MsqlBackend())
+    res <- dataStorage(MsBackendSql())
     expect_identical(res, character())
 
     res <- dataStorage(mm8_be)
@@ -14,7 +14,7 @@ test_that("dataStorage works", {
     expect_identical(length(res), length(mm8_be))
 })
 
-test_that("[,MsqlBackend works", {
+test_that("[,MsBackendSql works", {
     idx <- c(4L, 12L, 100L, 14L)
     res <- mm8_be[idx]
     expect_identical(res@spectraIds, idx)
@@ -31,7 +31,7 @@ test_that("[,MsqlBackend works", {
     expect_identical(be$new_var[idx], res$new_var)
 })
 
-test_that("peaksData,MsqlBackend works", {
+test_that("peaksData,MsBackendSql works", {
     idx <- c(4L, 12L, 100L, 14L)
     res <- mm8_be[idx]
     expect_identical(peaksData(res), peaksData(mm8_sps@backend[idx]))
@@ -73,24 +73,24 @@ test_that("peaksData,MsqlBackend works", {
     expect_equal(res_2, peaksData(mm8_sps@backend[idx], "intensity"))
 })
 
-test_that("peaksVariables,MsqlBackend works", {
+test_that("peaksVariables,MsBackendSql works", {
     expect_equal(peaksVariables(mm8_be), c("mz", "intensity"))
 })
 
-test_that("intensity<-,MsqlBackend works", {
+test_that("intensity<-,MsBackendSql works", {
     expect_error(intensity(mm8_be) <- 1:5, "replace")
 })
 
-test_that("mz<-,MsqlBackend works", {
+test_that("mz<-,MsBackendSql works", {
     expect_error(mz(mm8_be) <- 1:5, "replace")
 })
 
-test_that("spectraData,MsqlBackend works", {
-    res <- spectraData(MsqlBackend())
+test_that("spectraData,MsBackendSql works", {
+    res <- spectraData(MsBackendSql())
     expect_s4_class(res, "DataFrame")
-    expect_equal(colnames(res), spectraVariables(MsqlBackend()))
+    expect_equal(colnames(res), spectraVariables(MsBackendSql()))
 
-    res <- spectraData(MsqlBackend(), c("rtime", "mz"))
+    res <- spectraData(MsBackendSql(), c("rtime", "mz"))
     expect_s4_class(res, "DataFrame")
     expect_equal(colnames(res), c("rtime", "mz"))
 
@@ -109,7 +109,7 @@ test_that("spectraData,MsqlBackend works", {
                  spectraData(mm8_sps@backend[idx], c("msLevel", "rtime", "mz")))
 })
 
-test_that("$<-,MsqlBackend works", {
+test_that("$<-,MsBackendSql works", {
     be <- mm8_be
     expect_error(mm8_be$spectrum_id_ <- "a", "not be")
     be$new_var <- "A"
@@ -117,7 +117,7 @@ test_that("$<-,MsqlBackend works", {
     expect_true(all(be$new_var == "A"))
 })
 
-test_that("reset,MsqlBackend", {
+test_that("reset,MsBackendSql", {
     be <- mm8_be[c(5, 2, 10)]
     be$add_var <- "B"
 
@@ -125,7 +125,7 @@ test_that("reset,MsqlBackend", {
     expect_identical(length(be_res), length(mm8_be))
 })
 
-test_that("spectraNames,spectraNames<-,MsqlBackend", {
+test_that("spectraNames,spectraNames<-,MsBackendSql", {
     res <- spectraNames(mm8_be)
     expect_true(is.character(res))
     expect_identical(res, as.character(seq_along(mm8_be)))
@@ -133,7 +133,7 @@ test_that("spectraNames,spectraNames<-,MsqlBackend", {
     expect_error(spectraNames(mm8_be) <- 1:20, "does not support")
 })
 
-test_that("filterMsLevel,MsqlBackend works", {
+test_that("filterMsLevel,MsBackendSql works", {
     res <- filterMsLevel(mm8_be)
     expect_equal(res, mm8_be)
 
@@ -149,7 +149,7 @@ test_that("filterMsLevel,MsqlBackend works", {
     expect_true(length(res) == (length(tmp) / 2))
 })
 
-test_that("filterRt,MsqlBackend works", {
+test_that("filterRt,MsBackendSql works", {
     res <- filterRt(mm8_be)
     expect_equal(res, mm8_be)
 
@@ -238,7 +238,7 @@ test_that("filterPrecursorMzValues works", {
     expect_equal(precursorMz(res), precursorMz(res_3))
 })
 
-test_that("uniqueMsLevels,MsqlBackend works", {
+test_that("uniqueMsLevels,MsBackendSql works", {
     expect_equal(uniqueMsLevels(tmt_be), unique(msLevel(tmt_be)))
-    expect_equal(uniqueMsLevels(MsqlBackend()), integer())
+    expect_equal(uniqueMsLevels(MsBackendSql()), integer())
 })

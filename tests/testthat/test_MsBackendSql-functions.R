@@ -22,29 +22,29 @@ test_that(".insert_data et al work", {
     dbDisconnect(db)
 })
 
-test_that("createMsqlBackendDatabase works", {
+test_that("createMsBackendSqlDatabase works", {
     cn <- dbConnect(SQLite(), tempfile())
 
-    expect_false(createMsqlBackendDatabase(cn))
+    expect_false(createMsBackendSqlDatabase(cn))
 
-    expect_error(createMsqlBackendDatabase("b", "b"), "valid connection")
-    expect_true(createMsqlBackendDatabase(cn, mm8_file))
+    expect_error(createMsBackendSqlDatabase("b", "b"), "valid connection")
+    expect_true(createMsBackendSqlDatabase(cn, mm8_file))
 
     dbDisconnect(cn)
 
     cn <- dbConnect(SQLite(), tempfile())
-    expect_error(createMsqlBackendDatabase(cn, "not existing"), "not found")
+    expect_error(createMsBackendSqlDatabase(cn, "not existing"), "not found")
 
     dbDisconnect(cn)
 })
 
-test_that("MsqlBackend works", {
-    res <- MsqlBackend()
-    expect_s4_class(res, "MsqlBackend")
+test_that("MsBackendSql works", {
+    res <- MsBackendSql()
+    expect_s4_class(res, "MsBackendSql")
 })
 
 test_that(".fetch_peaks_sql works", {
-    res <- .fetch_peaks_sql(MsqlBackend(), columns = "intensity")
+    res <- .fetch_peaks_sql(MsBackendSql(), columns = "intensity")
     expect_true(is.data.frame(res))
     expect_true(nrow(res) == 0)
     expect_identical(colnames(res), c("spectrum_id_", "intensity"))
@@ -55,7 +55,7 @@ test_that(".fetch_peaks_sql works", {
 })
 
 test_that(".fetch_peaks_sql_blob works", {
-    res <- .fetch_peaks_sql_blob(MsqlBackend(), columns = "intensity")
+    res <- .fetch_peaks_sql_blob(MsBackendSql(), columns = "intensity")
     expect_true(is.data.frame(res))
     expect_true(nrow(res) == 0)
     expect_identical(colnames(res), c("spectrum_id_", "intensity"))
