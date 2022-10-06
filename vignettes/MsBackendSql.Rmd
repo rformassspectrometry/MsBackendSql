@@ -139,13 +139,15 @@ The need to retrieve any spectra data on-the-fly from the database will have an
 impact on the performance of data access function of `Spectra` objects using the
 `MsBackendSql` backends. To evaluate its impact we next compare the performance
 of the `MsBackendSql` to other `Spectra` backends, specifically, the
-`MsBackendMzR` which is the default backend to read and represent raw MS data
-and the `MsBackendDataFrame` that keeps all MS data in memory (and is thus not
-suggested for larger MS experiments). Similar to the `MsBackendSql`, the
-`MsBackendMzR` also keeps only a limited amount of data in memory while
-retrieving the MS peaks data on-the-fly from the original raw data files. The
-`MsBackendDataFrame` is supposed to provide the fastest data access since all
-data is kept in memory.
+`MsBackendMzR` which is the default backend to read and represent raw MS data,
+and the `MsBackendMemory` backend that keeps all MS data in memory (and is thus
+not suggested for larger MS experiments). Similar to the `MsBackendMzR`, also
+the `MsBackendSql` keeps only a limited amount of data in memory. These
+*on-disk* backends need thus to retrieve spectra and MS peaks data on-the-fly
+from either the original raw data files (in the case of the `MsBackendMzR`) or
+from the SQL database (in the case of the `MsBackendSql`). The in-memory backend
+`MsBackendMemory` is supposed to provide the fastest data access since all data
+is kept in memory.
 
 Below we thus create `Spectra` objects from the same data but using the
 different backends.
@@ -153,7 +155,7 @@ different backends.
 ```{r}
 sps <- Spectra(con, source = MsBackendSql())
 sps_mzr <- Spectra(fls, source = MsBackendMzR())
-sps_df <- setBackend(sps_mzr, backend = MsBackendDataFrame())
+sps_im <- setBackend(sps_mzr, backend = MsBackendMemory())
 ```
 
 At first we compare the memory footprint of the 3 backends.
@@ -161,23 +163,23 @@ At first we compare the memory footprint of the 3 backends.
 ```{r}
 print(object.size(sps), units = "KB")
 print(object.size(sps_mzr), units = "KB")
-print(object.size(sps_df), units = "KB")
+print(object.size(sps_im), units = "KB")
 ```
 
 The `MsBackendSql` has the lowest memory footprint of all 3 backends because it
 does not keep any data in memory. The `MsBackendMzR` keeps all spectra
 variables, except the MS peaks data, in memory and has thus a larger size. The
-`MsBackendDataFrame` keeps all data (including the MS peaks data) in memory and
-has thus the largest size in memory.
+`MsBackendMemory` keeps all data (including the MS peaks data) in memory and has
+thus the largest size in memory.
 
 Next we compare the performance to extract the MS level for each spectrum from
-the 3 different `Spectra` objects.
+the 4 different `Spectra` objects.
 
 ```{r}
 library(microbenchmark)
 microbenchmark(msLevel(sps),
                msLevel(sps_mzr),
-               msLevel(sps_df))
+               msLevel(sps_im))
 ```
 
 Extracting MS levels is thus slowest for the `MsBackendSql`, which is not
@@ -190,31 +192,32 @@ We next compare the performance to access the full peaks data from each
 ```{r}
 microbenchmark(peaksData(sps),
                peaksData(sps_mzr),
-               peaksData(sps_df), times = 10)
+               peaksData(sps_im), times = 10)
 ```
 
-Here, performance of the `MsBackendSql` and `MsBackendDataFrame` are comparable
-while extracting peak data is slowest for the `MsBackendMzR`.
+As expected, the `MsBackendMemory` has the fasted access to the full peaks
+data. The `MsBackendSql` outperforms however the `MsBackendMzR` providing faster
+access to the m/z and intensity values.
 
 We next compare the performance of subsetting operations.
 
 ```{r}
 microbenchmark(filterRt(sps, rt = c(50, 100)),
                filterRt(sps_mzr, rt = c(50, 100)),
-               filterRt(sps_df, rt = c(50, 100)))
+               filterRt(sps_im, rt = c(50, 100)))
 ```
 
-All backends show a similar performance for filtering by retention time. This
-filtering does however involve also access to spectra variables (the retention
-time in this case). To evaluate the performance of a *pure* subsetting operation
-we first define the indices of 10 random spectra and subset the `Spectra`
-objects to these.
+The two *on-disk* backends `MsBackendSql` and `MsBackendMzR` show a comparable
+performance for this operation. This filtering does however involve also access
+to spectra variables (the retention time in this case). To evaluate the
+performance of a *pure* subsetting operation we first define the indices of 10
+random spectra and subset the `Spectra` objects to these.
 
 ```{r}
 idx <- sample(seq_along(sps), 10)
 microbenchmark(sps[idx],
                sps_mzr[idx],
-               sps_df[idx])
+               sps_im[idx])
 ```
 
 Here the `MsBackendSql` outperforms the other backends because it does not keep
@@ -228,31 +231,29 @@ At last we compare also the extraction of the peaks data from the such subset
 ```{r}
 sps_10 <- sps[idx]
 sps_mzr_10 <- sps_mzr[idx]
-sps_df_10 <- sps_df[idx]
+sps_im_10 <- sps_im[idx]
 
 microbenchmark(peaksData(sps_10),
                peaksData(sps_mzr_10),
-               peaksData(sps_df_10),
+               peaksData(sps_im_10),
                times = 10)
 ```
 
-The `MsBackendSql` and `MsBackendDataFrame` have a similar performance while the
-`MsBackendMzR` is about 20 times slower in extracting small subsets of peaks
-data.
+The `MsBackendSql` outperforms the `MsBackendMzR` while, not unexpectedly, the
+`MsBackendMemory` provides fasted access.
 
 
 # Summary
 
 The `MsBackendSql` provides an MS data representations and storage mode with a
-minimal memory footprint (in R) that is still comparable efficient for standard
+minimal memory footprint (in R) that is still comparably efficient for standard
 processing and subsetting operations. This backend is specifically useful for
 very large MS data sets, that could even be hosted on remote (MySQL/MariaDB)
 servers. A potential use case for this backend could thus be to set up a central
-storage place for MS experiment with data analysts connecting remotely to this
+storage place for MS experiments with data analysts connecting remotely to this
 server to perform initial data exploration and filtering. After subsetting to
 a smaller data set of interest, users could then retrieve/download this data by
-changing the backend to e.g. a `MsBackendDataFrame`, which would cause the data
-to be loaded into the memory on the user's computer.
+changing the backend to e.g. a `MsBackendMemory`, which would result in a *download* of the full data to the user computer's memory.
 
 
 # Session information
