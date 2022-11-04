@@ -45,11 +45,19 @@
 #'   While data can be stored in any SQL database, at present it is suggested
 #'   to use MySQL/MariaDB databases. For `dbcon` being a connection to a
 #'   MySQL/MariaDB database, the tables will use the *ARIA* engine providing
-#'   faster data access and will use table partitioning for `blob = FALSE`
-#'   (using by default 10 partitions). Note that, while inserting the data
-#'   takes a considerable amount of time, also the subsequent creation
-#'   of database indices can take very long (even longer than data insertion for
-#'   `blob = FALSE`).
+#'   faster data access and will use *table partitioning*: tables are splitted
+#'   into multiple partitions which can improve data insertion and index
+#'   generation. Partitioning can be defined with the parameters `partitionBy`
+#'   and `partitionNumber`. By default `partitionBy = "none"` no partitioning is
+#'   performed. For very large datasets it is suggested to enable table
+#'   partitioning by selecting either `partitionBy = "spectrum"` or
+#'   `partitionBy = "chunk"`. The first option assignes consecutive spectra
+#'   to different partitions while the latter puts spectra from files part of
+#'   the same *chunk* into the same partition. Both options have about the
+#'   same performance but `partitionBy = "spectrum"` requires less disk space.
+#'   Note that, while inserting the data takes a considerable amount of time,
+#'   also the subsequent creation of database indices can take very long (even
+#'   longer than data insertion for `blob = FALSE`).
 #'
 #' - `backendInitialize`: get access and initialize a `MsBackendSql` object.
 #'   Parameter `object` is supposed to be a `MsBackendSql` instance, created e.g.
@@ -203,6 +211,24 @@
 #'     to replace.
 #'
 #' @param object A `MsBackendSql` instance.
+#'
+#' @param partitionBy For `createMsBackendSqlDatabase`: `character(1)` defining
+#'     if and how the peak data table should be partitioned. `"none"` (default):
+#'     no partitioning, `"spectrum"`: peaks are assigned to the partition based
+#'     on the spectrum ID (number), i.e. spectra are evenly (consecutively)
+#'     assigned across partitions. For `partitionNumber = 3`, the first
+#'     spectrum is assigned to the first partition, the second to the second,
+#'     the third to the third and the fourth spectrum again to the first
+#'     partition. `"chunk"`: spectra processed as part of the same *chunk* are
+#'     placed into the same partition. All spectra from the next processed
+#'     chunk are assigned to the next partition. Note that this is only
+#'     available for MySQL/MariaDB databases, i.e., if `con` is a
+#'     `MariaDBConnection`.
+#'     See details for more information.
+#'
+#' @param partitionNumber For `createMsBackendSqlDatabase`: `integer(1)`
+#'     defining the number of partitions the database table will be partitioned
+#'     into (only supported for MySQL/MariaDB databases).
 #'
 #' @param ppm For `filterPrecursorMzValues`: `numeric` with the m/z-relative
 #'     maximal acceptable difference for a m/z value to be considered matching.

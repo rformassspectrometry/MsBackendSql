@@ -32,7 +32,9 @@ createMsBackendSqlDatabase(
   x = character(),
   backend = MsBackendMzR(),
   chunksize = 10L,
-  blob = TRUE
+  blob = TRUE,
+  partitionBy = c("none", "spectrum", "chunk"),
+  partitionNumber = 10L
 )
 
 \S4method{show}{MsBackendSql}(object)
@@ -95,6 +97,24 @@ memory.}
 m/z and intensity values should be stored separately (\code{blob = FALSE}) or
 if the m/z and intensity values for each spectrum should be stored as
 a single \emph{BLOB} SQL data type (\code{blob = TRUE}, the default).}
+
+\item{partitionBy}{For \code{createMsBackendSqlDatabase}: \code{character(1)} defining
+if and how the peak data table should be partitioned. \code{"none"} (default):
+no partitioning, \code{"spectrum"}: peaks are assigned to the partition based
+on the spectrum ID (number), i.e. spectra are evenly (consecutively)
+assigned across partitions. For \code{partitionNumber = 3}, the first
+spectrum is assigned to the first partition, the second to the second,
+the third to the third and the fourth spectrum again to the first
+partition. \code{"chunk"}: spectra processed as part of the same \emph{chunk} are
+placed into the same partition. All spectra from the next processed
+chunk are assigned to the next partition. Note that this is only
+available for MySQL/MariaDB databases, i.e., if \code{con} is a
+\code{MariaDBConnection}.
+See details for more information.}
+
+\item{partitionNumber}{For \code{createMsBackendSqlDatabase}: \code{integer(1)}
+defining the number of partitions the database table will be partitioned
+into (only supported for MySQL/MariaDB databases).}
 
 \item{object}{A \code{MsBackendSql} instance.}
 
@@ -189,11 +209,19 @@ allow to define custom (manual) SQL queries on individual peak values.
 While data can be stored in any SQL database, at present it is suggested
 to use MySQL/MariaDB databases. For \code{dbcon} being a connection to a
 MySQL/MariaDB database, the tables will use the \emph{ARIA} engine providing
-faster data access and will use table partitioning for \code{blob = FALSE}
-(using by default 10 partitions). Note that, while inserting the data
-takes a considerable amount of time, also the subsequent creation
-of database indices can take very long (even longer than data insertion for
-\code{blob = FALSE}).
+faster data access and will use \emph{table partitioning}: tables are splitted
+into multiple partitions which can improve data insertion and index
+generation. Partitioning can be defined with the parameters \code{partitionBy}
+and \code{partitionNumber}. By default \code{partitionBy = "none"} no partitioning is
+performed. For very large datasets it is suggested to enable table
+partitioning by selecting either \code{partitionBy = "spectrum"} or
+\code{partitionBy = "chunk"}. The first option assignes consecutive spectra
+to different partitions while the latter puts spectra from files part of
+the same \emph{chunk} into the same partition. Both options have about the
+same performance but \code{partitionBy = "spectrum"} requires less disk space.
+Note that, while inserting the data takes a considerable amount of time,
+also the subsequent creation of database indices can take very long (even
+longer than data insertion for \code{blob = FALSE}).
 \item \code{backendInitialize}: get access and initialize a \code{MsBackendSql} object.
 Parameter \code{object} is supposed to be a \code{MsBackendSql} instance, created e.g.
 with \code{MsBackendSql()}. Parameter \code{dbcon} is expected to be a connection to
