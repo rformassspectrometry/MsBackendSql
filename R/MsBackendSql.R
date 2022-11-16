@@ -49,7 +49,8 @@
 #'   into multiple partitions which can improve data insertion and index
 #'   generation. Partitioning can be defined with the parameters `partitionBy`
 #'   and `partitionNumber`. By default `partitionBy = "none"` no partitioning is
-#'   performed. For very large datasets it is suggested to enable table
+#'   performed. For `blob = TRUE` partitioning is usually not required. Only for
+#'   `blob = FALSE ` and very large datasets it is suggested to enable table
 #'   partitioning by selecting either `partitionBy = "spectrum"` or
 #'   `partitionBy = "chunk"`. The first option assignes consecutive spectra
 #'   to different partitions while the latter puts spectra from files part of

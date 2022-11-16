@@ -213,7 +213,8 @@ faster data access and will use \emph{table partitioning}: tables are splitted
 into multiple partitions which can improve data insertion and index
 generation. Partitioning can be defined with the parameters \code{partitionBy}
 and \code{partitionNumber}. By default \code{partitionBy = "none"} no partitioning is
-performed. For very large datasets it is suggested to enable table
+performed. For \code{blob = TRUE} partitioning is usually not required. Only for
+\code{blob = FALSE } and very large datasets it is suggested to enable table
 partitioning by selecting either \code{partitionBy = "spectrum"} or
 \code{partitionBy = "chunk"}. The first option assignes consecutive spectra
 to different partitions while the latter puts spectra from files part of
