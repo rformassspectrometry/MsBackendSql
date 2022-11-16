@@ -1,0 +1,263 @@
+---
+title: "Storing Mass Spectrometry Data in SQL Databases"
+output:
+    BiocStyle::html_document:
+        toc_float: true
+vignette: >
+    %\VignetteIndexEntry{Storing Mass Spectrometry Data in SQL Databases}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+    %\VignettePackage{MsBackendSql}
+    %\VignetteDepends{MsBackendSql,BiocStyle,RSQLite,msdata,microbenchmark}
+---
+
+```{r style, echo = FALSE, results = 'asis', message=FALSE}
+BiocStyle::markdown()
+```
+
+**Package**: `r Biocpkg("MsBackendSql")`<br />
+**Authors**: `r packageDescription("MsBackendSql")[["Author"]] `<br />
+**Compiled**: `r date()`
+
+```{r, echo = FALSE, message = FALSE}
+library(MsBackendSql)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+library(BiocStyle)
+```
+
+# Introduction
+
+The `r Biocpkg("Spectra")` Bioconductor package provides a flexible and
+expandable infrastructure for Mass Spectrometry (MS) data. The package supports
+interchangeable use of different *backends* that provide additional file support
+or different ways to store and represent MS data. The
+`r Biocpkg("MsBackendSql")` package provides a backend to store data from whole
+MS experiments in SQL databases. The data in such databases can be easily (and
+efficiently) accessed using `Spectra` objects that use the `MsBackendSql` class
+as an interface to the data in the database. Such `Spectra` objects have a
+minimal memory footprint and hence allow analysis of very large data sets even
+on computers with limited hardware capabilities. For certain operations, the
+performance of this data representation is superior to that of other low-memory
+(*on-disk*) data representations such as `Spectra`'s `MsBackendMzR` backend.
+Finally, the `MsBackendSql` supports also remote data access to e.g. a central
+database server hosting several large MS data sets.
+
+
+# Installation
+
+The package can be installed with the `BiocManager` package. To install
+`BiocManager` use `install.packages("BiocManager")` and, after that,
+`BiocManager::install("MsBackendSql")` to install this package.
+
+
+# Creating `MsBackendSql` SQL databases
+
+The `r Biocpkg("MsBackendSql")` provides, with `createMsBackendSqlDatabase`, a
+function to import (raw) MS data and store it to an SQL database. This function
+takes a connection to an (empty) database and the names of the files from which
+the data should be imported as input parameters and stores the full data into
+the database. Below we create an empty SQLite database (in a temporary file) and
+fill that with MS data from two mzML files (from the `r Biocpkg("msdata")`
+package).
+
+```{r, message = FALSE, results = "hide"}
+library(RSQLite)
+
+dbfile <- tempfile()
+con <- dbConnect(SQLite(), dbfile)
+
+library(MsBackendSql)
+fls <- dir(system.file("sciex", package = "msdata"), full.names = TRUE)
+createMsBackendSqlDatabase(con, fls)
+```
+
+By default the m/z and intensity values are stored as *BLOB* data types in the
+database. This has advantages on the performance to extract peaks data from the
+database but would for example not allow to filter peaks by m/z values directly
+in the database. As an alternative it is also possible to the individual m/z and
+intensity values in separate rows of the database table. This *long table
+format* results however in considerably larger databases (with potentially
+poorer performance). Note also that the code and backend is optimized for
+MySQL/MariaDB databases by taking advantage of table partitioning and
+specialized table storage options. Any other SQL database server is however also
+supported (also portable, self-contained SQLite databases).
+
+We can now create a `Spectra` object by providing the connection to the database
+in the constructor call and specifying to use the `MsBackendSql` (provided by
+this package) as *backend* using the `source` parameter:
+
+```{r}
+sps <- Spectra(con, source = MsBackendSql())
+sps
+```
+
+Similar to any other `Spectra` object we can retrieve the available *spectra
+variables* using the `spectraVariables` function.
+
+```{r}
+spectraVariables(sps)
+```
+
+The MS peak data can be accessed using either the `mz`, `intensity` or
+`peaksData` functions. Below we extract the peaks matrix of the 5th spectrum and
+display the first 6 rows.
+
+```{r}
+peaksData(sps)[[5]] |>
+head()
+```
+
+All data (peaks data or spectra variables) are **always** retrieved on the fly
+from the database resulting thus in a minimal memory footprint for the `Spectra`
+object.
+
+```{r}
+print(object.size(sps), units = "KB")
+```
+
+The backend supports also adding additional spectra variables or changing their
+values. Below we add 10 seconds to the retention time of each spectrum.
+
+```{r}
+sps$rtime <- sps$rtime + 10
+```
+
+Such operations do however **not** change the data in the database (which is
+always considered read-only) but are cached locally within the backend object
+(in memory). The size in memory of the object is thus higher after changing that
+spectra variable.
+
+```{r}
+print(object.size(sps), units = "KB")
+```
+
+
+
+# Performance comparison with other backends
+
+The need to retrieve any spectra data on-the-fly from the database will have an
+impact on the performance of data access function of `Spectra` objects using the
+`MsBackendSql` backends. To evaluate its impact we next compare the performance
+of the `MsBackendSql` to other `Spectra` backends, specifically, the
+`MsBackendMzR` which is the default backend to read and represent raw MS data,
+and the `MsBackendMemory` backend that keeps all MS data in memory (and is thus
+not suggested for larger MS experiments). Similar to the `MsBackendMzR`, also
+the `MsBackendSql` keeps only a limited amount of data in memory. These
+*on-disk* backends need thus to retrieve spectra and MS peaks data on-the-fly
+from either the original raw data files (in the case of the `MsBackendMzR`) or
+from the SQL database (in the case of the `MsBackendSql`). The in-memory backend
+`MsBackendMemory` is supposed to provide the fastest data access since all data
+is kept in memory.
+
+Below we thus create `Spectra` objects from the same data but using the
+different backends.
+
+```{r}
+sps <- Spectra(con, source = MsBackendSql())
+sps_mzr <- Spectra(fls, source = MsBackendMzR())
+sps_im <- setBackend(sps_mzr, backend = MsBackendMemory())
+```
+
+At first we compare the memory footprint of the 3 backends.
+
+```{r}
+print(object.size(sps), units = "KB")
+print(object.size(sps_mzr), units = "KB")
+print(object.size(sps_im), units = "KB")
+```
+
+The `MsBackendSql` has the lowest memory footprint of all 3 backends because it
+does not keep any data in memory. The `MsBackendMzR` keeps all spectra
+variables, except the MS peaks data, in memory and has thus a larger size. The
+`MsBackendMemory` keeps all data (including the MS peaks data) in memory and has
+thus the largest size in memory.
+
+Next we compare the performance to extract the MS level for each spectrum from
+the 4 different `Spectra` objects.
+
+```{r}
+library(microbenchmark)
+microbenchmark(msLevel(sps),
+               msLevel(sps_mzr),
+               msLevel(sps_im))
+```
+
+Extracting MS levels is thus slowest for the `MsBackendSql`, which is not
+surprising because both other backends keep this data in memory while the
+`MsBackendSql` needs to retrieve it from the database.
+
+We next compare the performance to access the full peaks data from each
+`Spectra` object.
+
+```{r}
+microbenchmark(peaksData(sps),
+               peaksData(sps_mzr),
+               peaksData(sps_im), times = 10)
+```
+
+As expected, the `MsBackendMemory` has the fasted access to the full peaks
+data. The `MsBackendSql` outperforms however the `MsBackendMzR` providing faster
+access to the m/z and intensity values.
+
+We next compare the performance of subsetting operations.
+
+```{r}
+microbenchmark(filterRt(sps, rt = c(50, 100)),
+               filterRt(sps_mzr, rt = c(50, 100)),
+               filterRt(sps_im, rt = c(50, 100)))
+```
+
+The two *on-disk* backends `MsBackendSql` and `MsBackendMzR` show a comparable
+performance for this operation. This filtering does however involve also access
+to spectra variables (the retention time in this case). To evaluate the
+performance of a *pure* subsetting operation we first define the indices of 10
+random spectra and subset the `Spectra` objects to these.
+
+```{r}
+idx <- sample(seq_along(sps), 10)
+microbenchmark(sps[idx],
+               sps_mzr[idx],
+               sps_im[idx])
+```
+
+Here the `MsBackendSql` outperforms the other backends because it does not keep
+any data in memory and hence does not need to subset these. The two other
+backends need to subset the data they keep in memory which is in both cases a
+data frame with either a reduced set of spectra variables or the full MS data.
+
+At last we compare also the extraction of the peaks data from the such subset
+`Spectra` objects.
+
+```{r}
+sps_10 <- sps[idx]
+sps_mzr_10 <- sps_mzr[idx]
+sps_im_10 <- sps_im[idx]
+
+microbenchmark(peaksData(sps_10),
+               peaksData(sps_mzr_10),
+               peaksData(sps_im_10),
+               times = 10)
+```
+
+The `MsBackendSql` outperforms the `MsBackendMzR` while, not unexpectedly, the
+`MsBackendMemory` provides fasted access.
+
+
+# Summary
+
+The `MsBackendSql` provides an MS data representations and storage mode with a
+minimal memory footprint (in R) that is still comparably efficient for standard
+processing and subsetting operations. This backend is specifically useful for
+very large MS data sets, that could even be hosted on remote (MySQL/MariaDB)
+servers. A potential use case for this backend could thus be to set up a central
+storage place for MS experiments with data analysts connecting remotely to this
+server to perform initial data exploration and filtering. After subsetting to
+a smaller data set of interest, users could then retrieve/download this data by
+changing the backend to e.g. a `MsBackendMemory`, which would result in a *download* of the full data to the user computer's memory.
+
+
+# Session information
+
+```{r}
+sessionInfo()
+```

@@ -1,8 +1,8 @@
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
-#' @export MsqlBackend
-MsqlBackend <- function() {
-    new("MsqlBackend")
+#' @export MsBackendSql
+MsBackendSql <- function() {
+    new("MsBackendSql")
 }
 
 #' @importFrom DBI dbListTables
@@ -139,7 +139,7 @@ MsqlBackend <- function() {
 
 #' Get columns from the msms_spectrum_peak database table (dropping spectrum_id)
 #'
-#' @param x `MsqlBackend`
+#' @param x `MsBackendSql`
 #'
 #' @noRd
 .available_peaks_variables <- function(x) {
@@ -184,7 +184,8 @@ MsqlBackend <- function() {
     suppressWarnings(res <- dbExecute(con, sql_b))
 }
 
-.initialize_tables_blob <- function(con, cols, ...) {
+.initialize_tables_blob <- function(con, cols, partitionBy = "none",
+                                    partitionNumber = 10) {
     sql_a <- paste0("CREATE TABLE msms_spectrum (",
                     paste(names(cols), cols, collapse = ", "),
                     ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
@@ -193,7 +194,17 @@ MsqlBackend <- function() {
     ## MySQL/MariaDB supports partitioning
     if (inherits(con, "MariaDBConnection")) {
         sql_a <- paste0(sql_a, " ENGINE=ARIA;")
-        sql_b <- paste0(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
+        if (partitionBy == "none")
+            sql_b <- paste0(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
+        if (partitionBy == "spectrum")
+            sql_b <- paste0(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
+                            "PARTITION BY HASH (spectrum_id_) PARTITIONS ",
+                            partitionNumber, ";")
+        if (partitionBy == "chunk")
+            sql_b <- paste0(sql_b, ", partition_ SMALLINT, ",
+                            "PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
+                            "PARTITION BY HASH (partition_) PARTITIONS ",
+                            partitionNumber, ";")
     } else
         sql_b <- paste0(sql_b, ");")
     suppressWarnings(res <- dbExecute(con, sql_a))
@@ -331,7 +342,9 @@ MsqlBackend <- function() {
 #'     fourth spectrum again to the first partition. `"chunk"`:
 #'     spectra processed as part of the same *chunk* are placed into the same
 #'     partition. All spectra from the next processed chunk are assigned to the
-#'     next partition. See details for more information.
+#'     next partition. Note that this is only available for MySQL/MariaDB
+#'     databases, i.e., if `con` is a `MariaDBConnection`.
+#'     See details for more information.
 #'
 #' @param partitionNumber `integer(1)` defining the number of partitions the
 #'     database table will be partitioned into (only supported for MySQL/MariaDB
@@ -345,8 +358,7 @@ MsqlBackend <- function() {
 #'     imported.
 #'
 #' @param blob `logical(1)` whether m/z and intensity values should be stored
-#'     as BLOB in the database. If `TRUE` `partitionBy` and `partitionNumber`
-#'     are ignored.
+#'     as BLOB in the database.
 #'
 #' @importFrom progress progress_bar
 #'
@@ -366,7 +378,7 @@ MsqlBackend <- function() {
         cols <- vapply(spd, function(z) dbDataType(con, z), character(1))
     else cols <- dbDataType(con, spd)
     if (blob) {
-        .initialize_tables_blob(con, cols)
+        .initialize_tables_blob(con, cols, partitionBy, partitionNumber)
         peak_table <- "msms_spectrum_peak_blob"
     } else {
         .initialize_tables(con, cols, partitionBy, partitionNumber)
@@ -392,7 +404,7 @@ MsqlBackend <- function() {
     for (i in seq_along(chunks)) {
         be <- backendInitialize(backend, x[chunks[[i]]], BPPARAM = bpparam())
         if (blob)
-            index <- .insert_backend_blob(con, be, index = index, partitionBy,i)
+            index <- .insert_backend_blob(con, be, index = index)
         else
             index <- .insert_backend(con, be, index = index, partitionBy, i)
         rm(be)
@@ -428,19 +440,25 @@ MsqlBackend <- function() {
     message(" Done")
 }
 
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
 #' @importFrom Spectra MsBackendMzR
 #'
 #' @export
-createMsqlBackendDatabase <- function(dbcon, x = character(),
-                                      backend = MsBackendMzR(),
-                                      chunksize = 10L, blob = TRUE) {
+createMsBackendSqlDatabase <- function(dbcon, x = character(),
+                                       backend = MsBackendMzR(),
+                                       chunksize = 10L, blob = TRUE,
+                                       partitionBy = c("none", "spectrum",
+                                                       "chunk"),
+                                       partitionNumber = 10L) {
+    partitionBy <- match.arg(partitionBy)
     if (!length(x)) return(FALSE)
     if (!inherits(dbcon, "DBIConnection"))
         stop("'dbcon' needs to be a valid connection to a database.")
     .insert_data(dbcon, x, backend, chunksize = chunksize,
-                 partitionBy = "spectrum", blob = blob)
+                 partitionBy = partitionBy,
+                 partitionNumber = partitionNumber[1L],
+                 blob = blob)
     TRUE
 }
 

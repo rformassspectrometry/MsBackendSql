@@ -1,12 +1,23 @@
-# MsqlBackend 0.1
+# MsBackendSql 0.98
+
+## Changes in 0.98.1
+
+- Rename `MsqlBackend` to `MsBackendSql`.
+
+## Changes in 0.98.0
+
+- Add vignette.
+
+
+# MsBackendSql 0.1
 
 ## Changes in 0.1.0
 
 - Add parameter `blob` to allow storing m/z and intensity values as *BLOB* data
-  type in the database. `MsqlBackend` will use different functions to retrieve
+  type in the database. `MsBackendSql` will use different functions to retrieve
   data from a database with this type of storage.
 
-# MsqlBackend 0.0
+# MsBackendSql 0.0
 
 ## Changes in 0.0.5
 
@@ -27,4 +38,4 @@
 
 ## Changes in 0.0.2
 
-- First full implementation of `MsqlBackend`.
+- First full implementation of `MsBackendSql`.

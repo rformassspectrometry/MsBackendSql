@@ -1,17 +1,17 @@
 #' @title `Spectra` MS backend storing data in a SQL database
 #'
-#' @aliases MsqlBackend-class
+#' @aliases MsBackendSql-class
 #'
 #' @description
 #'
-#' The `MsqlBackend` is an implementation for the [MsBackend()] class for
+#' The `MsBackendSql` is an implementation for the [MsBackend()] class for
 #' [Spectra()] objects which stores and retrieves MS data from a SQL database.
 #' New databases can be created from raw MS data files using
-#' `createMsqlBackendDatabase`.
+#' `createMsBackendSqlDatabase`.
 #'
 #' @details
 #'
-#' The `MsqlBackend` class is in principle a *read-only* backend but by
+#' The `MsBackendSql` class is in principle a *read-only* backend but by
 #' extending the [MsBackendCached()] backend from the `Spectra` package it
 #' allows changing and adding (**temporarily**) spectra variables **without**
 #' changing the original data in the SQL database.
@@ -19,12 +19,12 @@
 #' @section Creation of backend objects:
 #'
 #' SQL databases can be created and filled with MS data from raw data files
-#' using the `createMsqlBackendDatabase` function. Existing SQL databases
-#' (created previously with `createMsqlBackendDatabase` can be loaded using
+#' using the `createMsBackendSqlDatabase` function. Existing SQL databases
+#' (created previously with `createMsBackendSqlDatabase` can be loaded using
 #' the conventional way to create/initialize `MsBackend` classes, i.e. using
 #' `backendInitialize`.
 #'
-#' - `createMsqlBackendDatabase`: create a database and fill it with MS data.
+#' - `createMsBackendSqlDatabase`: create a database and fill it with MS data.
 #'   Parameter `dbcon` is expected to be a database connection, parameter `x` a
 #'   `character` vector with the file names from which to import the data.
 #'   Parameter `backend` is used for the actual data import and defaults to
@@ -45,30 +45,39 @@
 #'   While data can be stored in any SQL database, at present it is suggested
 #'   to use MySQL/MariaDB databases. For `dbcon` being a connection to a
 #'   MySQL/MariaDB database, the tables will use the *ARIA* engine providing
-#'   faster data access and will use table partitioning for `blob = FALSE`
-#'   (using by default 10 partitions). Note that, while inserting the data
-#'   takes a considerable amount of time, also the subsequent creation
-#'   of database indices can take very long (even longer than data insertion for
-#'   `blob = FALSE`).
+#'   faster data access and will use *table partitioning*: tables are splitted
+#'   into multiple partitions which can improve data insertion and index
+#'   generation. Partitioning can be defined with the parameters `partitionBy`
+#'   and `partitionNumber`. By default `partitionBy = "none"` no partitioning is
+#'   performed. For `blob = TRUE` partitioning is usually not required. Only for
+#'   `blob = FALSE ` and very large datasets it is suggested to enable table
+#'   partitioning by selecting either `partitionBy = "spectrum"` or
+#'   `partitionBy = "chunk"`. The first option assignes consecutive spectra
+#'   to different partitions while the latter puts spectra from files part of
+#'   the same *chunk* into the same partition. Both options have about the
+#'   same performance but `partitionBy = "spectrum"` requires less disk space.
+#'   Note that, while inserting the data takes a considerable amount of time,
+#'   also the subsequent creation of database indices can take very long (even
+#'   longer than data insertion for `blob = FALSE`).
 #'
-#' - `backendInitialize`: get access and initialize a `MsqlBackend` object.
-#'   Parameter `object` is supposed to be a `MsqlBackend` instance, created e.g.
-#'   with `MsqlBackend()`. Parameter `dbcon` is expected to be a connection to
-#'   a SQL database previously created with the `createMsqlBackendDatabase`
+#' - `backendInitialize`: get access and initialize a `MsBackendSql` object.
+#'   Parameter `object` is supposed to be a `MsBackendSql` instance, created e.g.
+#'   with `MsBackendSql()`. Parameter `dbcon` is expected to be a connection to
+#'   a SQL database previously created with the `createMsBackendSqlDatabase`
 #'   function.
 #'
 #' @section Subsetting and filtering data:
 #'
-#' `MsqlBackend` objects can be subsetted using the `[` function. Internally,
+#' `MsBackendSql` objects can be subsetted using the `[` function. Internally,
 #' this will simply subset the `integer` vector of the primary keys and
 #' eventually cached data. The original data in the database **is not** affected
 #' by any subsetting operation. Any subsetting operation can be *undone* by
 #' resetting the object with the `reset` function. Subsetting in arbitrary
 #' order as well as index replication is supported.
 #'
-#' In addition, `MsqlBackend` supports all other filtering methods available
+#' In addition, `MsBackendSql` supports all other filtering methods available
 #' through [MsBackendCached()]. Implementation of filter functions optimized
-#' for `MsqlBackend` objects are:
+#' for `MsBackendSql` objects are:
 #'
 #' - `filterDataOrigin`: filter the object retaining spectra with `dataOrigin`
 #'   spectra variable values matching the provided ones with parameter
@@ -98,8 +107,8 @@
 #'
 #' @section Accessing and *modifying* data:
 #'
-#' The functions listed here are specifically implemented for `MsqlBackend`. In
-#' addition, `MsqlBackend` inherits and supports all data accessor, filtering
+#' The functions listed here are specifically implemented for `MsBackendSql`. In
+#' addition, `MsBackendSql` inherits and supports all data accessor, filtering
 #' functions and data manipulation functions from [MsBackendCached()].
 #'
 #' - `$`, `$<-`: access or set (add) spectra variables in `object`. Spectra
@@ -123,7 +132,7 @@
 #' - `peaksVariables`: returns a `character` with the available peak variables,
 #'   i.e. columns that could be queried with `peaksData`.
 #'
-#' - `reset`: *restores* an `MsqlBackend` by re-initializing it with the data
+#' - `reset`: *restores* an `MsBackendSql` by re-initializing it with the data
 #'   from the database. Any subsetting or cached spectra variables will be lost.
 #'
 #' - `spectraData`: gets or general spectrum metadata.  `spectraData` returns
@@ -135,30 +144,32 @@
 #'   the database (converted to `character`). Replacing spectra names with
 #'   `spectraNames<-` is not supported.
 #'
+#' - `uniqueMsLevels`: returns the unique MS levels of all spectra in `object`.
+#'
 #' @section Implementation notes:
 #'
-#' Internally, the `MsqlBackend` class contains only the primary keys for all
+#' Internally, the `MsBackendSql` class contains only the primary keys for all
 #' spectra stored in the SQL database. Keeping only these `integer` in memory
 #' guarantees a minimal memory footpring of the object. Still, depending of the
 #' number of spectra in the database, this `integer` vector might become very
 #' large. Any data access will involve SQL calls to retrieve the data from the
 #' database. By extending the [MsBackendCached()] object from the `Spectra`
-#' package, the `MsqlBackend` supports to (temporarily, i.e. for the duration
+#' package, the `MsBackendSql` supports to (temporarily, i.e. for the duration
 #' of the R session) add or modify spectra variables. These are however stored
 #' in a `data.frame` within the object thus increasing the memory demand of the
 #' object.
 #'
 #' @param dbcon Connection to a database.
 #'
-#' @param backend For `createMsqlBackendDatabase`: MS backend that can be used
+#' @param backend For `createMsBackendSqlDatabase`: MS backend that can be used
 #'     to import MS data from the raw files specified with parameter `x`.
 #'
-#' @param blob For `createMsqlBackendDatabase`: `logical(1)` whether individual
+#' @param blob For `createMsBackendSqlDatabase`: `logical(1)` whether individual
 #'     m/z and intensity values should be stored separately (`blob = FALSE`) or
 #'     if the m/z and intensity values for each spectrum should be stored as
 #'     a single *BLOB* SQL data type (`blob = TRUE`, the default).
 #'
-#' @param chunksize For `createMsqlBackendDatabase`: `integer(1)` defining the
+#' @param chunksize For `createMsBackendSqlDatabase`: `integer(1)` defining the
 #'     number of input that should be processed per iteration. With
 #'     `chunksize = 1` each file specified with `x` will be imported and its
 #'     data inserted to the database. With `chunksize = 5` data from 5 files
@@ -200,7 +211,25 @@
 #' @param name For `<-`: `character(1)` with the name of the spectra variable
 #'     to replace.
 #'
-#' @param object A `MsqlBackend` instance.
+#' @param object A `MsBackendSql` instance.
+#'
+#' @param partitionBy For `createMsBackendSqlDatabase`: `character(1)` defining
+#'     if and how the peak data table should be partitioned. `"none"` (default):
+#'     no partitioning, `"spectrum"`: peaks are assigned to the partition based
+#'     on the spectrum ID (number), i.e. spectra are evenly (consecutively)
+#'     assigned across partitions. For `partitionNumber = 3`, the first
+#'     spectrum is assigned to the first partition, the second to the second,
+#'     the third to the third and the fourth spectrum again to the first
+#'     partition. `"chunk"`: spectra processed as part of the same *chunk* are
+#'     placed into the same partition. All spectra from the next processed
+#'     chunk are assigned to the next partition. Note that this is only
+#'     available for MySQL/MariaDB databases, i.e., if `con` is a
+#'     `MariaDBConnection`.
+#'     See details for more information.
+#'
+#' @param partitionNumber For `createMsBackendSqlDatabase`: `integer(1)`
+#'     defining the number of partitions the database table will be partitioned
+#'     into (only supported for MySQL/MariaDB databases).
 #'
 #' @param ppm For `filterPrecursorMzValues`: `numeric` with the m/z-relative
 #'     maximal acceptable difference for a m/z value to be considered matching.
@@ -216,13 +245,13 @@
 #'
 #' @param value For all setter methods: replacement value.
 #'
-#' @param x For `createMsqlBackendDatabase`: `character` with the names of the
+#' @param x For `createMsBackendSqlDatabase`: `character` with the names of the
 #'     raw data files from which the data should be imported. For other methods
 #'     an `MsqlBaackend` instance.
 #'
 #' @param ... For `[`: ignored.
 #'
-#' @name MsqlBackend
+#' @name MsBackendSql
 #'
 #' @return See documentation of respective function.
 #'
@@ -230,12 +259,12 @@
 #'
 #' @md
 #'
-#' @exportClass MsqlBackend
+#' @exportClass MsBackendSql
 #'
 #' @examples
 #'
 #' ####
-#' ## Create a new MsqlBackend database
+#' ## Create a new MsBackendSql database
 #'
 #' ## Define a file from which to import the data
 #' data_file <- system.file("microtofq", "MM8.mzML", package = "msdata")
@@ -246,12 +275,12 @@
 #' dbc <- dbConnect(SQLite(), db_file)
 #'
 #' ## Import the data from the file into the database
-#' createMsqlBackendDatabase(dbc, data_file)
+#' createMsBackendSqlDatabase(dbc, data_file)
 #' dbDisconnect(dbc)
 #'
-#' ## Initialize a MsqlBackend
+#' ## Initialize a MsBackendSql
 #' dbc <- dbConnect(SQLite(), db_file)
-#' be <- backendInitialize(MsqlBackend(), dbc)
+#' be <- backendInitialize(MsBackendSql(), dbc)
 #'
 #' be
 #'
@@ -295,7 +324,7 @@ setClassUnion("DBIConnectionOrNULL", c("DBIConnection", "NULL"))
 #'
 #' @importClassesFrom Spectra MsBackendCached
 setClass(
-    "MsqlBackend",
+    "MsBackendSql",
     contains = "MsBackendCached",
     slots = c(
         dbcon = "DBIConnectionOrNULL",
@@ -312,7 +341,7 @@ setClass(
 #' @importFrom methods .valueClassTest is new validObject
 #'
 #' @noRd
-setValidity("MsqlBackend", function(object) {
+setValidity("MsBackendSql", function(object) {
     msg <- .valid_dbcon(object@dbcon)
     if (is.null(msg)) TRUE
     else msg
@@ -322,8 +351,8 @@ setValidity("MsqlBackend", function(object) {
 #'
 #' @exportMethod show
 #'
-#' @rdname MsqlBackend
-setMethod("show", "MsqlBackend", function(object) {
+#' @rdname MsBackendSql
+setMethod("show", "MsBackendSql", function(object) {
     callNextMethod()
     if (!is.null(.dbcon(object))) {
         info <- dbGetInfo(.dbcon(object))
@@ -337,11 +366,11 @@ setMethod("show", "MsqlBackend", function(object) {
 #'
 #' @importFrom DBI dbGetQuery
 #'
-#' @rdname MsqlBackend
-setMethod("backendInitialize", "MsqlBackend",
+#' @rdname MsBackendSql
+setMethod("backendInitialize", "MsBackendSql",
           function(object, dbcon, ...) {
     if (missing(dbcon))
-        stop("Parameter 'dbcon' is required for 'MsqlBackend'")
+        stop("Parameter 'dbcon' is required for 'MsBackendSql'")
     msg <- .valid_dbcon(dbcon)
     if (length(msg)) stop(msg)
     object@dbcon <- dbcon
@@ -369,8 +398,8 @@ setMethod("backendInitialize", "MsqlBackend",
 #'
 #' @importFrom DBI dbGetInfo
 #'
-#' @rdname MsqlBackend
-setMethod("dataStorage", "MsqlBackend", function(object) {
+#' @rdname MsBackendSql
+setMethod("dataStorage", "MsBackendSql", function(object) {
     if (!is.null(.dbcon(object))) {
         info <- dbGetInfo(.dbcon(object))
         rep(info$dbname, length(object))
@@ -385,8 +414,8 @@ setMethod("dataStorage", "MsqlBackend", function(object) {
 #'
 #' @importFrom S4Vectors extractROWS
 #'
-#' @rdname MsqlBackend
-setMethod("[", "MsqlBackend", function(x, i, j, ..., drop = FALSE) {
+#' @rdname MsBackendSql
+setMethod("[", "MsBackendSql", function(x, i, j, ..., drop = FALSE) {
     if (missing(i))
         return(x)
     i <- i2index(i, length(x), x@spectraIds)
@@ -399,9 +428,9 @@ setMethod("[", "MsqlBackend", function(x, i, j, ..., drop = FALSE) {
 #'
 #' @exportMethod peaksData
 #'
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 setMethod(
-    "peaksData", "MsqlBackend",
+    "peaksData", "MsBackendSql",
     function(object, columns = c("mz", "intensity")) {
         pks <- object@peak_fun(object, columns)
         if (is.list(pks$mz) | is.list(pks$intensity)) {
@@ -425,16 +454,16 @@ setMethod(
 #'
 #' @exportMethod peaksVariables
 #'
-#' @rdname MsqlBackend
-setMethod("peaksVariables", "MsqlBackend",
+#' @rdname MsBackendSql
+setMethod("peaksVariables", "MsBackendSql",
           function(object) .available_peaks_variables(object))
 
 #' @exportMethod intensity<-
 #'
 #' @importMethodsFrom ProtGenerics intensity<-
 #'
-#' @rdname MsqlBackend
-setReplaceMethod("intensity", "MsqlBackend", function(object, value) {
+#' @rdname MsBackendSql
+setReplaceMethod("intensity", "MsBackendSql", function(object, value) {
     stop("Can not replace original intensity values in the database.")
 })
 
@@ -442,15 +471,15 @@ setReplaceMethod("intensity", "MsqlBackend", function(object, value) {
 #'
 #' @importMethodsFrom ProtGenerics mz<-
 #'
-#' @rdname MsqlBackend
-setReplaceMethod("mz", "MsqlBackend", function(object, value) {
+#' @rdname MsBackendSql
+setReplaceMethod("mz", "MsBackendSql", function(object, value) {
     stop("Can not replace original data  in the database.")
 })
 
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
 #' @export
-setReplaceMethod("$", "MsqlBackend", function(x, name, value) {
+setReplaceMethod("$", "MsBackendSql", function(x, name, value) {
     if (name %in% c("spectrum_id_"))
         stop("Spectra IDs can not be changed.", call. = FALSE)
     callNextMethod()
@@ -460,8 +489,8 @@ setReplaceMethod("$", "MsqlBackend", function(x, name, value) {
 #'
 #' @exportMethod spectraData
 #'
-#' @rdname MsqlBackend
-setMethod("spectraData", "MsqlBackend",
+#' @rdname MsBackendSql
+setMethod("spectraData", "MsBackendSql",
           function(object, columns = spectraVariables(object)) {
               .spectra_data_sql(object, columns = columns)
           })
@@ -470,11 +499,11 @@ setMethod("spectraData", "MsqlBackend",
 #'
 #' @importMethodsFrom Spectra reset
 #'
-#' @rdname MsqlBackend
-setMethod("reset", "MsqlBackend", function(object) {
+#' @rdname MsBackendSql
+setMethod("reset", "MsBackendSql", function(object) {
     message("Restoring original data ...", appendLF = FALSE)
     if (is(object@dbcon, "DBIConnection"))
-        object <- backendInitialize(MsqlBackend(), object@dbcon)
+        object <- backendInitialize(MsBackendSql(), object@dbcon)
     message("DONE")
     object
 })
@@ -483,8 +512,8 @@ setMethod("reset", "MsqlBackend", function(object) {
 #'
 #' @importMethodsFrom ProtGenerics spectraNames
 #'
-#' @rdname MsqlBackend
-setMethod("spectraNames", "MsqlBackend", function(object) {
+#' @rdname MsBackendSql
+setMethod("spectraNames", "MsBackendSql", function(object) {
     as.character(object@spectraIds)
 })
 
@@ -492,21 +521,21 @@ setMethod("spectraNames", "MsqlBackend", function(object) {
 #'
 #' @importMethodsFrom ProtGenerics spectraNames<-
 #'
-#' @rdname MsqlBackend
-setReplaceMethod("spectraNames", "MsqlBackend",
+#' @rdname MsBackendSql
+setReplaceMethod("spectraNames", "MsBackendSql",
                  function(object, value) {
                      stop(class(object)[1],
                           " does not support replacing spectra names (IDs).")
 })
 
-#' @importMethodsFrom Spectra filterMsLevel
+#' @importMethodsFrom Spectra filterMsLevel uniqueMsLevels
 #'
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
 #' @exportMethod filterMsLevel
 setMethod(
-    "filterMsLevel", "MsqlBackend",
-    function(object, msLevel = integer()) {
+    "filterMsLevel", "MsBackendSql",
+    function(object, msLevel = uniqueMsLevels(object)) {
         if (!length(msLevel))
             return(object)
         if(.has_local_variable(object, "msLevel"))
@@ -520,10 +549,10 @@ setMethod(
 
 #' @importMethodsFrom Spectra filterRt
 #'
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
 #' @exportMethod filterRt
-setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
+setMethod("filterRt", "MsBackendSql", function(object, rt = numeric(),
                                               msLevel. = integer()) {
     if (!length(rt))
         return(object)
@@ -548,10 +577,10 @@ setMethod("filterRt", "MsqlBackend", function(object, rt = numeric(),
 
 #' @importMethodsFrom Spectra filterDataOrigin dataOrigin
 #'
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
 #' @exportMethod filterDataOrigin
-setMethod("filterDataOrigin", "MsqlBackend", function(object,
+setMethod("filterDataOrigin", "MsBackendSql", function(object,
                                                       dataOrigin = character()){
     if (!length(dataOrigin))
         return(object)
@@ -570,10 +599,10 @@ setMethod("filterDataOrigin", "MsqlBackend", function(object,
 
 #' @importMethodsFrom Spectra filterPrecursorMzRange
 #'
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
 #' @exportMethod filterPrecursorMzRange
-setMethod("filterPrecursorMzRange", "MsqlBackend", function(object,
+setMethod("filterPrecursorMzRange", "MsBackendSql", function(object,
                                                             mz = numeric()) {
     if (length(mz)) {
         if (.has_local_variable(object, "precursorMz"))
@@ -589,11 +618,11 @@ setMethod("filterPrecursorMzRange", "MsqlBackend", function(object,
 
 #' @importMethodsFrom Spectra filterPrecursorMzValues
 #'
-#' @rdname MsqlBackend
+#' @rdname MsBackendSql
 #'
 #' @exportMethod filterPrecursorMzValues
 setMethod(
-    "filterPrecursorMzValues", "MsqlBackend",
+    "filterPrecursorMzValues", "MsBackendSql",
     function(object, mz = numeric(), ppm = 20, tolerance = 0) {
         if (length(mz)) {
             if (.has_local_variable(object, "precursorMz"))
@@ -606,3 +635,13 @@ setMethod(
             }
         } else object
     })
+
+#' @rdname MsBackendSql
+#'
+#' @exportMethod uniqueMsLevels
+setMethod("uniqueMsLevels", "MsBackendSql", function(object, ...) {
+    if (!is.null(.dbcon(object))) {
+        dbGetQuery(.dbcon(object),
+                   "select distinct msLevel from msms_spectrum")[, "msLevel"]
+    } else integer()
+})
