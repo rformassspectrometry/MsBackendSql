@@ -132,7 +132,6 @@ print(object.size(sps), units = "KB")
 ```
 
 
-
 # Performance comparison with other backends
 
 The need to retrieve any spectra data on-the-fly from the database will have an
@@ -243,6 +242,26 @@ The `MsBackendSql` outperforms the `MsBackendMzR` while, not unexpectedly, the
 `MsBackendMemory` provides fasted access.
 
 
+# Other properties of the `MsBackendSql`
+
+The `MsBackendSql` backend does not support parallel processing since the
+database connection can not be shared across the different parallel
+processes. Thus, it is suggested to either disable parallel processing in
+general in the R session with `register(SerialParam())` or to pass the parameter
+`BPPARAM = SerialParam()` to functions such as `peaksData`.
+
+Some functions on `Spectra` objects require to load the MS peak data (i.e., m/z
+and intensity values) into memory. For very large data sets (or computers with
+limited hardware resources) such function calls can cause out-of-memory
+errors. One example is the `lengths` function that determines the number of
+peaks per spectrum by loading the peak matrix first into memory. Such functions
+should ideally be called using the `peaksapply` function with parameter
+`chunkSize` (e.g., `peaksapply(sps, lengths, chunkSize = 5000L)`). Instead of
+processing the full data set, the data will be first split into chunks of size
+`chunkSize` that are stepwise processed. Hence, only data from `chunkSize`
+spectra is loaded into memory in one iteration.
+
+
 # Summary
 
 The `MsBackendSql` provides an MS data representations and storage mode with a
@@ -251,9 +270,10 @@ processing and subsetting operations. This backend is specifically useful for
 very large MS data sets, that could even be hosted on remote (MySQL/MariaDB)
 servers. A potential use case for this backend could thus be to set up a central
 storage place for MS experiments with data analysts connecting remotely to this
-server to perform initial data exploration and filtering. After subsetting to
-a smaller data set of interest, users could then retrieve/download this data by
-changing the backend to e.g. a `MsBackendMemory`, which would result in a *download* of the full data to the user computer's memory.
+server to perform initial data exploration and filtering. After subsetting to a
+smaller data set of interest, users could then retrieve/download this data by
+changing the backend to e.g. a `MsBackendMemory`, which would result in a
+*download* of the full data to the user computer's memory.
 
 
 # Session information
