@@ -1,6 +1,7 @@
-pandoc: 2.17.1.1
-pkgdown: 2.0.5.9000
-pkgdown_sha: b4096aa376773d7dee98a267fd0b5a025975a3dc
-articles: {}
-last_built: 2022-07-06T14:33Z
+pandoc: 2.19.2
+pkgdown: 2.0.6.9000
+pkgdown_sha: d94fb41b1a1cd92b5b4e2d253aa4301e252702d6
+articles:
+  MsBackendSql: MsBackendSql.html
+last_built: 2022-11-22T15:11Z
 
