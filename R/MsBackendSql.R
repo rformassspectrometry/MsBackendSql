@@ -438,8 +438,10 @@ setMethod(
                                             list(FUN = base::cbind)))
             res[match(object@spectraIds, pks$spectrum_id_)]
         } else {
-            f <- as.factor(pks$spectrum_id_)        # using levels does not work because we can have duplicates
-            pks <- unname(split.data.frame(pks, f)[as.character(object@spectraIds)])
+            f <- as.factor(pks$spectrum_id_)
+            ## using levels does not work because we can have duplicates
+            pks <- unname(
+                split.data.frame(pks, f)[as.character(object@spectraIds)])
             idx <- seq_along(columns) + 1
             lapply(pks, function(z) {
                 if (length(z) && nrow(z))

@@ -1,3 +1,10 @@
+# MsBackendSql 0.99
+
+## Changes in 0.99.0
+
+- Prepare the package for submission to Bioconductor.
+
+
 # MsBackendSql 0.98
 
 ## Changes in 0.98.1
