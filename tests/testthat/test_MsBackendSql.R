@@ -242,3 +242,23 @@ test_that("uniqueMsLevels,MsBackendSql works", {
     expect_equal(uniqueMsLevels(tmt_be), unique(msLevel(tmt_be)))
     expect_equal(uniqueMsLevels(MsBackendSql()), integer())
 })
+
+test_that("backendMerge,MsBackendSql works", {
+    empty <- mm8_be[integer()]
+    res <- backendMerge(empty)
+    expect_equal(res, empty)
+
+    spl <- split(mm8_be[1:10], 1:10)
+    spl[[5]] <- empty
+
+    mm8_sub <- mm8_be[c(1, 2,3, 4, 6, 7, 8, 9, 10)]
+    res <- backendMerge(spl)
+    expect_s4_class(res, "MsBackendSql")
+    expect_true(length(res) == 9L)
+    expect_equal(rtime(res), rtime(mm8_sub))
+    expect_equal(mz(res), mz(mm8_sub))
+
+    spl[[2]]$other_var <- 2L
+    res <- backendMerge(spl)
+    expect_equal(res$other_var, c(NA, 2L, NA, NA, NA, NA, NA, NA, NA))
+})

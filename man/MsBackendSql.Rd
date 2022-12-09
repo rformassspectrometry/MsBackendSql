@@ -23,6 +23,7 @@
 \alias{filterPrecursorMzRange,MsBackendSql-method}
 \alias{filterPrecursorMzValues,MsBackendSql-method}
 \alias{uniqueMsLevels,MsBackendSql-method}
+\alias{backendMerge,MsBackendSql-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsBackendSql()
@@ -74,6 +75,8 @@ createMsBackendSqlDatabase(
 \S4method{filterPrecursorMzValues}{MsBackendSql}(object, mz = numeric(), ppm = 20, tolerance = 0)
 
 \S4method{uniqueMsLevels}{MsBackendSql}(object, ...)
+
+\S4method{backendMerge}{MsBackendSql}(object, ...)
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -231,7 +234,7 @@ function.
 }
 }
 
-\section{Subsetting and filtering data}{
+\section{Subsetting, merging and filtering data}{
 
 
 \code{MsBackendSql} objects can be subsetted using the \code{[} function. Internally,
@@ -240,6 +243,12 @@ eventually cached data. The original data in the database \strong{is not} affect
 by any subsetting operation. Any subsetting operation can be \emph{undone} by
 resetting the object with the \code{reset} function. Subsetting in arbitrary
 order as well as index replication is supported.
+
+Multiple \code{MsBackendSql} objects can also be merged (combined) with the
+\code{backendMerge} function. Note that this requires that all \code{MsBackendSql}
+objects are connected to the \strong{same} database. This function is thus
+mostly used for combining \code{MsBackendSql} objects that were previously
+splitted using e.g. \code{split}.
 
 In addition, \code{MsBackendSql} supports all other filtering methods available
 through \code{\link[=MsBackendCached]{MsBackendCached()}}. Implementation of filter functions optimized

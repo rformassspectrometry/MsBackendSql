@@ -494,3 +494,32 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
                       paste0(x@spectraIds, collapse = ","), ") and ")
     qry
 }
+
+#' @importFrom MsCoreUtils vapply1c rbindFill
+.combine <- function(objects) {
+    if (length(objects) == 1L)
+        return(objects[[1L]])
+    if (!all(vapply1c(objects, class) == class(objects[[1]])))
+        stop("Can only merge backends of the same type: ", class(objects[[1]]))
+    ids <- vapply(objects, .db_info_string, character(1))
+    if (length(unique(ids)) != 1L)
+        stop("Can only merge backends connected to the same database")
+    res <- objects[[1]]
+    res@spectraIds <- unname(
+        do.call(c, lapply(objects, function(z) z@spectraIds)))
+    ## merge slots of MsBackendCached.
+    res@localData <- do.call(
+        rbindFill, lapply(objects, function(z) z@localData))
+    if (!nrow(res@localData))
+        res@localData <- data.frame(row.names = seq_along(res@spectraIds))
+    res@spectraVariables <- unique(
+        unlist(lapply(objects, function(z) z@spectraVariables),
+               use.names = FALSE))
+    res@nspectra <- length(res@spectraIds)
+    res
+}
+
+#' @importFrom DBI dbGetInfo
+.db_info_string <- function(x) {
+    do.call(paste, dbGetInfo(.dbcon(x)))
+}

@@ -1,5 +1,9 @@
 # MsBackendSql 0.99
 
+## Changes in 0.99.
+
+- Add `backendMerge` method.
+
 ## Changes in 0.99.0
 
 - Prepare the package for submission to Bioconductor.

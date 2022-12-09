@@ -135,3 +135,16 @@ test_that(".precursor_mz_query works", {
                              " or precursorMz >= ", 5 - ppm(5, 100) - 0.1,
                              " and precursorMz <= ", 5 + ppm(5, 100) + 0.1))
 })
+
+test_that(".db_info_string works", {
+    res <-.db_info_string(mm8_be)
+    expect_true(is.character(res))
+    expect_true(length(res) == 1L)
+})
+
+test_that(".combine works", {
+    tmp <- split(mm8_be[1:10], 1:10)
+    res <- .combine(tmp)
+    expect_s4_class(res, "MsBackendSql")
+    expect_equal(mm8_be[1:10], res)
+})

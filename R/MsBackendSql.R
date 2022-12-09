@@ -66,7 +66,7 @@
 #'   a SQL database previously created with the `createMsBackendSqlDatabase`
 #'   function.
 #'
-#' @section Subsetting and filtering data:
+#' @section Subsetting, merging and filtering data:
 #'
 #' `MsBackendSql` objects can be subsetted using the `[` function. Internally,
 #' this will simply subset the `integer` vector of the primary keys and
@@ -74,6 +74,12 @@
 #' by any subsetting operation. Any subsetting operation can be *undone* by
 #' resetting the object with the `reset` function. Subsetting in arbitrary
 #' order as well as index replication is supported.
+#'
+#' Multiple `MsBackendSql` objects can also be merged (combined) with the
+#' `backendMerge` function. Note that this requires that all `MsBackendSql`
+#' objects are connected to the **same** database. This function is thus
+#' mostly used for combining `MsBackendSql` objects that were previously
+#' splitted using e.g. `split`.
 #'
 #' In addition, `MsBackendSql` supports all other filtering methods available
 #' through [MsBackendCached()]. Implementation of filter functions optimized
@@ -646,4 +652,19 @@ setMethod("uniqueMsLevels", "MsBackendSql", function(object, ...) {
         dbGetQuery(.dbcon(object),
                    "select distinct msLevel from msms_spectrum")[, "msLevel"]
     } else integer()
+})
+
+#' @rdname MsBackendSql
+#'
+#' @importMethodsFrom Spectra backendMerge
+#'
+#' @exportMethod backendMerge
+setMethod("backendMerge", "MsBackendSql", function(object, ...) {
+    object <- unname(c(object, ...))
+    not_empty <- lengths(object) > 0
+    if (any(not_empty))
+        res <- .combine(object[not_empty])
+    else res <- object[[1L]]
+    validObject(res)
+    res
 })
