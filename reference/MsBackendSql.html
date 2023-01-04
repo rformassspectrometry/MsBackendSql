@@ -20,7 +20,7 @@ createMsBackendSqlDatabase."><!-- mathjax --><script src="https://cdnjs.cloudfla
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">MsBackendSql</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.99.1</span>
       </span>
     </div>
 
@@ -139,53 +139,55 @@ uniqueMsLevels(object, ...)</code></pre></div>
 
 
 <dt>x</dt>
-<dd><p>For <code>createMsBackendSqlDatabase</code>: <code>character</code> with the names of the
-raw data files from which the data should be imported. For other methods
-an <code>MsqlBaackend</code> instance.</p></dd>
+<dd><p>For <code>createMsBackendSqlDatabase</code>: <code>character</code> with the names of
+the raw data files from which the data should be imported. For other
+methods an <code>MsqlBackend</code> instance.</p></dd>
 
 
 <dt>backend</dt>
-<dd><p>For <code>createMsBackendSqlDatabase</code>: MS backend that can be used
-to import MS data from the raw files specified with parameter <code>x</code>.</p></dd>
+<dd><p>For <code>createMsBackendSqlDatabase</code>: MS backend that can be
+used to import MS data from the raw files specified with
+parameter <code>x</code>.</p></dd>
 
 
 <dt>chunksize</dt>
-<dd><p>For <code>createMsBackendSqlDatabase</code>: <code>integer(1)</code> defining the
-number of input that should be processed per iteration. With
+<dd><p>For <code>createMsBackendSqlDatabase</code>: <code>integer(1)</code> defining
+the number of input that should be processed per iteration. With
 <code>chunksize = 1</code> each file specified with <code>x</code> will be imported and its
 data inserted to the database. With <code>chunksize = 5</code> data from 5 files
-will be imported (in parallel) and inserted to the database. Thus, higher
-values might result in faster database creation, but require also more
-memory.</p></dd>
+will be imported (in parallel) and inserted to the database. Thus,
+higher values might result in faster database creation, but require
+also more memory.</p></dd>
 
 
 <dt>blob</dt>
-<dd><p>For <code>createMsBackendSqlDatabase</code>: <code>logical(1)</code> whether individual
-m/z and intensity values should be stored separately (<code>blob = FALSE</code>) or
-if the m/z and intensity values for each spectrum should be stored as
-a single <em>BLOB</em> SQL data type (<code>blob = TRUE</code>, the default).</p></dd>
+<dd><p>For <code>createMsBackendSqlDatabase</code>: <code>logical(1)</code> whether
+individual m/z and intensity values should be stored separately
+(<code>blob = FALSE</code>) or if the m/z and intensity values for each spectrum
+should be stored as a single <em>BLOB</em> SQL data type (<code>blob = TRUE</code>,
+the default).</p></dd>
 
 
 <dt>partitionBy</dt>
-<dd><p>For <code>createMsBackendSqlDatabase</code>: <code>character(1)</code> defining
-if and how the peak data table should be partitioned. <code>"none"</code> (default):
-no partitioning, <code>"spectrum"</code>: peaks are assigned to the partition based
-on the spectrum ID (number), i.e. spectra are evenly (consecutively)
-assigned across partitions. For <code>partitionNumber = 3</code>, the first
-spectrum is assigned to the first partition, the second to the second,
-the third to the third and the fourth spectrum again to the first
-partition. <code>"chunk"</code>: spectra processed as part of the same <em>chunk</em> are
-placed into the same partition. All spectra from the next processed
-chunk are assigned to the next partition. Note that this is only
-available for MySQL/MariaDB databases, i.e., if <code>con</code> is a
+<dd><p>For <code>createMsBackendSqlDatabase</code>: <code>character(1)</code>
+defining if and how the peak data table should be partitioned. <code>"none"</code>
+(default): no partitioning, <code>"spectrum"</code>: peaks are assigned to the
+partition based on the spectrum ID (number), i.e. spectra are evenly
+(consecutively) assigned across partitions. For <code>partitionNumber = 3</code>,
+the first spectrum is assigned to the first partition, the second to
+the second, the third to the third and the fourth spectrum again to
+the first partition. <code>"chunk"</code>: spectra processed as part of the same
+<em>chunk</em> are placed into the same partition. All spectra from the next
+processed chunk are assigned to the next partition. Note that this is
+only available for MySQL/MariaDB databases, i.e., if <code>con</code> is a
 <code>MariaDBConnection</code>.
 See details for more information.</p></dd>
 
 
 <dt>partitionNumber</dt>
 <dd><p>For <code>createMsBackendSqlDatabase</code>: <code>integer(1)</code>
-defining the number of partitions the database table will be partitioned
-into (only supported for MySQL/MariaDB databases).</p></dd>
+defining the number of partitions the database table will be
+partitioned into (only supported for MySQL/MariaDB databases).</p></dd>
 
 
 <dt>object</dt>
@@ -209,11 +211,11 @@ into (only supported for MySQL/MariaDB databases).</p></dd>
 
 
 <dt>columns</dt>
-<dd><p>For <code>spectraData</code>: <code><a href="https://rdrr.io/r/base/character.html" class="external-link">character()</a></code> optionally defining a subset
-of spectra variables that should be returned. Defaults to
+<dd><p>For <code>spectraData</code>: <code><a href="https://rdrr.io/r/base/character.html" class="external-link">character()</a></code> optionally defining a
+subset of spectra variables that should be returned. Defaults to
 <code>columns = spectraVariables(object)</code> hence all variables are returned.
-For <code>peaksData</code> accessor: optional <code>character</code> with requested columns in
-the individual <code>matrix</code> of the returned <code>list</code>. Defaults to
+For <code>peaksData</code> accessor: optional <code>character</code> with requested columns
+in the individual <code>matrix</code> of the returned <code>list</code>. Defaults to
 <code>columns = c("mz", "intensity")</code> but all columns listed by
 <code>peaksVariables</code> would be supported.</p></dd>
 
@@ -250,14 +252,14 @@ values to which the data should be subsetted.</p></dd>
 <dt>mz</dt>
 <dd><p>For <code>filterPrecursorMzRange</code>: <code>numeric(2)</code> with the desired lower
 and upper limit of the precursor m/z range.
-For <code>filterPrecursorMzValues</code>: <code>numeric</code> with the m/z value(s) to filter
-the object.</p></dd>
+For <code>filterPrecursorMzValues</code>: <code>numeric</code> with the m/z value(s) to
+filter the object.</p></dd>
 
 
 <dt>ppm</dt>
 <dd><p>For <code>filterPrecursorMzValues</code>: <code>numeric</code> with the m/z-relative
-maximal acceptable difference for a m/z value to be considered matching.
-Can be of length 1 or equal to <code>length(mz)</code>.</p></dd>
+maximal acceptable difference for a m/z value to be considered
+matching. Can be of length 1 or equal to <code>length(mz)</code>.</p></dd>
 
 
 <dt>tolerance</dt>
@@ -289,45 +291,47 @@ using the <code>createMsBackendSqlDatabase</code> function. Existing SQL databas
 (created previously with <code>createMsBackendSqlDatabase</code> can be loaded using
 the conventional way to create/initialize <code>MsBackend</code> classes, i.e. using
 <code>backendInitialize</code>.</p><ul><li><p><code>createMsBackendSqlDatabase</code>: create a database and fill it with MS data.
-Parameter <code>dbcon</code> is expected to be a database connection, parameter <code>x</code> a
-<code>character</code> vector with the file names from which to import the data.
+Parameter <code>dbcon</code> is expected to be a database connection, parameter <code>x</code>
+a <code>character</code> vector with the file names from which to import the data.
 Parameter <code>backend</code> is used for the actual data import and defaults to
 <code>backend = MsBackendMzR()</code> hence allowing to import data from mzML, mzXML
 or netCDF files. Parameter <code>chunksize</code> allows to define the number of
 files (<code>x</code>) from which the data should be imported in one iteration. With
-the default <code>chunksize = 10L</code> data is imported from 10 files in <code>x</code> at the
-same time (if <code>backend</code> supports it even in parallel) and this data is then
-inserted into the database. Larger chunk sizes will require more memory and
-also larger disk space (as data import is performed through temporary
-files) but might eventually be faster. Parameter <code>blob</code> allows to define
-whether m/z and intensity values from a spectrum should be stored as a
-<em>BLOB</em> SQL data type in the database (<code>blob = TRUE</code>, the default) or if
-individual m/z and intensity values for each peak should be stored
-separately (<code>blob = FALSE</code>). The latter case results in a much larger
-database and slower performance of the <code>peaksData</code> function, but would
-allow to define custom (manual) SQL queries on individual peak values.
+the default <code>chunksize = 10L</code> data is imported from 10 files in <code>x</code> at
+the same time (if <code>backend</code> supports it even in parallel) and this data
+is then inserted into the database. Larger chunk sizes will require more
+memory and also larger disk space (as data import is performed through
+temporary files) but might eventually be faster. Parameter <code>blob</code> allows
+to define whether m/z and intensity values from a spectrum should be
+stored as a <em>BLOB</em> SQL data type in the database (<code>blob = TRUE</code>, the
+default) or if individual m/z and intensity values for each peak should
+be stored separately (<code>blob = FALSE</code>). The latter case results in a much
+larger database and slower performance of the <code>peaksData</code> function, but
+would allow to define custom (manual) SQL queries on individual peak
+values.
 While data can be stored in any SQL database, at present it is suggested
 to use MySQL/MariaDB databases. For <code>dbcon</code> being a connection to a
 MySQL/MariaDB database, the tables will use the <em>ARIA</em> engine providing
-faster data access and will use <em>table partitioning</em>: tables are splitted
-into multiple partitions which can improve data insertion and index
-generation. Partitioning can be defined with the parameters <code>partitionBy</code>
-and <code>partitionNumber</code>. By default <code>partitionBy = "none"</code> no partitioning is
-performed. For <code>blob = TRUE</code> partitioning is usually not required. Only for
-<code>blob = FALSE </code> and very large datasets it is suggested to enable table
-partitioning by selecting either <code>partitionBy = "spectrum"</code> or
-<code>partitionBy = "chunk"</code>. The first option assignes consecutive spectra
-to different partitions while the latter puts spectra from files part of
-the same <em>chunk</em> into the same partition. Both options have about the
-same performance but <code>partitionBy = "spectrum"</code> requires less disk space.
-Note that, while inserting the data takes a considerable amount of time,
-also the subsequent creation of database indices can take very long (even
-longer than data insertion for <code>blob = FALSE</code>).</p></li>
+faster data access and will use <em>table partitioning</em>: tables are
+splitted into multiple partitions which can improve data insertion and
+index generation. Partitioning can be defined with the parameters
+<code>partitionBy</code> and <code>partitionNumber</code>. By default <code>partitionBy = "none"</code>
+no partitioning is performed. For <code>blob = TRUE</code> partitioning is usually
+not required. Only for <code>blob = FALSE </code> and very large datasets it is
+suggested to enable table partitioning by selecting either
+<code>partitionBy = "spectrum"</code> or <code>partitionBy = "chunk"</code>. The first option
+assignes consecutive spectra to different partitions while the latter
+puts spectra from files part of the same <em>chunk</em> into the same partition.
+Both options have about the same performance but
+<code>partitionBy = "spectrum"</code> requires less disk space.
+Note that, while inserting the data takes a considerable amount of
+time, also the subsequent creation of database indices can take very
+long (even longer than data insertion for <code>blob = FALSE</code>).</p></li>
 <li><p><code>backendInitialize</code>: get access and initialize a <code>MsBackendSql</code> object.
-Parameter <code>object</code> is supposed to be a <code>MsBackendSql</code> instance, created e.g.
-with <code>MsBackendSql()</code>. Parameter <code>dbcon</code> is expected to be a connection to
-a SQL database previously created with the <code>createMsBackendSqlDatabase</code>
-function.</p></li>
+Parameter <code>object</code> is supposed to be a <code>MsBackendSql</code> instance, created
+e.g. with <code>MsBackendSql()</code>. Parameter <code>dbcon</code> is expected to be a
+connection to a SQL database previously created with the
+<code>createMsBackendSqlDatabase</code> function.</p></li>
 </ul></div>
     <div id="subsetting-and-filtering-data">
     <h2>Subsetting and filtering data</h2>
@@ -336,10 +340,10 @@ function.</p></li>
 
 <p><code>MsBackendSql</code> objects can be subsetted using the <code>[</code> function. Internally,
 this will simply subset the <code>integer</code> vector of the primary keys and
-eventually cached data. The original data in the database <strong>is not</strong> affected
-by any subsetting operation. Any subsetting operation can be <em>undone</em> by
-resetting the object with the <code>reset</code> function. Subsetting in arbitrary
-order as well as index replication is supported.</p>
+eventually cached data. The original data in the database <strong>is not</strong>
+affected by any subsetting operation. Any subsetting operation can be
+<em>undone</em> by resetting the object with the <code>reset</code> function. Subsetting
+in arbitrary order as well as index replication is supported.</p>
 <p>In addition, <code>MsBackendSql</code> supports all other filtering methods available
 through <code><a href="https://rdrr.io/pkg/Spectra/man/MsBackendCached.html" class="external-link">MsBackendCached()</a></code>. Implementation of filter functions optimized
 for <code>MsBackendSql</code> objects are:</p><ul><li><p><code>filterDataOrigin</code>: filter the object retaining spectra with <code>dataOrigin</code>
@@ -349,25 +353,27 @@ values provided with parameter <code>dataOrigin</code>.</p></li>
 <li><p><code>filterMsLevel</code>: filter the object based on the MS levels specified with
 parameter <code>msLevel</code>. The function does the filtering using SQL queries.
 If <code>"msLevel"</code> is a <em>local</em> variable stored within the object (and hence
-in memory) the default implementation in <code>MsBackendCached</code> is used instead.</p></li>
+in memory) the default implementation in <code>MsBackendCached</code> is used
+instead.</p></li>
 <li><p><code>filterPrecursorMzRange</code>: filters the data keeping only spectra with a
-<code>precursorMz</code> within the m/z value range provided with parameter <code>mz</code> (i.e.
-all spectra with a precursor m/z <code>&gt;= mz[1L]</code> and <code>&lt;= mz[2L]</code>).</p></li>
-<li><p>filterPrecursorMzValues<code>: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter </code>mz<code>. Parameters </code>ppm<code>and</code>tolerance<code>allow to specify acceptable differences between compared values. Lengths of</code>ppm<code>and</code>tolerance<code>can be either</code>1<code>or equal to</code>length(mz)` to use different values for ppm and tolerance for
-each provided m/z value.</p></li>
+<code>precursorMz</code> within the m/z value range provided with parameter <code>mz</code>
+(i.e. all spectra with a precursor m/z <code>&gt;= mz[1L]</code> and <code>&lt;= mz[2L]</code>).</p></li>
+<li><p>filterPrecursorMzValues<code>: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter </code>mz<code>. Parameters </code>ppm<code>and</code>tolerance<code>allow to specify acceptable differences between compared values. Lengths of</code>ppm<code>and</code>tolerance<code>can be either</code>1<code>or equal to</code>length(mz)` to use different values for ppm and
+tolerance for each provided m/z value.</p></li>
 <li><p><code>filterRt</code>: filter the object keeping only spectra with retention times
 within the specified retention time range (parameter <code>rt</code>). Optional
-parameter <code>msLevel.</code> allows to restrict the retention time filter only on
-the provided MS level(s) returning all spectra from other MS levels.</p></li>
+parameter <code>msLevel.</code> allows to restrict the retention time filter only
+on the provided MS level(s) returning all spectra from other MS levels.</p></li>
 </ul></div>
     <div id="accessing-and-modifying-data">
     <h2>Accessing and <em>modifying</em> data</h2>
     
 
 
-<p>The functions listed here are specifically implemented for <code>MsBackendSql</code>. In
-addition, <code>MsBackendSql</code> inherits and supports all data accessor, filtering
-functions and data manipulation functions from <code><a href="https://rdrr.io/pkg/Spectra/man/MsBackendCached.html" class="external-link">MsBackendCached()</a></code>.</p><ul><li><p><code>$</code>, <code>$&lt;-</code>: access or set (add) spectra variables in <code>object</code>. Spectra
+<p>The functions listed here are specifically implemented for <code>MsBackendSql</code>.
+In addition, <code>MsBackendSql</code> inherits and supports all data accessor,
+filtering functions and data manipulation functions from
+<code><a href="https://rdrr.io/pkg/Spectra/man/MsBackendCached.html" class="external-link">MsBackendCached()</a></code>.</p><ul><li><p><code>$</code>, <code>$&lt;-</code>: access or set (add) spectra variables in <code>object</code>. Spectra
 variables added or modified using the <code>$&lt;-</code> are <em>cached</em> locally within
 the object (data in the database is never changed). To restore an object
 (i.e. drop all cached values) the <code>reset</code> function can be used.</p></li>
@@ -379,19 +385,23 @@ spectra in <code>object</code> with the name of the database containing the data
 the list is equal to the number of spectra in <code>object</code>. Each element of
 the list is a <code>matrix</code> with columns according to parameter <code>columns</code>. For
 an empty spectrum, a <code>matrix</code> with 0 rows is returned. Use
-<code>peaksVariables(object)</code> to list supported values for parameter <code>columns</code>.</p></li>
-<li><p><code>peaksVariables</code>: returns a <code>character</code> with the available peak variables,
-i.e. columns that could be queried with <code>peaksData</code>.</p></li>
-<li><p><code>reset</code>: <em>restores</em> an <code>MsBackendSql</code> by re-initializing it with the data
-from the database. Any subsetting or cached spectra variables will be lost.</p></li>
+<code>peaksVariables(object)</code> to list supported values for parameter
+<code>columns</code>.</p></li>
+<li><p><code>peaksVariables</code>: returns a <code>character</code> with the available peak
+variables, i.e. columns that could be queried with <code>peaksData</code>.</p></li>
+<li><p><code>reset</code>: <em>restores</em> an <code>MsBackendSql</code> by re-initializing it with the
+data from the database. Any subsetting or cached spectra variables will
+be lost.</p></li>
 <li><p><code>spectraData</code>: gets or general spectrum metadata.  <code>spectraData</code> returns
 a <code>DataFrame</code> with the same number of rows as there are spectra in
-<code>object</code>. Parameter <code>columns</code> allows to select specific spectra variables.</p></li>
-<li><p><code>spectraNames</code>, <code>spectraNames&lt;-</code>: returns a <code>character</code> of length equal to
-the number of spectra in <code>object</code> with the primary keys of the spectra from
-the database (converted to <code>character</code>). Replacing spectra names with
-<code>spectraNames&lt;-</code> is not supported.</p></li>
-<li><p><code>uniqueMsLevels</code>: returns the unique MS levels of all spectra in <code>object</code>.</p></li>
+<code>object</code>. Parameter <code>columns</code> allows to select specific spectra
+variables.</p></li>
+<li><p><code>spectraNames</code>, <code>spectraNames&lt;-</code>: returns a <code>character</code> of length equal
+to the number of spectra in <code>object</code> with the primary keys of the spectra
+from the database (converted to <code>character</code>). Replacing spectra names
+with <code>spectraNames&lt;-</code> is not supported.</p></li>
+<li><p><code>uniqueMsLevels</code>: returns the unique MS levels of all spectra in
+<code>object</code>.</p></li>
 </ul></div>
     <div id="implementation-notes">
     <h2>Implementation notes</h2>
@@ -400,14 +410,14 @@ the database (converted to <code>character</code>). Replacing spectra names with
 
 <p>Internally, the <code>MsBackendSql</code> class contains only the primary keys for all
 spectra stored in the SQL database. Keeping only these <code>integer</code> in memory
-guarantees a minimal memory footpring of the object. Still, depending of the
-number of spectra in the database, this <code>integer</code> vector might become very
-large. Any data access will involve SQL calls to retrieve the data from the
-database. By extending the <code><a href="https://rdrr.io/pkg/Spectra/man/MsBackendCached.html" class="external-link">MsBackendCached()</a></code> object from the <code>Spectra</code>
-package, the <code>MsBackendSql</code> supports to (temporarily, i.e. for the duration
-of the R session) add or modify spectra variables. These are however stored
-in a <code>data.frame</code> within the object thus increasing the memory demand of the
-object.</p>
+guarantees a minimal memory footpring of the object. Still, depending of
+the number of spectra in the database, this <code>integer</code> vector might become
+very large. Any data access will involve SQL calls to retrieve the data
+from the database. By extending the <code><a href="https://rdrr.io/pkg/Spectra/man/MsBackendCached.html" class="external-link">MsBackendCached()</a></code> object from the
+<code>Spectra</code> package, the <code>MsBackendSql</code> supports to (temporarily, i.e. for
+the duration of the R session) add or modify spectra variables. These are
+however stored in a <code>data.frame</code> within the object thus increasing the
+memory demand of the object.</p>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -462,7 +472,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpKTAT4f/filee046b833e31</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpJNbpQ1/file13ec231c332f</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Original data source</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span></span>
@@ -475,9 +485,9 @@ object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Data storage</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">dataStorage</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpKTAT4f/filee046b833e31" "/tmp/RtmpKTAT4f/filee046b833e31"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpKTAT4f/filee046b833e31" "/tmp/RtmpKTAT4f/filee046b833e31"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpKTAT4f/filee046b833e31" "/tmp/RtmpKTAT4f/filee046b833e31"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpJNbpQ1/file13ec231c332f" "/tmp/RtmpJNbpQ1/file13ec231c332f"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpJNbpQ1/file13ec231c332f" "/tmp/RtmpJNbpQ1/file13ec231c332f"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpJNbpQ1/file13ec231c332f" "/tmp/RtmpJNbpQ1/file13ec231c332f"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access all spectra data</span></span></span>
 <span class="r-in"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -653,7 +663,7 @@ object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpKTAT4f/filee046b833e31</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpJNbpQ1/file13ec231c332f</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span></span>
@@ -662,8 +672,8 @@ object.</p>
 <span class="r-in"><span><span class="co">## Add additional spectra variables</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">new_variable</span> <span class="op">&lt;-</span> <span class="st">"B"</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">## This variable is *cached* locally within the object (not inserted into the</span></span></span>
-<span class="r-in"><span><span class="co">## database)</span></span></span>
+<span class="r-in"><span><span class="co">## This variable is *cached* locally within the object (not inserted into</span></span></span>
+<span class="r-in"><span><span class="co">## the database)</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">new_variable</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "B" "B" "B" "B" "B" "B"</span>
 </code></pre></div>
@@ -680,7 +690,7 @@ object.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.9000.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.9000.</p>
 </div>
 
       </footer></div>
