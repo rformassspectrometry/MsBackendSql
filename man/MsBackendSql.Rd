@@ -78,43 +78,45 @@ createMsBackendSqlDatabase(
 \arguments{
 \item{dbcon}{Connection to a database.}
 
-\item{x}{For \code{createMsBackendSqlDatabase}: \code{character} with the names of the
-raw data files from which the data should be imported. For other methods
-an \code{MsqlBaackend} instance.}
+\item{x}{For \code{createMsBackendSqlDatabase}: \code{character} with the names of
+the raw data files from which the data should be imported. For other
+methods an \code{MsqlBackend} instance.}
 
-\item{backend}{For \code{createMsBackendSqlDatabase}: MS backend that can be used
-to import MS data from the raw files specified with parameter \code{x}.}
+\item{backend}{For \code{createMsBackendSqlDatabase}: MS backend that can be
+used to import MS data from the raw files specified with
+parameter \code{x}.}
 
-\item{chunksize}{For \code{createMsBackendSqlDatabase}: \code{integer(1)} defining the
-number of input that should be processed per iteration. With
+\item{chunksize}{For \code{createMsBackendSqlDatabase}: \code{integer(1)} defining
+the number of input that should be processed per iteration. With
 \code{chunksize = 1} each file specified with \code{x} will be imported and its
 data inserted to the database. With \code{chunksize = 5} data from 5 files
-will be imported (in parallel) and inserted to the database. Thus, higher
-values might result in faster database creation, but require also more
-memory.}
+will be imported (in parallel) and inserted to the database. Thus,
+higher values might result in faster database creation, but require
+also more memory.}
 
-\item{blob}{For \code{createMsBackendSqlDatabase}: \code{logical(1)} whether individual
-m/z and intensity values should be stored separately (\code{blob = FALSE}) or
-if the m/z and intensity values for each spectrum should be stored as
-a single \emph{BLOB} SQL data type (\code{blob = TRUE}, the default).}
+\item{blob}{For \code{createMsBackendSqlDatabase}: \code{logical(1)} whether
+individual m/z and intensity values should be stored separately
+(\code{blob = FALSE}) or if the m/z and intensity values for each spectrum
+should be stored as a single \emph{BLOB} SQL data type (\code{blob = TRUE},
+the default).}
 
-\item{partitionBy}{For \code{createMsBackendSqlDatabase}: \code{character(1)} defining
-if and how the peak data table should be partitioned. \code{"none"} (default):
-no partitioning, \code{"spectrum"}: peaks are assigned to the partition based
-on the spectrum ID (number), i.e. spectra are evenly (consecutively)
-assigned across partitions. For \code{partitionNumber = 3}, the first
-spectrum is assigned to the first partition, the second to the second,
-the third to the third and the fourth spectrum again to the first
-partition. \code{"chunk"}: spectra processed as part of the same \emph{chunk} are
-placed into the same partition. All spectra from the next processed
-chunk are assigned to the next partition. Note that this is only
-available for MySQL/MariaDB databases, i.e., if \code{con} is a
+\item{partitionBy}{For \code{createMsBackendSqlDatabase}: \code{character(1)}
+defining if and how the peak data table should be partitioned. \code{"none"}
+(default): no partitioning, \code{"spectrum"}: peaks are assigned to the
+partition based on the spectrum ID (number), i.e. spectra are evenly
+(consecutively) assigned across partitions. For \code{partitionNumber = 3},
+the first spectrum is assigned to the first partition, the second to
+the second, the third to the third and the fourth spectrum again to
+the first partition. \code{"chunk"}: spectra processed as part of the same
+\emph{chunk} are placed into the same partition. All spectra from the next
+processed chunk are assigned to the next partition. Note that this is
+only available for MySQL/MariaDB databases, i.e., if \code{con} is a
 \code{MariaDBConnection}.
 See details for more information.}
 
 \item{partitionNumber}{For \code{createMsBackendSqlDatabase}: \code{integer(1)}
-defining the number of partitions the database table will be partitioned
-into (only supported for MySQL/MariaDB databases).}
+defining the number of partitions the database table will be
+partitioned into (only supported for MySQL/MariaDB databases).}
 
 \item{object}{A \code{MsBackendSql} instance.}
 
@@ -126,11 +128,11 @@ into (only supported for MySQL/MariaDB databases).}
 
 \item{drop}{For \code{[}: \code{logical(1)}, ignored.}
 
-\item{columns}{For \code{spectraData}: \code{character()} optionally defining a subset
-of spectra variables that should be returned. Defaults to
+\item{columns}{For \code{spectraData}: \code{character()} optionally defining a
+subset of spectra variables that should be returned. Defaults to
 \code{columns = spectraVariables(object)} hence all variables are returned.
-For \code{peaksData} accessor: optional \code{character} with requested columns in
-the individual \code{matrix} of the returned \code{list}. Defaults to
+For \code{peaksData} accessor: optional \code{character} with requested columns
+in the individual \code{matrix} of the returned \code{list}. Defaults to
 \code{columns = c("mz", "intensity")} but all columns listed by
 \code{peaksVariables} would be supported.}
 
@@ -153,12 +155,12 @@ values to which the data should be subsetted.}
 
 \item{mz}{For \code{filterPrecursorMzRange}: \code{numeric(2)} with the desired lower
 and upper limit of the precursor m/z range.
-For \code{filterPrecursorMzValues}: \code{numeric} with the m/z value(s) to filter
-the object.}
+For \code{filterPrecursorMzValues}: \code{numeric} with the m/z value(s) to
+filter the object.}
 
 \item{ppm}{For \code{filterPrecursorMzValues}: \code{numeric} with the m/z-relative
-maximal acceptable difference for a m/z value to be considered matching.
-Can be of length 1 or equal to \code{length(mz)}.}
+maximal acceptable difference for a m/z value to be considered
+matching. Can be of length 1 or equal to \code{length(mz)}.}
 
 \item{tolerance}{For \code{filterPrecursorMzValues}: \code{numeric} with the absolute
 difference for m/z values to be considered matching. Can be of length 1
@@ -189,45 +191,47 @@ the conventional way to create/initialize \code{MsBackend} classes, i.e. using
 \code{backendInitialize}.
 \itemize{
 \item \code{createMsBackendSqlDatabase}: create a database and fill it with MS data.
-Parameter \code{dbcon} is expected to be a database connection, parameter \code{x} a
-\code{character} vector with the file names from which to import the data.
+Parameter \code{dbcon} is expected to be a database connection, parameter \code{x}
+a \code{character} vector with the file names from which to import the data.
 Parameter \code{backend} is used for the actual data import and defaults to
 \code{backend = MsBackendMzR()} hence allowing to import data from mzML, mzXML
 or netCDF files. Parameter \code{chunksize} allows to define the number of
 files (\code{x}) from which the data should be imported in one iteration. With
-the default \code{chunksize = 10L} data is imported from 10 files in \code{x} at the
-same time (if \code{backend} supports it even in parallel) and this data is then
-inserted into the database. Larger chunk sizes will require more memory and
-also larger disk space (as data import is performed through temporary
-files) but might eventually be faster. Parameter \code{blob} allows to define
-whether m/z and intensity values from a spectrum should be stored as a
-\emph{BLOB} SQL data type in the database (\code{blob = TRUE}, the default) or if
-individual m/z and intensity values for each peak should be stored
-separately (\code{blob = FALSE}). The latter case results in a much larger
-database and slower performance of the \code{peaksData} function, but would
-allow to define custom (manual) SQL queries on individual peak values.
+the default \code{chunksize = 10L} data is imported from 10 files in \code{x} at
+the same time (if \code{backend} supports it even in parallel) and this data
+is then inserted into the database. Larger chunk sizes will require more
+memory and also larger disk space (as data import is performed through
+temporary files) but might eventually be faster. Parameter \code{blob} allows
+to define whether m/z and intensity values from a spectrum should be
+stored as a \emph{BLOB} SQL data type in the database (\code{blob = TRUE}, the
+default) or if individual m/z and intensity values for each peak should
+be stored separately (\code{blob = FALSE}). The latter case results in a much
+larger database and slower performance of the \code{peaksData} function, but
+would allow to define custom (manual) SQL queries on individual peak
+values.
 While data can be stored in any SQL database, at present it is suggested
 to use MySQL/MariaDB databases. For \code{dbcon} being a connection to a
 MySQL/MariaDB database, the tables will use the \emph{ARIA} engine providing
-faster data access and will use \emph{table partitioning}: tables are splitted
-into multiple partitions which can improve data insertion and index
-generation. Partitioning can be defined with the parameters \code{partitionBy}
-and \code{partitionNumber}. By default \code{partitionBy = "none"} no partitioning is
-performed. For \code{blob = TRUE} partitioning is usually not required. Only for
-\code{blob = FALSE } and very large datasets it is suggested to enable table
-partitioning by selecting either \code{partitionBy = "spectrum"} or
-\code{partitionBy = "chunk"}. The first option assignes consecutive spectra
-to different partitions while the latter puts spectra from files part of
-the same \emph{chunk} into the same partition. Both options have about the
-same performance but \code{partitionBy = "spectrum"} requires less disk space.
-Note that, while inserting the data takes a considerable amount of time,
-also the subsequent creation of database indices can take very long (even
-longer than data insertion for \code{blob = FALSE}).
+faster data access and will use \emph{table partitioning}: tables are
+splitted into multiple partitions which can improve data insertion and
+index generation. Partitioning can be defined with the parameters
+\code{partitionBy} and \code{partitionNumber}. By default \code{partitionBy = "none"}
+no partitioning is performed. For \code{blob = TRUE} partitioning is usually
+not required. Only for \code{blob = FALSE } and very large datasets it is
+suggested to enable table partitioning by selecting either
+\code{partitionBy = "spectrum"} or \code{partitionBy = "chunk"}. The first option
+assignes consecutive spectra to different partitions while the latter
+puts spectra from files part of the same \emph{chunk} into the same partition.
+Both options have about the same performance but
+\code{partitionBy = "spectrum"} requires less disk space.
+Note that, while inserting the data takes a considerable amount of
+time, also the subsequent creation of database indices can take very
+long (even longer than data insertion for \code{blob = FALSE}).
 \item \code{backendInitialize}: get access and initialize a \code{MsBackendSql} object.
-Parameter \code{object} is supposed to be a \code{MsBackendSql} instance, created e.g.
-with \code{MsBackendSql()}. Parameter \code{dbcon} is expected to be a connection to
-a SQL database previously created with the \code{createMsBackendSqlDatabase}
-function.
+Parameter \code{object} is supposed to be a \code{MsBackendSql} instance, created
+e.g. with \code{MsBackendSql()}. Parameter \code{dbcon} is expected to be a
+connection to a SQL database previously created with the
+\code{createMsBackendSqlDatabase} function.
 }
 }
 
@@ -236,10 +240,10 @@ function.
 
 \code{MsBackendSql} objects can be subsetted using the \code{[} function. Internally,
 this will simply subset the \code{integer} vector of the primary keys and
-eventually cached data. The original data in the database \strong{is not} affected
-by any subsetting operation. Any subsetting operation can be \emph{undone} by
-resetting the object with the \code{reset} function. Subsetting in arbitrary
-order as well as index replication is supported.
+eventually cached data. The original data in the database \strong{is not}
+affected by any subsetting operation. Any subsetting operation can be
+\emph{undone} by resetting the object with the \code{reset} function. Subsetting
+in arbitrary order as well as index replication is supported.
 
 In addition, \code{MsBackendSql} supports all other filtering methods available
 through \code{\link[=MsBackendCached]{MsBackendCached()}}. Implementation of filter functions optimized
@@ -252,25 +256,27 @@ values provided with parameter \code{dataOrigin}.
 \item \code{filterMsLevel}: filter the object based on the MS levels specified with
 parameter \code{msLevel}. The function does the filtering using SQL queries.
 If \code{"msLevel"} is a \emph{local} variable stored within the object (and hence
-in memory) the default implementation in \code{MsBackendCached} is used instead.
+in memory) the default implementation in \code{MsBackendCached} is used
+instead.
 \item \code{filterPrecursorMzRange}: filters the data keeping only spectra with a
-\code{precursorMz} within the m/z value range provided with parameter \code{mz} (i.e.
-all spectra with a precursor m/z \verb{>= mz[1L]} and \verb{<= mz[2L]}).
-\item filterPrecursorMzValues\verb{: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter }mz\verb{. Parameters }ppm\code{and}tolerance\verb{allow to specify acceptable differences between compared values. Lengths of}ppm\code{and}tolerance\verb{can be either}1\verb{or equal to}length(mz)` to use different values for ppm and tolerance for
-each provided m/z value.
+\code{precursorMz} within the m/z value range provided with parameter \code{mz}
+(i.e. all spectra with a precursor m/z \verb{>= mz[1L]} and \verb{<= mz[2L]}).
+\item filterPrecursorMzValues\verb{: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter }mz\verb{. Parameters }ppm\code{and}tolerance\verb{allow to specify acceptable differences between compared values. Lengths of}ppm\code{and}tolerance\verb{can be either}1\verb{or equal to}length(mz)` to use different values for ppm and
+tolerance for each provided m/z value.
 \item \code{filterRt}: filter the object keeping only spectra with retention times
 within the specified retention time range (parameter \code{rt}). Optional
-parameter \code{msLevel.} allows to restrict the retention time filter only on
-the provided MS level(s) returning all spectra from other MS levels.
+parameter \code{msLevel.} allows to restrict the retention time filter only
+on the provided MS level(s) returning all spectra from other MS levels.
 }
 }
 
 \section{Accessing and \emph{modifying} data}{
 
 
-The functions listed here are specifically implemented for \code{MsBackendSql}. In
-addition, \code{MsBackendSql} inherits and supports all data accessor, filtering
-functions and data manipulation functions from \code{\link[=MsBackendCached]{MsBackendCached()}}.
+The functions listed here are specifically implemented for \code{MsBackendSql}.
+In addition, \code{MsBackendSql} inherits and supports all data accessor,
+filtering functions and data manipulation functions from
+\code{\link[=MsBackendCached]{MsBackendCached()}}.
 \itemize{
 \item \code{$}, \verb{$<-}: access or set (add) spectra variables in \code{object}. Spectra
 variables added or modified using the \verb{$<-} are \emph{cached} locally within
@@ -284,19 +290,23 @@ spectra in \code{object} with the name of the database containing the data.
 the list is equal to the number of spectra in \code{object}. Each element of
 the list is a \code{matrix} with columns according to parameter \code{columns}. For
 an empty spectrum, a \code{matrix} with 0 rows is returned. Use
-\code{peaksVariables(object)} to list supported values for parameter \code{columns}.
-\item \code{peaksVariables}: returns a \code{character} with the available peak variables,
-i.e. columns that could be queried with \code{peaksData}.
-\item \code{reset}: \emph{restores} an \code{MsBackendSql} by re-initializing it with the data
-from the database. Any subsetting or cached spectra variables will be lost.
+\code{peaksVariables(object)} to list supported values for parameter
+\code{columns}.
+\item \code{peaksVariables}: returns a \code{character} with the available peak
+variables, i.e. columns that could be queried with \code{peaksData}.
+\item \code{reset}: \emph{restores} an \code{MsBackendSql} by re-initializing it with the
+data from the database. Any subsetting or cached spectra variables will
+be lost.
 \item \code{spectraData}: gets or general spectrum metadata.  \code{spectraData} returns
 a \code{DataFrame} with the same number of rows as there are spectra in
-\code{object}. Parameter \code{columns} allows to select specific spectra variables.
-\item \code{spectraNames}, \verb{spectraNames<-}: returns a \code{character} of length equal to
-the number of spectra in \code{object} with the primary keys of the spectra from
-the database (converted to \code{character}). Replacing spectra names with
-\verb{spectraNames<-} is not supported.
-\item \code{uniqueMsLevels}: returns the unique MS levels of all spectra in \code{object}.
+\code{object}. Parameter \code{columns} allows to select specific spectra
+variables.
+\item \code{spectraNames}, \verb{spectraNames<-}: returns a \code{character} of length equal
+to the number of spectra in \code{object} with the primary keys of the spectra
+from the database (converted to \code{character}). Replacing spectra names
+with \verb{spectraNames<-} is not supported.
+\item \code{uniqueMsLevels}: returns the unique MS levels of all spectra in
+\code{object}.
 }
 }
 
@@ -305,14 +315,14 @@ the database (converted to \code{character}). Replacing spectra names with
 
 Internally, the \code{MsBackendSql} class contains only the primary keys for all
 spectra stored in the SQL database. Keeping only these \code{integer} in memory
-guarantees a minimal memory footpring of the object. Still, depending of the
-number of spectra in the database, this \code{integer} vector might become very
-large. Any data access will involve SQL calls to retrieve the data from the
-database. By extending the \code{\link[=MsBackendCached]{MsBackendCached()}} object from the \code{Spectra}
-package, the \code{MsBackendSql} supports to (temporarily, i.e. for the duration
-of the R session) add or modify spectra variables. These are however stored
-in a \code{data.frame} within the object thus increasing the memory demand of the
-object.
+guarantees a minimal memory footpring of the object. Still, depending of
+the number of spectra in the database, this \code{integer} vector might become
+very large. Any data access will involve SQL calls to retrieve the data
+from the database. By extending the \code{\link[=MsBackendCached]{MsBackendCached()}} object from the
+\code{Spectra} package, the \code{MsBackendSql} supports to (temporarily, i.e. for
+the duration of the R session) add or modify spectra variables. These are
+however stored in a \code{data.frame} within the object thus increasing the
+memory demand of the object.
 }
 
 \examples{
@@ -364,8 +374,8 @@ be_sub$spectrum_id_
 ## Add additional spectra variables
 be_sub$new_variable <- "B"
 
-## This variable is *cached* locally within the object (not inserted into the
-## database)
+## This variable is *cached* locally within the object (not inserted into
+## the database)
 be_sub$new_variable
 }
 \author{

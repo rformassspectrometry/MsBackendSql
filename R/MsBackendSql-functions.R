@@ -180,8 +180,8 @@ MsBackendSql <- function() {
                             partitionNumber, ";")
     } else
         sql_b <- paste0(sql_b, ");")
-    suppressWarnings(res <- dbExecute(con, sql_a))
-    suppressWarnings(res <- dbExecute(con, sql_b))
+    res <- dbExecute(con, sql_a)
+    res <- dbExecute(con, sql_b)
 }
 
 .initialize_tables_blob <- function(con, cols, partitionBy = "none",
@@ -207,8 +207,8 @@ MsBackendSql <- function() {
                             partitionNumber, ";")
     } else
         sql_b <- paste0(sql_b, ");")
-    suppressWarnings(res <- dbExecute(con, sql_a))
-    suppressWarnings(res <- dbExecute(con, sql_b))
+    res <- dbExecute(con, sql_a)
+    res <- dbExecute(con, sql_b)
 }
 
 #' @importFrom DBI dbWriteTable
