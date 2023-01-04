@@ -1,5 +1,9 @@
 # MsBackendSql 0.99
 
+## Changes in 0.99.1
+
+- Address Kayla's package review comments.
+
 ## Changes in 0.99.0
 
 - Prepare the package for submission to Bioconductor.
