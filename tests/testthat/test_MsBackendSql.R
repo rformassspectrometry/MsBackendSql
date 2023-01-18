@@ -242,3 +242,23 @@ test_that("uniqueMsLevels,MsBackendSql works", {
     expect_equal(uniqueMsLevels(tmt_be), unique(msLevel(tmt_be)))
     expect_equal(uniqueMsLevels(MsBackendSql()), integer())
 })
+
+test_that("centroided,MsBackendSql works", {
+    expect_true(is.logical(centroided(tmt_be)))
+})
+
+test_that("smoothed,MsBackendSql works", {
+    expect_true(is.logical(smoothed(tmt_be)))
+})
+
+test_that("tic,MsBackendSql works", {
+    res <- tic(tmt_be)
+    expect_true(is.numeric(res))
+    expect_true(all(!is.na(res)))
+
+    res <- tic(mm_be)
+    expect_true(is.numeric(res))
+    expect_true(all(!is.na(res)))
+    res_2 <- tic(mm_be, initial = FALSE)
+    expect_true(sum(res != res_2) > 10)
+})

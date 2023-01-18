@@ -23,6 +23,10 @@
 \alias{filterPrecursorMzRange,MsBackendSql-method}
 \alias{filterPrecursorMzValues,MsBackendSql-method}
 \alias{uniqueMsLevels,MsBackendSql-method}
+\alias{precScanNum,MsBackendSql-method}
+\alias{centroided,MsBackendSql-method}
+\alias{smoothed,MsBackendSql-method}
+\alias{tic,MsBackendSql-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsBackendSql()
@@ -74,6 +78,14 @@ createMsBackendSqlDatabase(
 \S4method{filterPrecursorMzValues}{MsBackendSql}(object, mz = numeric(), ppm = 20, tolerance = 0)
 
 \S4method{uniqueMsLevels}{MsBackendSql}(object, ...)
+
+\S4method{precScanNum}{MsBackendSql}(object)
+
+\S4method{centroided}{MsBackendSql}(object)
+
+\S4method{smoothed}{MsBackendSql}(object)
+
+\S4method{tic}{MsBackendSql}(object, initial = TRUE)
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -165,6 +177,10 @@ matching. Can be of length 1 or equal to \code{length(mz)}.}
 \item{tolerance}{For \code{filterPrecursorMzValues}: \code{numeric} with the absolute
 difference for m/z values to be considered matching. Can be of length 1
 or equal to \code{length(mz)}.}
+
+\item{initial}{For \code{tic}: \code{logical(1)} whether the original total ion count
+should be returned (\code{initial = TRUE}, the default) or whether it
+should be calculated on the spectras' intensities (\code{initial = FALSE}).}
 }
 \value{
 See documentation of respective function.
@@ -307,6 +323,9 @@ from the database (converted to \code{character}). Replacing spectra names
 with \verb{spectraNames<-} is not supported.
 \item \code{uniqueMsLevels}: returns the unique MS levels of all spectra in
 \code{object}.
+\item \code{tic}: returns the originally reported total ion count (for
+\code{initial = TRUE}) or calculates the total ion count from the intensities
+of each spectrum (for \code{initial = FALSE}).
 }
 }
 

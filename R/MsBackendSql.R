@@ -154,6 +154,10 @@
 #' - `uniqueMsLevels`: returns the unique MS levels of all spectra in
 #'   `object`.
 #'
+#' - `tic`: returns the originally reported total ion count (for
+#'   `initial = TRUE`) or calculates the total ion count from the intensities
+#'   of each spectrum (for `initial = FALSE`).
+#'
 #' @section Implementation notes:
 #'
 #' Internally, the `MsBackendSql` class contains only the primary keys for all
@@ -199,6 +203,10 @@
 #'     values to which the data should be subsetted.
 #'
 #' @param drop For `[`: `logical(1)`, ignored.
+#'
+#' @param initial For `tic`: `logical(1)` whether the original total ion count
+#'     should be returned (`initial = TRUE`, the default) or whether it
+#'     should be calculated on the spectras' intensities (`initial = FALSE`).
 #'
 #' @param i For `[`: `integer` or `logical` to subset the object.
 #'
@@ -658,4 +666,46 @@ setMethod("uniqueMsLevels", "MsBackendSql", function(object, ...) {
         dbGetQuery(.dbcon(object),
                    "select distinct msLevel from msms_spectrum")[, "msLevel"]
     } else integer()
+})
+
+#' @rdname MsBackendSql
+#'
+#' @importMethodsFrom ProtGenerics precScanNum
+#'
+#' @exportMethod precScanNum
+setMethod("precScanNum", "MsBackendSql", function(object) {
+    spectraData(object, "precScanNum")[, 1L]
+})
+
+#' @rdname MsBackendSql
+#'
+#' @importMethodsFrom ProtGenerics centroided
+#'
+#' @exportMethod centroided
+setMethod("centroided", "MsBackendSql", function(object) {
+    as.logical(callNextMethod())
+})
+
+#' @rdname MsBackendSql
+#'
+#' @importMethodsFrom ProtGenerics smoothed
+#'
+#' @exportMethod smoothed
+setMethod("smoothed", "MsBackendSql", function(object) {
+    as.logical(callNextMethod())
+})
+
+#' @importMethodsFrom ProtGenerics tic
+#'
+#' @importFrom Spectra intensity
+#'
+#' @importFrom MsCoreUtils vapply1d
+#'
+#' @exportMethod tic
+#'
+#' @rdname MsBackendSql
+setMethod("tic", "MsBackendSql", function(object, initial = TRUE) {
+    if (initial)
+        spectraData(object, "totIonCurrent")[, 1L]
+    else vapply1d(intensity(object), sum, na.rm = TRUE)
 })

@@ -1,5 +1,10 @@
 # MsBackendSql 0.99
 
+## Changes in 0.99.2
+
+- Evaluate validity of the `MsBackendSql` using the full unit test suite from
+  the `Spectra` package.
+
 ## Changes in 0.99.1
 
 - Address Kayla's package review comments.
