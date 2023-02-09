@@ -27,4 +27,16 @@ tmt_be <- backendInitialize(MsBackendSql(), tmt_db)
 
 test_check("MsBackendSql")
 
+test_suite <- system.file("test_backends", "test_MsBackend",
+                          package = "Spectra")
+
+be <- mm8_be
+test_dir(test_suite, stop_on_failure = TRUE)
+
+be <- tmt_be[sample(seq_along(tmt_be), 300)]
+test_dir(test_suite, stop_on_failure = TRUE)
+
 dbDisconnect(mm8_db)
+dbDisconnect(mm8_db_blob)
+dbDisconnect(mm_db)
+dbDisconnect(tmt_db)
