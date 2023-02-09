@@ -24,6 +24,7 @@
 \alias{filterPrecursorMzValues,MsBackendSql-method}
 \alias{uniqueMsLevels,MsBackendSql-method}
 \alias{backendMerge,MsBackendSql-method}
+\alias{precScanNum,MsBackendSql-method}
 \alias{centroided,MsBackendSql-method}
 \alias{smoothed,MsBackendSql-method}
 \alias{tic,MsBackendSql-method}
@@ -80,6 +81,8 @@ createMsBackendSqlDatabase(
 \S4method{uniqueMsLevels}{MsBackendSql}(object, ...)
 
 \S4method{backendMerge}{MsBackendSql}(object, ...)
+
+\S4method{precScanNum}{MsBackendSql}(object)
 
 \S4method{centroided}{MsBackendSql}(object)
 

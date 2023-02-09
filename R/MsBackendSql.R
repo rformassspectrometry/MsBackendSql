@@ -689,6 +689,8 @@ setMethod("backendMerge", "MsBackendSql", function(object, ...) {
     res
 })
 
+#' @rdname MsBackendSql
+#'
 #' @importMethodsFrom ProtGenerics precScanNum
 #'
 #' @exportMethod precScanNum
