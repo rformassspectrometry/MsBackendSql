@@ -44,7 +44,7 @@ createMsBackendSqlDatabase(
 
 \S4method{show}{MsBackendSql}(object)
 
-\S4method{backendInitialize}{MsBackendSql}(object, dbcon, ...)
+\S4method{backendInitialize}{MsBackendSql}(object, dbcon, data, ...)
 
 \S4method{dataStorage}{MsBackendSql}(object)
 
@@ -135,7 +135,15 @@ partitioned into (only supported for MySQL/MariaDB databases).}
 
 \item{object}{A \code{MsBackendSql} instance.}
 
-\item{...}{For \code{[}: ignored.}
+\item{data}{For \code{backendInitialize}: optional \code{DataFrame} with the full
+spectra data that should be inserted into a (new) \code{MsBackendSql}
+database. If provided, it is assumed that \code{dbcon} is a (writeable)
+connection to an empty database into which \code{data} should be inserted.
+\code{data} could be the output of \code{spectraData} from another backend.}
+
+\item{...}{For \code{[}: ignored. For \code{backendInitialize}, if parameter \code{data}
+is used: additional parameters to be passed to the function creating the
+database such as \code{blob}.}
 
 \item{i}{For \code{[}: \code{integer} or \code{logical} to subset the object.}
 
@@ -204,9 +212,11 @@ changing the original data in the SQL database.
 
 
 SQL databases can be created and filled with MS data from raw data files
-using the \code{createMsBackendSqlDatabase} function. Existing SQL databases
-(created previously with \code{createMsBackendSqlDatabase} can be loaded using
-the conventional way to create/initialize \code{MsBackend} classes, i.e. using
+using the \code{createMsBackendSqlDatabase} function or using
+\code{backendInitialize} and providing all data with parameter \code{data}. Existing
+SQL databases (created previously with \code{createMsBackendSqlDatabase} or
+\code{backendInitialize} with the \code{data} parameter) can be loaded using the
+\emph{conventional} way to create/initialize \code{MsBackend} classes, i.e. using
 \code{backendInitialize}.
 \itemize{
 \item \code{createMsBackendSqlDatabase}: create a database and fill it with MS data.
@@ -249,8 +259,18 @@ long (even longer than data insertion for \code{blob = FALSE}).
 \item \code{backendInitialize}: get access and initialize a \code{MsBackendSql} object.
 Parameter \code{object} is supposed to be a \code{MsBackendSql} instance, created
 e.g. with \code{MsBackendSql()}. Parameter \code{dbcon} is expected to be a
-connection to a SQL database previously created with the
-\code{createMsBackendSqlDatabase} function.
+connection to an existing \emph{MsBackendSql} SQL database (created e.g. with
+\code{createMsBackendSqlDatabase}). \code{backendInitialize} can alternatively also
+be used to create a \strong{new} \code{MsBackendSql} database using the optional
+\code{data} parameter. In this case, \code{dbcon} is expected to be a writeable
+connection to an empty database and \code{data} a \code{DataFrame} with the full
+spectra data to be inserted into this database. The format of \code{data}
+should match the format of the \code{DataFrame} returned by the \code{spectraData}
+function and requires columns \code{"mz"} and \code{"intensity"} with the m/z and
+intensity values of each spectrum. The \code{backendInitialize} call will
+then create all necessary tables in the database, will fill these tables
+with the provided data and will return an \code{MsBackendSql} for this
+database.
 }
 }
 

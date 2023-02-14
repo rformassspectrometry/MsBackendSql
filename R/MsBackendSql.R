@@ -19,9 +19,11 @@
 #' @section Creation of backend objects:
 #'
 #' SQL databases can be created and filled with MS data from raw data files
-#' using the `createMsBackendSqlDatabase` function. Existing SQL databases
-#' (created previously with `createMsBackendSqlDatabase` can be loaded using
-#' the conventional way to create/initialize `MsBackend` classes, i.e. using
+#' using the `createMsBackendSqlDatabase` function or using
+#' `backendInitialize` and providing all data with parameter `data`. Existing
+#' SQL databases (created previously with `createMsBackendSqlDatabase` or
+#' `backendInitialize` with the `data` parameter) can be loaded using the
+#' *conventional* way to create/initialize `MsBackend` classes, i.e. using
 #' `backendInitialize`.
 #'
 #' - `createMsBackendSqlDatabase`: create a database and fill it with MS data.
@@ -65,8 +67,18 @@
 #' - `backendInitialize`: get access and initialize a `MsBackendSql` object.
 #'   Parameter `object` is supposed to be a `MsBackendSql` instance, created
 #'   e.g. with `MsBackendSql()`. Parameter `dbcon` is expected to be a
-#'   connection to a SQL database previously created with the
-#'   `createMsBackendSqlDatabase` function.
+#'   connection to an existing *MsBackendSql* SQL database (created e.g. with
+#'   `createMsBackendSqlDatabase`). `backendInitialize` can alternatively also
+#'   be used to create a **new** `MsBackendSql` database using the optional
+#'   `data` parameter. In this case, `dbcon` is expected to be a writeable
+#'   connection to an empty database and `data` a `DataFrame` with the full
+#'   spectra data to be inserted into this database. The format of `data`
+#'   should match the format of the `DataFrame` returned by the `spectraData`
+#'   function and requires columns `"mz"` and `"intensity"` with the m/z and
+#'   intensity values of each spectrum. The `backendInitialize` call will
+#'   then create all necessary tables in the database, will fill these tables
+#'   with the provided data and will return an `MsBackendSql` for this
+#'   database.
 #'
 #' @section Subsetting, merging and filtering data:
 #'
@@ -177,8 +189,6 @@
 #' however stored in a `data.frame` within the object thus increasing the
 #' memory demand of the object.
 #'
-#' @param dbcon Connection to a database.
-#'
 #' @param backend For `createMsBackendSqlDatabase`: MS backend that can be
 #'     used to import MS data from the raw files specified with
 #'     parameter `x`.
@@ -205,8 +215,16 @@
 #'     `columns = c("mz", "intensity")` but all columns listed by
 #'     `peaksVariables` would be supported.
 #'
+#' @param data For `backendInitialize`: optional `DataFrame` with the full
+#'     spectra data that should be inserted into a (new) `MsBackendSql`
+#'     database. If provided, it is assumed that `dbcon` is a (writeable)
+#'     connection to an empty database into which `data` should be inserted.
+#'     `data` could be the output of `spectraData` from another backend.
+#'
 #' @param dataOrigin For `filterDataOrigin`: `character` with *data origin*
 #'     values to which the data should be subsetted.
+#'
+#' @param dbcon Connection to a database.
 #'
 #' @param drop For `[`: `logical(1)`, ignored.
 #'
@@ -273,7 +291,9 @@
 #'     the raw data files from which the data should be imported. For other
 #'     methods an `MsqlBackend` instance.
 #'
-#' @param ... For `[`: ignored.
+#' @param ... For `[`: ignored. For `backendInitialize`, if parameter `data`
+#'     is used: additional parameters to be passed to the function creating the
+#'     database such as `blob`.
 #'
 #' @name MsBackendSql
 #'
@@ -360,7 +380,7 @@ setClass(
         spectraIds = integer(),
         .tables = list(),
         peak_fun = .fetch_peaks_sql,
-        readonly = TRUE, version = "0.2"))
+        readonly = FALSE, version = "0.2"))
 
 #' @importFrom methods .valueClassTest is new validObject
 #'
@@ -392,16 +412,17 @@ setMethod("show", "MsBackendSql", function(object) {
 #'
 #' @rdname MsBackendSql
 setMethod("backendInitialize", "MsBackendSql",
-          function(object, dbcon, ...) {
+          function(object, dbcon, data, ...) {
     if (missing(dbcon))
         stop("Parameter 'dbcon' is required for 'MsBackendSql'")
+    ## if data is provided create a new database in dbcon with the data.
+    if (!missing(data))
+        .create_from_spectra_data(dbcon, data = data, ...)
     msg <- .valid_dbcon(dbcon)
     if (length(msg)) stop(msg)
     object@dbcon <- dbcon
-
-    res <- dbGetQuery(
-        dbcon, "select spectrum_id_ from msms_spectrum")
-    object@spectraIds <- res[, "spectrum_id_"]
+    object@spectraIds <- dbGetQuery(
+        dbcon, "select spectrum_id_ from msms_spectrum")[, 1L]
     object@.tables <- list(
         msms_spectrum = colnames(
             dbGetQuery(dbcon, "select * from msms_spectrum limit 0")))

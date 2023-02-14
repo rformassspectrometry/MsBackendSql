@@ -3,6 +3,10 @@
 ## Changes in 0.99.3
 
 - Add `backendMerge` method.
+- Add parameter `data` to `backendInitialize` to allow creating a new
+  `MsBackendSql` database and store the values from `data` in it. This
+  enables the use of `Spectra,setBackend` to convert any backend to a
+  `MsBackendSql`.
 
 ## Changes in 0.99.2
 

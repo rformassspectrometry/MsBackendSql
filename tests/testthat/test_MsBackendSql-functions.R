@@ -8,7 +8,10 @@ test_that(".insert_data et al work", {
     spd$smoothed <- as.logical(spd$smoothed)
     spd$centroided <- as.logical(spd$centroided)
     spd$spectrum_id_ <- NULL
-    expect_equal(as.data.frame(spectraData(mm8_sps)), spd)
+    spd$dataStorage <- NULL
+    ref <- as.data.frame(spectraData(mm8_sps))
+    ref$dataStorage <- NULL
+    expect_equal(ref, spd)
 
     pks <- dbGetQuery(db, "select * from msms_spectrum_peak")
     pks <- split(pks[, 1:2], pks$spectrum_id_)
@@ -147,4 +150,96 @@ test_that(".combine works", {
     res <- .combine(tmp)
     expect_s4_class(res, "MsBackendSql")
     expect_equal(mm8_be[1:10], res)
+})
+
+test_that(".create_from_spectra_data works", {
+    ## wrong format or missing data.
+    tmpf <- tempfile()
+    tmpcon <- dbConnect(SQLite(), tmpf)
+    dta <- spectraData(mm8_sps)
+    expect_error(.create_from_spectra_data(tmpcon, dta), "required")
+
+    ## blob
+    dta <- spectraData(
+        mm8_sps, columns = c(spectraVariables(mm8_sps), "mz", "intensity"))
+    .create_from_spectra_data(tmpcon, dta)
+    res <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
+    expect_true(all(mm8_sps$dataStorage != res$dataStorage))
+    expect_equal(rtime(mm8_be), rtime(res))
+    expect_equal(mz(mm8_be), mz(res))
+    expect_equal(intensity(mm8_be), intensity(res))
+    tbls <- dbListTables(tmpcon)
+    expect_equal(tbls, c("msms_spectrum", "msms_spectrum_peak_blob"))
+
+    ## long format
+    tmpf <- tempfile()
+    tmpcon <- dbConnect(SQLite(), tmpf)
+    .create_from_spectra_data(tmpcon, dta, blob = FALSE)
+    tbls <- dbListTables(tmpcon)
+    expect_equal(tbls, c("msms_spectrum", "msms_spectrum_peak"))
+    res2 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
+    expect_true(all(res2$dataStorage != res$dataStorage))
+    expect_equal(rtime(res2), rtime(res))
+    expect_equal(mz(res2), mz(res))
+    expect_equal(intensity(res2), intensity(res))
+
+    ## empty data frame
+    tmpf <- tempfile()
+    tmpcon <- dbConnect(SQLite(), tmpf)
+    dta <- spectraData(
+        mm8_sps[integer()],
+        columns = c(spectraVariables(mm8_sps), "mz", "intensity"))
+    .create_from_spectra_data(tmpcon, dta)
+    res3 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
+    expect_true(validObject(res3))
+    expect_equal(spectraVariables(res2), spectraVariables(res3))
+    expect_equal(colnames(spectraData(res2)), colnames(spectraData(res3)))
+    expect_true(length(res3) == 0L)
+    dbDisconnect(tmpcon)
+
+    ## spectra without m/z and intensity
+    dta <- data.frame(msLevel = c(1L, 2L, 2L), rtime = c(12.2, 12.3, 13.1))
+    tmpf <- tempfile()
+    tmpcon <- dbConnect(SQLite(), tmpf)
+    expect_error(.create_from_spectra_data(tmpcon, dta))
+    dta$mz <- list(numeric(), numeric(), numeric())
+    dta$intensity <- list(numeric(), numeric(), numeric())
+    dta$my_col <- "a"
+    .create_from_spectra_data(tmpcon, dta)
+    res4 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
+    expect_true(validObject(res4))
+    expect_true(all(colnames(dta) %in% spectraVariables(res4)))
+    tmp <- spectraData(res4)
+    expect_equal(
+        tmp$mz, IRanges::NumericList(list(numeric(), numeric(), numeric()),
+                                     compress = FALSE))
+    expect_equal(tmp$msLevel, dta$msLevel)
+    expect_equal(tmp$rtime, dta$rtime)
+})
+
+test_that(".drop_na_columns works", {
+    tmp <- data.frame(a = 1:3, b = NA, d = 1:3)
+    res <- .drop_na_columns(tmp)
+    expect_equal(res, tmp[, c(1, 3)])
+
+    tmp$a <- NA
+    tmp$d <- NA
+    res <- .drop_na_columns(tmp)
+    expect_true(is.data.frame(tmp))
+    expect_true(ncol(res) == 0)
+    expect_true(nrow(res) == 3)
+
+    tmp$a <- list(1:3, 2:3, 3)
+    tmp$z <- "b"
+    res <- .drop_na_columns(tmp)
+    expect_equal(res, tmp[, c(1, 4)])
+
+    ## want to keep specific columns with missing values.
+    res <- .drop_na_columns(tmp, keep = c("d"))
+    expect_equal(res, tmp[, c(1, 3, 4)])
+
+    tmp$b <- "4"
+    tmp$d <- 9
+    res <- .drop_na_columns(tmp)
+    expect_equal(res, tmp)
 })

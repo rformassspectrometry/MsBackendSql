@@ -3,6 +3,24 @@ test_that("backendInitialize works", {
     expect_error(backendInitialize(MsBackendSql(), dbcon = "file"), "connection")
 
     be <- backendInitialize(MsBackendSql(), dbcon = mm8_db)
+
+    ## backendInitialize creating a new database.
+    expect_warning(
+        be2 <- backendInitialize(
+            MsBackendSql(), dbcon = dbConnect(SQLite(), tempfile()),
+            data = spectraData(be))
+      , "Replacing")
+    expect_equal(be$mz, be2$mz)
+    expect_equal(be$rtime, be2$rtime)
+
+    ## empty data
+    expect_warning(
+        be2 <- backendInitialize(
+            MsBackendSql(), dbcon = dbConnect(SQLite(), tempfile()),
+            data = spectraData(be[integer()]))
+      , "Replacing")
+    expect_true(length(be2) == 0L)
+    expect_equal(spectraVariables(be2), spectraVariables(be))
 })
 
 test_that("dataStorage works", {
