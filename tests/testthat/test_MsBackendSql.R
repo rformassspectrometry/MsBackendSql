@@ -148,7 +148,8 @@ test_that("spectraNames,spectraNames<-,MsBackendSql", {
     expect_true(is.character(res))
     expect_identical(res, as.character(seq_along(mm8_be)))
 
-    expect_error(spectraNames(mm8_be) <- 1:20, "does not support")
+    expect_error(spectraNames(mm8_be) <- rev(seq_along(mm8_be)),
+                 "not supported")
 })
 
 test_that("filterMsLevel,MsBackendSql works", {
@@ -299,4 +300,38 @@ test_that("tic,MsBackendSql works", {
     expect_true(all(!is.na(res)))
     res_2 <- tic(mm_be, initial = FALSE)
     expect_true(sum(res != res_2) > 10)
+})
+
+test_that("supportsSetBackend,MsBackendSql works", {
+    expect_true(supportsSetBackend(MsBackendSql()))
+    expect_true(isReadOnly(MsBackendSql()))
+})
+
+test_that("setBackend works with MsBackendSql", {
+    tmpcon <- dbConnect(SQLite(), tempfile())
+    expect_error(res <- setBackend(mm8_sps, MsBackendSql()), "dbcon")
+    res <- setBackend(mm8_sps, MsBackendSql(), dbcon = tmpcon)
+    expect_equal(dbListTables(tmpcon),
+                 c("msms_spectrum", "msms_spectrum_peak_blob"))
+    expect_equal(mz(res), mz(mm8_sps))
+    expect_equal(rtime(res), rtime(mm8_sps))
+    expect_s4_class(res@backend, "MsBackendSql")
+
+    dbDisconnect(tmpcon)
+    tmpcon <- dbConnect(SQLite(), tempfile())
+    res <- setBackend(mm8_sps, MsBackendSql(),
+                      dbcon = tmpcon, blob = FALSE)
+    expect_equal(dbListTables(tmpcon),
+                 c("msms_spectrum", "msms_spectrum_peak"))
+    expect_equal(mz(res), mz(mm8_sps))
+    expect_equal(rtime(res), rtime(mm8_sps))
+    expect_s4_class(res@backend, "MsBackendSql")
+
+    dbDisconnect(tmpcon)
+    tmpcon <- dbConnect(SQLite(), tempfile())
+    res <- setBackend(mm8_sps[integer()], MsBackendSql(),
+                      dbcon = tmpcon, blob = FALSE)
+    expect_equal(dbListTables(tmpcon),
+                 c("msms_spectrum", "msms_spectrum_peak"))
+    dbDisconnect(tmpcon)
 })

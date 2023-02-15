@@ -7,6 +7,7 @@
   `MsBackendSql` database and store the values from `data` in it. This
   enables the use of `Spectra,setBackend` to convert any backend to a
   `MsBackendSql`.
+- Implement `supportsSetBackend` to enable `setBackend,Spectra,MsBackendSql`.
 
 ## Changes in 0.99.2
 

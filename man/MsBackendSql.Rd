@@ -28,6 +28,7 @@
 \alias{centroided,MsBackendSql-method}
 \alias{smoothed,MsBackendSql-method}
 \alias{tic,MsBackendSql-method}
+\alias{supportsSetBackend,MsBackendSql-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsBackendSql()
@@ -89,6 +90,8 @@ createMsBackendSqlDatabase(
 \S4method{smoothed}{MsBackendSql}(object)
 
 \S4method{tic}{MsBackendSql}(object, initial = TRUE)
+
+\S4method{supportsSetBackend}{MsBackendSql}(object, ...)
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -270,7 +273,17 @@ function and requires columns \code{"mz"} and \code{"intensity"} with the m/z an
 intensity values of each spectrum. The \code{backendInitialize} call will
 then create all necessary tables in the database, will fill these tables
 with the provided data and will return an \code{MsBackendSql} for this
-database.
+database. Thus, the \code{MsBackendSql} supports the \code{setBackend} method
+from \code{Spectra} to change from (any) backend to a \code{MsBackendSql}.
+\item \code{supportsSetBackend}: whether \code{MsBackendSql} supports the \code{setBackend}
+method to change the \code{MsBackend} of a \code{Spectra} object to a
+\code{MsBackendSql}. Returns \code{TRUE}, thus, changing the backend to a
+\code{MsBackendSql} is supported \strong{if} a writeable database connection
+is provided in addition with parameter \code{dbcon} (i.e.
+\code{setBackend(sps, MsBackendSql(), dbcon = con)} with \code{con} being a
+connection to an \strong{empty} database would store the full spectra
+data from the \code{Spectra} object \code{sps} into the specified database and
+would return a \code{Spectra} object that uses a \code{MsBackendSql}).
 }
 }
 

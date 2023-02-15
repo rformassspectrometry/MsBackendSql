@@ -78,7 +78,19 @@
 #'   intensity values of each spectrum. The `backendInitialize` call will
 #'   then create all necessary tables in the database, will fill these tables
 #'   with the provided data and will return an `MsBackendSql` for this
-#'   database.
+#'   database. Thus, the `MsBackendSql` supports the `setBackend` method
+#'   from `Spectra` to change from (any) backend to a `MsBackendSql`.
+#'
+#' - `supportsSetBackend`: whether `MsBackendSql` supports the `setBackend`
+#'   method to change the `MsBackend` of a `Spectra` object to a
+#'   `MsBackendSql`. Returns `TRUE`, thus, changing the backend to a
+#'   `MsBackendSql` is supported **if** a writeable database connection
+#'   is provided in addition with parameter `dbcon` (i.e.
+#'   `setBackend(sps, MsBackendSql(), dbcon = con)` with `con` being a
+#'   connection to an **empty** database would store the full spectra
+#'   data from the `Spectra` object `sps` into the specified database and
+#'   would return a `Spectra` object that uses a `MsBackendSql`).
+#'
 #'
 #' @section Subsetting, merging and filtering data:
 #'
@@ -380,7 +392,7 @@ setClass(
         spectraIds = integer(),
         .tables = list(),
         peak_fun = .fetch_peaks_sql,
-        readonly = FALSE, version = "0.2"))
+        readonly = TRUE, version = "0.2"))
 
 #' @importFrom methods .valueClassTest is new validObject
 #'
@@ -569,10 +581,8 @@ setMethod("spectraNames", "MsBackendSql", function(object) {
 #' @importMethodsFrom ProtGenerics spectraNames<-
 #'
 #' @rdname MsBackendSql
-setReplaceMethod("spectraNames", "MsBackendSql",
-                 function(object, value) {
-                     stop(class(object)[1],
-                          " does not support replacing spectra names (IDs).")
+setReplaceMethod("spectraNames", "MsBackendSql", function(object, value) {
+    stop("Replacing spectraNames is not supported for ", class(object)[1L])
 })
 
 #' @importMethodsFrom Spectra filterMsLevel uniqueMsLevels
@@ -750,4 +760,13 @@ setMethod("tic", "MsBackendSql", function(object, initial = TRUE) {
     if (initial)
         spectraData(object, "totIonCurrent")[, 1L]
     else vapply1d(intensity(object), sum, na.rm = TRUE)
+})
+
+#' @importMethodsFrom Spectra supportsSetBackend
+#'
+#' @exportMethod supportsSetBackend
+#'
+#' @rdname MsBackendSql
+setMethod("supportsSetBackend", "MsBackendSql", function(object, ...) {
+    TRUE
 })

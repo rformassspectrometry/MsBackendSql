@@ -21,7 +21,7 @@ Description: SQL-based mass spectrometry (MS) data backend supporting also
 	     representation for very large or remote MS data sets.
 Depends:
     R (>= 4.3.0),
-    Spectra (>= 1.9.9)
+    Spectra (>= 1.9.10)
 Imports:
     BiocParallel,
     S4Vectors,
