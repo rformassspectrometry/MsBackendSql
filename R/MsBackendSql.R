@@ -491,8 +491,10 @@ setMethod(
     function(object, columns = c("mz", "intensity")) {
         pks <- object@peak_fun(object, columns)
         if (is.list(pks$mz) | is.list(pks$intensity)) {
-            res <- do.call(mapply, args = c(pks[columns],
-                                            list(FUN = base::cbind)))
+            res <- do.call(
+                mapply, args = c(pks[columns],
+                                 list(FUN = base::cbind, SIMPLIFY = FALSE,
+                                      USE.NAMES = FALSE)))
             res[match(object@spectraIds, pks$spectrum_id_)]
         } else {
             f <- as.factor(pks$spectrum_id_)
