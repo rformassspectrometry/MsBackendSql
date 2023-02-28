@@ -16,7 +16,7 @@ createMsBackendSqlDatabase."><meta property="og:image" content="https://rformass
     
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.3</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@ createMsBackendSqlDatabase(
 show(object)
 
 # S4 method for MsBackendSql
-backendInitialize(object, dbcon, ...)
+backendInitialize(object, dbcon, data, ...)
 
 # S4 method for MsBackendSql
 dataStorage(object)
@@ -133,6 +133,9 @@ filterPrecursorMzValues(object, mz = numeric(), ppm = 20, tolerance = 0)
 uniqueMsLevels(object, ...)
 
 # S4 method for MsBackendSql
+backendMerge(object, ...)
+
+# S4 method for MsBackendSql
 precScanNum(object)
 
 # S4 method for MsBackendSql
@@ -142,7 +145,10 @@ centroided(object)
 smoothed(object)
 
 # S4 method for MsBackendSql
-tic(object, initial = TRUE)</code></pre></div>
+tic(object, initial = TRUE)
+
+# S4 method for MsBackendSql
+supportsSetBackend(object, ...)</code></pre></div>
     </div>
 
     <div class="section level2">
@@ -207,8 +213,18 @@ partitioned into (only supported for MySQL/MariaDB databases).</p></dd>
 <dd><p>A <code>MsBackendSql</code> instance.</p></dd>
 
 
+<dt>data</dt>
+<dd><p>For <code>backendInitialize</code>: optional <code>DataFrame</code> with the full
+spectra data that should be inserted into a (new) <code>MsBackendSql</code>
+database. If provided, it is assumed that <code>dbcon</code> is a (writeable)
+connection to an empty database into which <code>data</code> should be inserted.
+<code>data</code> could be the output of <code>spectraData</code> from another backend.</p></dd>
+
+
 <dt>...</dt>
-<dd><p>For <code>[</code>: ignored.</p></dd>
+<dd><p>For <code>[</code>: ignored. For <code>backendInitialize</code>, if parameter <code>data</code>
+is used: additional parameters to be passed to the function creating the
+database such as <code>blob</code>.</p></dd>
 
 
 <dt>i</dt>
@@ -306,9 +322,11 @@ changing the original data in the SQL database.</p>
 
 
 <p>SQL databases can be created and filled with MS data from raw data files
-using the <code>createMsBackendSqlDatabase</code> function. Existing SQL databases
-(created previously with <code>createMsBackendSqlDatabase</code> can be loaded using
-the conventional way to create/initialize <code>MsBackend</code> classes, i.e. using
+using the <code>createMsBackendSqlDatabase</code> function or using
+<code>backendInitialize</code> and providing all data with parameter <code>data</code>. Existing
+SQL databases (created previously with <code>createMsBackendSqlDatabase</code> or
+<code>backendInitialize</code> with the <code>data</code> parameter) can be loaded using the
+<em>conventional</em> way to create/initialize <code>MsBackend</code> classes, i.e. using
 <code>backendInitialize</code>.</p><ul><li><p><code>createMsBackendSqlDatabase</code>: create a database and fill it with MS data.
 Parameter <code>dbcon</code> is expected to be a database connection, parameter <code>x</code>
 a <code>character</code> vector with the file names from which to import the data.
@@ -349,11 +367,31 @@ long (even longer than data insertion for <code>blob = FALSE</code>).</p></li>
 <li><p><code>backendInitialize</code>: get access and initialize a <code>MsBackendSql</code> object.
 Parameter <code>object</code> is supposed to be a <code>MsBackendSql</code> instance, created
 e.g. with <code>MsBackendSql()</code>. Parameter <code>dbcon</code> is expected to be a
-connection to a SQL database previously created with the
-<code>createMsBackendSqlDatabase</code> function.</p></li>
+connection to an existing <em>MsBackendSql</em> SQL database (created e.g. with
+<code>createMsBackendSqlDatabase</code>). <code>backendInitialize</code> can alternatively also
+be used to create a <strong>new</strong> <code>MsBackendSql</code> database using the optional
+<code>data</code> parameter. In this case, <code>dbcon</code> is expected to be a writeable
+connection to an empty database and <code>data</code> a <code>DataFrame</code> with the full
+spectra data to be inserted into this database. The format of <code>data</code>
+should match the format of the <code>DataFrame</code> returned by the <code>spectraData</code>
+function and requires columns <code>"mz"</code> and <code>"intensity"</code> with the m/z and
+intensity values of each spectrum. The <code>backendInitialize</code> call will
+then create all necessary tables in the database, will fill these tables
+with the provided data and will return an <code>MsBackendSql</code> for this
+database. Thus, the <code>MsBackendSql</code> supports the <code>setBackend</code> method
+from <code>Spectra</code> to change from (any) backend to a <code>MsBackendSql</code>.</p></li>
+<li><p><code>supportsSetBackend</code>: whether <code>MsBackendSql</code> supports the <code>setBackend</code>
+method to change the <code>MsBackend</code> of a <code>Spectra</code> object to a
+<code>MsBackendSql</code>. Returns <code>TRUE</code>, thus, changing the backend to a
+<code>MsBackendSql</code> is supported <strong>if</strong> a writeable database connection
+is provided in addition with parameter <code>dbcon</code> (i.e.
+<code>setBackend(sps, MsBackendSql(), dbcon = con)</code> with <code>con</code> being a
+connection to an <strong>empty</strong> database would store the full spectra
+data from the <code>Spectra</code> object <code>sps</code> into the specified database and
+would return a <code>Spectra</code> object that uses a <code>MsBackendSql</code>).</p></li>
 </ul></div>
     <div class="section level2">
-    <h2 id="subsetting-and-filtering-data">Subsetting and filtering data<a class="anchor" aria-label="anchor" href="#subsetting-and-filtering-data"></a></h2>
+    <h2 id="subsetting-merging-and-filtering-data">Subsetting, merging and filtering data<a class="anchor" aria-label="anchor" href="#subsetting-merging-and-filtering-data"></a></h2>
     
 
 
@@ -363,6 +401,11 @@ eventually cached data. The original data in the database <strong>is not</strong
 affected by any subsetting operation. Any subsetting operation can be
 <em>undone</em> by resetting the object with the <code>reset</code> function. Subsetting
 in arbitrary order as well as index replication is supported.</p>
+<p>Multiple <code>MsBackendSql</code> objects can also be merged (combined) with the
+<code>backendMerge</code> function. Note that this requires that all <code>MsBackendSql</code>
+objects are connected to the <strong>same</strong> database. This function is thus
+mostly used for combining <code>MsBackendSql</code> objects that were previously
+splitted using e.g. <code>split</code>.</p>
 <p>In addition, <code>MsBackendSql</code> supports all other filtering methods available
 through <code><a href="https://rdrr.io/pkg/Spectra/man/MsBackendCached.html" class="external-link">MsBackendCached()</a></code>. Implementation of filter functions optimized
 for <code>MsBackendSql</code> objects are:</p><ul><li><p><code>filterDataOrigin</code>: filter the object retaining spectra with <code>dataOrigin</code>
@@ -466,7 +509,9 @@ memory demand of the object.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> [==========================================================] 1/1 (100%) in  1s</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating indices (this can take, depending on the database's size, very long) </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Creating indices </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  Done</span>
@@ -494,7 +539,7 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmplPH3EB/file8b22f9151ad</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpJgxBkU/file270666bc943</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Original data source</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span></span>
@@ -507,9 +552,9 @@ memory demand of the object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Data storage</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">dataStorage</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmplPH3EB/file8b22f9151ad" "/tmp/RtmplPH3EB/file8b22f9151ad"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmplPH3EB/file8b22f9151ad" "/tmp/RtmplPH3EB/file8b22f9151ad"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmplPH3EB/file8b22f9151ad" "/tmp/RtmplPH3EB/file8b22f9151ad"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpJgxBkU/file270666bc943" "/tmp/RtmpJgxBkU/file270666bc943"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpJgxBkU/file270666bc943" "/tmp/RtmpJgxBkU/file270666bc943"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpJgxBkU/file270666bc943" "/tmp/RtmpJgxBkU/file270666bc943"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access all spectra data</span></span></span>
 <span class="r-in"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -529,20 +574,20 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 197         1   66.4458            197       197    111.058,112.026,113.029,...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1   66.7818            198       198    111.044,112.024,112.518,...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           intensity            dataStorage             dataOrigin centroided</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NumericList&gt;            &lt;character&gt;            &lt;character&gt;  &lt;integer&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NumericList&gt;            &lt;character&gt;            &lt;character&gt;  &lt;logical&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...             ...                    ...                    ...        ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /__w/_temp/Library/m.. /__w/_temp/Library/m..          1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/RtmpJgxBkU/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      smoothed  polarity precScanNum precursorMz precursorIntensity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;integer&gt; &lt;integer&gt;   &lt;integer&gt;   &lt;numeric&gt;          &lt;numeric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;logical&gt; &lt;integer&gt;   &lt;integer&gt;   &lt;numeric&gt;          &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          NA         1          NA          NA                 NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2          NA         1          NA          NA                 NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3          NA         1          NA          NA                 NA</span>
@@ -685,7 +730,7 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmplPH3EB/file8b22f9151ad</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpJgxBkU/file270666bc943</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span></span>
