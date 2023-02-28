@@ -82,6 +82,10 @@ MsBackendSql <- function() {
         stop("Column(s) ", paste0(columns[!columns %in% names(res)],
                                   collapse = ", "), " not available.",
              call. = FALSE)
+    if (any(columns == "centroided") && !is.logical(res$centroided))
+        res$centroided <- as.logical(res$centroided)
+    if (any(columns == "smoothed") && !is.logical(res$smoothed))
+        res$smoothed <- as.logical(res$smoothed)
     extractCOLS(res, columns)
 }
 
@@ -215,6 +219,10 @@ MsBackendSql <- function() {
 #'
 #' @noRd
 .insert_spectra_variables <- function(con, data) {
+    info <- dbGetInfo(con)
+    if (length(info$dbname))
+        data$dataStorage <- info$dbname
+    else data$dataStorage <- "<database>"
     if (inherits(con, "MariaDBConnection") || inherits(con, "MySQLConnection"))
         .load_data_file(con, data, "msms_spectrum")
     else
@@ -281,7 +289,7 @@ MsBackendSql <- function() {
     spectrum_id <- seq(index + 1L, index + nrow(spd))
     spd$spectrum_id_ <- spectrum_id
     .insert_spectra_variables(con, spd)
-    pks <- peaksData(x)
+    pks <- peaksData(x, columns = c("mz", "intensity"))
     lns <- lengths(pks) / 2
     pks <- as.data.frame(do.call(rbind, pks))
     pks$spectrum_id_ <- rep(spectrum_id, lns)
@@ -304,7 +312,7 @@ MsBackendSql <- function() {
     spectrum_id <- seq(index + 1L, index + nrow(spd))
     spd$spectrum_id_ <- spectrum_id
     .insert_spectra_variables(con, spd)
-    pks <- peaksData(x)
+    pks <- peaksData(x, columns = c("mz", "intensity"))
     template <- data.frame(matrix(ncol = 0, nrow = 1))
     pks_table <- do.call(rbind, lapply(pks, function(z) {
         template$mz <- list(serialize(z[, 1], NULL))
@@ -316,7 +324,6 @@ MsBackendSql <- function() {
                  value = pks_table, append = TRUE)
     spectrum_id[length(spectrum_id)]
 }
-
 
 #' Insert data sequentially from files provided by x and adds it to a database
 #'
@@ -411,8 +418,11 @@ MsBackendSql <- function() {
         gc()
         pb$tick(1)
     }
-    message("Creating indices (this can take, depending on the database's size",
-            ", very long) ", appendLF = FALSE)
+    .create_indices(con, peak_table)
+}
+
+.create_indices <- function(con, peak_table) {
+    message("Creating indices ", appendLF = FALSE)
     if (inherits(con, "MariaDBConnection")) {
         res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 1;")
         message(".", appendLF = FALSE)
@@ -433,8 +443,10 @@ MsBackendSql <- function() {
     ## create remaining indices
     res <- dbExecute(con, paste0("CREATE INDEX spectrum_rtime on ",
                                   "msms_spectrum (rtime)"))
+    message(".", appendLF = FALSE)
     res <- dbExecute(con, paste0("CREATE INDEX spectrum_precursor_mz on ",
                                   "msms_spectrum (precursorMz)"))
+    message(".", appendLF = FALSE)
     res <- dbExecute(con, paste0("CREATE INDEX spectrum_ms_level on ",
                                   "msms_spectrum (msLevel)"))
     message(" Done")
@@ -493,4 +505,145 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
         qry <- paste0(qry, "spectrum_id_ in (",
                       paste0(x@spectraIds, collapse = ","), ") and ")
     qry
+}
+
+#' @importFrom MsCoreUtils vapply1c rbindFill
+.combine <- function(objects) {
+    if (length(objects) == 1L)
+        return(objects[[1L]])
+    if (!all(vapply1c(objects, class) == class(objects[[1]])))
+        stop("Can only merge backends of the same type: ", class(objects[[1]]))
+    ids <- vapply(objects, .db_info_string, character(1))
+    if (length(unique(ids)) != 1L)
+        stop("Can only merge backends connected to the same database")
+    res <- objects[[1]]
+    res@spectraIds <- unname(
+        do.call(c, lapply(objects, function(z) z@spectraIds)))
+    ## merge slots of MsBackendCached.
+    res@localData <- do.call(
+        rbindFill, lapply(objects, function(z) z@localData))
+    if (!nrow(res@localData))
+        res@localData <- data.frame(row.names = seq_along(res@spectraIds))
+    res@spectraVariables <- unique(
+        unlist(lapply(objects, function(z) z@spectraVariables),
+               use.names = FALSE))
+    res@nspectra <- length(res@spectraIds)
+    res
+}
+
+#' @importFrom DBI dbGetInfo
+.db_info_string <- function(x) {
+    do.call(paste, dbGetInfo(.dbcon(x)))
+}
+
+#' Create a new `MsBackendSql` database and insert the (full) data provided
+#' with a `spectraData` `DataFrame`. This is supposed to support changing
+#' backend using `setBackend` to a `MsBackendSql`.
+#'
+#' @note
+#'
+#' At present we are not supporting additional peak variables. These
+#' might eventually be provided with an additional parameter
+#' `peaksVariables` and these would have to be extracted and
+#' merged with the `peaks` data frame.
+#'
+#' @param data `DataFrame` with the full spectra data as returned by
+#'     `spectraData`.
+#'
+#' @note
+#'
+#' There is some redundancy and code duplication between this function and
+#' the `insert_backend` and `insert_backend_blob` functions. These functions
+#' are not (yet) merged, because the latter are designed to be more memory
+#' efficient and to enable import of large data set. This function assumes
+#' that data is already loaded into memory.
+#'
+#' @author Johannes Rainer
+#'
+#' @importFrom Spectra coreSpectraVariables
+#'
+#' @noRd
+.create_from_spectra_data <- function(dbcon, data, blob = TRUE, ...) {
+    tbls <- dbListTables(dbcon)
+    if (any(c("msms_spectrum", "msms_spectrum_peak",
+              "msms_spectrum_peak_blob") %in% tbls))
+        stop("'dbcon' contains already tables of a 'MsBackendSql' database")
+    if (!all(c("mz", "intensity") %in% colnames(data)))
+        stop("'data' lacks required columns \"mz\" and \"intensity\"")
+    if (any(colnames(data) == "spectrum_id_")) {
+        warning("Replacing original column \"spectrum_id_\"")
+        data$spectrum_id_ <- NULL
+    }
+    message("preparing data ... ", appendLF = FALSE)
+    data <- .drop_na_columns(
+        data, keep = setdiff(colnames(data), names(coreSpectraVariables())))
+    if (!any(colnames(data) == "precursorMz"))
+        data$precursorMz <- NA_real_
+    if (!any(colnames(data) == "msLevel"))
+        data$msLevel <- NA_integer_
+    if (!any(colnames(data) == "rtime"))
+        data$rtime <- NA_real_
+    lns <- lengths(data$mz)
+    mzs <- data$mz
+    ints <- data$intensity
+    data$mz <- NULL
+    data$intensity <- NULL
+    data <- as.data.frame(data)
+    if (nrow(data))
+        data$dataStorage <- "<database>"
+    if (inherits(dbcon, "MySQLConnection"))
+        cols <- vapply(data, function(z) dbDataType(dbcon, z), character(1))
+    else cols <- dbDataType(dbcon, data)
+    if (blob) {
+        peak_table <- "msms_spectrum_peak_blob"
+        .initialize_tables_blob(dbcon, cols)
+    } else {
+        peak_table <- "msms_spectrum_peak"
+        .initialize_tables(dbcon, cols)
+    }
+    if (nrow(data)) {
+        if (inherits(dbcon, "MariaDBConnection")) {
+            res <- dbExecute(dbcon, "SET FOREIGN_KEY_CHECKS = 0;")
+            res <- dbExecute(dbcon, "SET UNIQUE_CHECKS = 0;")
+            res <- dbExecute(dbcon, "ALTER TABLE msms_spectrum DISABLE KEYS;")
+            res <- dbExecute(
+                dbcon, paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
+        }
+        sid <- seq_len(nrow(data))
+        data$spectrum_id_ <- sid
+        message("Done")
+        message("Inserting data ... ", appendLF = FALSE)
+        .insert_spectra_variables(dbcon, data)
+        if (blob) {
+            pks <- data.frame(matrix(ncol = 0, nrow = nrow(data)))
+            pks$mz <- lapply(as.list(mzs), serialize, connection = NULL)
+            pks$intensity <- lapply(as.list(ints), serialize, connection = NULL)
+            pks$spectrum_id_ <- sid
+            dbWriteTable(dbcon, name = peak_table, value = pks, append = TRUE)
+        } else {
+            pks <- data.frame(mz = unlist(mzs), intensity = unlist(ints))
+            pks$spectrum_id_ <- rep(sid, lns)
+            .insert_peaks(dbcon, pks)
+        }
+        message("Done")
+        .create_indices(dbcon, peak_table)
+    } else message("Done \nInserting data ... Done")
+}
+
+#' @importFrom MsCoreUtils vapply1l
+#'
+#' @noRd
+.drop_na_columns <- function(x, keep = character()) {
+    if (!nrow(x))
+        return(x)
+    nas <- vapply1l(x, function(z) {
+        allna <- all(is.na(z))
+        if (length(allna) > 1)
+            FALSE
+        else allna
+    })
+    nas <- nas & !colnames(x) %in% keep
+    if (any(nas))
+        x[, !nas, drop = FALSE]
+    else x
 }

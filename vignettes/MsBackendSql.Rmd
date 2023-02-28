@@ -50,15 +50,18 @@ The package can be installed with the `BiocManager` package. To install
 `BiocManager::install("MsBackendSql")` to install this package.
 
 
-# Creating `MsBackendSql` SQL databases
+# Creating and using `MsBackendSql` SQL databases
 
-The `r Biocpkg("MsBackendSql")` provides, with `createMsBackendSqlDatabase`, a
-function to import (raw) MS data and store it to an SQL database. This function
-takes a connection to an (empty) database and the names of the files from which
-the data should be imported as input parameters and stores the full data into
-the database. Below we create an empty SQLite database (in a temporary file) and
-fill that with MS data from two mzML files (from the `r Biocpkg("msdata")`
-package).
+`MsBackendSql` databases can be created either by importing (raw) MS data from
+MS data files using the `createMsBackendSqlDatabase` or using the
+`backendInitialize` function by providing in addition to the database connection
+also the full MS data to import as a `DataFrame`. In the first example we use
+the `createMsBackendSqlDatabase` function which takes a connection to an (empty)
+database and the names of the files from which the data should be imported as
+input parameters creates all necessary database tables and stores the full data
+into the database. Below we create an empty SQLite database (in a temporary
+file) and fill that with MS data from two mzML files (from the `r
+Biocpkg("msdata")` package).
 
 ```{r, message = FALSE, results = "hide"}
 library(RSQLite)
@@ -84,11 +87,35 @@ supported (also portable, self-contained SQLite databases).
 
 We can now create a `Spectra` object by providing the connection to the database
 in the constructor call and specifying to use the `MsBackendSql` (provided by
-this package) as *backend* using the `source` parameter:
+this package) as *backend* using the `source` parameter to get access to the
+data in this database:
 
 ```{r}
 sps <- Spectra(con, source = MsBackendSql())
 sps
+```
+
+`Spectra` objects allow also to change the backend to any other backend
+(extending `MsBackend`) using the `setBackend` function. Below we use this
+function to first load all data into memory by changing from the `MsBackendSql`
+to a `MsBackendMemory`.
+
+```{r}
+sps_mem <- setBackend(sps, MsBackendMemory())
+sps_mem
+```
+
+With this function it is also possible to change from any backend to a
+`MsBackendSql` in which case a new database is created and all data from the
+originating backend is stored in this database. We thus have to provide in
+addition also a connection to an (empty) database using the `dbcon`
+parameter. Below we create a new empty SQLite database and store all data
+from the `Spectra` object into this database using the `setBackend` method.
+
+```{r}
+tmpcon <- dbConnect(SQLite(), tempfile())
+sps2 <- setBackend(sps_mem, MsBackendSql(), dbcon = tmpcon)
+sps2
 ```
 
 Similar to any other `Spectra` object we can retrieve the available *spectra
@@ -129,6 +156,26 @@ spectra variable.
 
 ```{r}
 print(object.size(sps), units = "KB")
+```
+
+Such `$<-` operations can also be used to *cache* spectra variables
+(temporarily) in memory which can eventually improve performance. Below we test
+the time it takes to extract the MS level from each spectrum from the database,
+then cache the MS levels in memory using `$msLevel <-` and test the timing to
+extract these cached variable.
+
+```{r}
+system.time(msLevel(sps))
+sps$msLevel <- msLevel(sps)
+system.time(msLevel(sps))
+```
+
+We can also use the `reset` function to *reset* the data to its original state
+(this will cause any local spectra variables to be deleted and the backend to be
+initialized with the original data in the database).
+
+```{r}
+sps <- reset(sps)
 ```
 
 

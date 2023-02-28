@@ -1,5 +1,14 @@
 # MsBackendSql 0.99
 
+## Changes in 0.99.3
+
+- Add `backendMerge` method.
+- Add parameter `data` to `backendInitialize` to allow creating a new
+  `MsBackendSql` database and store the values from `data` in it. This
+  enables the use of `Spectra,setBackend` to convert any backend to a
+  `MsBackendSql`.
+- Implement `supportsSetBackend` to enable `setBackend,Spectra,MsBackendSql`.
+
 ## Changes in 0.99.2
 
 - Evaluate validity of the `MsBackendSql` using the full unit test suite from

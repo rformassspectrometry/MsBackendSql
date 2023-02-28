@@ -3,6 +3,24 @@ test_that("backendInitialize works", {
     expect_error(backendInitialize(MsBackendSql(), dbcon = "file"), "connection")
 
     be <- backendInitialize(MsBackendSql(), dbcon = mm8_db)
+
+    ## backendInitialize creating a new database.
+    expect_warning(
+        be2 <- backendInitialize(
+            MsBackendSql(), dbcon = dbConnect(SQLite(), tempfile()),
+            data = spectraData(be))
+      , "Replacing")
+    expect_equal(be$mz, be2$mz)
+    expect_equal(be$rtime, be2$rtime)
+
+    ## empty data
+    expect_warning(
+        be2 <- backendInitialize(
+            MsBackendSql(), dbcon = dbConnect(SQLite(), tempfile()),
+            data = spectraData(be[integer()]))
+      , "Replacing")
+    expect_true(length(be2) == 0L)
+    expect_equal(spectraVariables(be2), spectraVariables(be))
 })
 
 test_that("dataStorage works", {
@@ -29,6 +47,26 @@ test_that("[,MsBackendSql works", {
     be$new_var <- 1:length(be)
     res <- be[idx]
     expect_identical(be$new_var[idx], res$new_var)
+
+    res <- peaksData(mm8_be[c(3, 1)])
+    expect_true(length(res) == 2L)
+    expect_equal(res[[1L]], peaksData(mm8_sps[3L])[[1L]])
+    expect_equal(res[[2L]], peaksData(mm8_sps[1L])[[1L]])
+
+    res <- peaksData(mm8_be_blob[c(3, 1)])
+    expect_true(length(res) == 2L)
+    expect_equal(res[[1L]], peaksData(mm8_sps[3L])[[1L]])
+    expect_equal(res[[2L]], peaksData(mm8_sps[1L])[[1L]])
+
+    res <- peaksData(mm8_be[1L])
+    expect_true(length(res) == 1L)
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(res[[1L]], peaksData(mm8_sps[1L])[[1L]])
+
+    res <- peaksData(mm8_be_blob[1])
+    expect_true(length(res) == 1L)
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(res[[1L]], peaksData(mm8_sps[1L])[[1L]])
 })
 
 test_that("peaksData,MsBackendSql works", {
@@ -71,6 +109,12 @@ test_that("peaksData,MsBackendSql works", {
 
     res_2 <- peaksData(mm8_be_blob[idx], c("intensity"))
     expect_equal(res_2, peaksData(mm8_sps@backend[idx], "intensity"))
+
+    res <- peaksData(mm8_be[1L])
+    expect_true(is.list(res))
+    expect_true(length(res) == 1L)
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(colnames(res[[1L]]), c("mz", "intensity"))
 })
 
 test_that("peaksVariables,MsBackendSql works", {
@@ -130,7 +174,8 @@ test_that("spectraNames,spectraNames<-,MsBackendSql", {
     expect_true(is.character(res))
     expect_identical(res, as.character(seq_along(mm8_be)))
 
-    expect_error(spectraNames(mm8_be) <- 1:20, "does not support")
+    expect_error(spectraNames(mm8_be) <- rev(seq_along(mm8_be)),
+                 "not supported")
 })
 
 test_that("filterMsLevel,MsBackendSql works", {
@@ -243,6 +288,26 @@ test_that("uniqueMsLevels,MsBackendSql works", {
     expect_equal(uniqueMsLevels(MsBackendSql()), integer())
 })
 
+test_that("backendMerge,MsBackendSql works", {
+    empty <- mm8_be[integer()]
+    res <- backendMerge(empty)
+    expect_equal(res, empty)
+
+    spl <- split(mm8_be[1:10], 1:10)
+    spl[[5]] <- empty
+
+    mm8_sub <- mm8_be[c(1, 2,3, 4, 6, 7, 8, 9, 10)]
+    res <- backendMerge(spl)
+    expect_s4_class(res, "MsBackendSql")
+    expect_true(length(res) == 9L)
+    expect_equal(rtime(res), rtime(mm8_sub))
+    expect_equal(mz(res), mz(mm8_sub))
+
+    spl[[2]]$other_var <- 2L
+    res <- backendMerge(spl)
+    expect_equal(res$other_var, c(NA, 2L, NA, NA, NA, NA, NA, NA, NA))
+})
+
 test_that("centroided,MsBackendSql works", {
     expect_true(is.logical(centroided(tmt_be)))
 })
@@ -261,4 +326,38 @@ test_that("tic,MsBackendSql works", {
     expect_true(all(!is.na(res)))
     res_2 <- tic(mm_be, initial = FALSE)
     expect_true(sum(res != res_2) > 10)
+})
+
+test_that("supportsSetBackend,MsBackendSql works", {
+    expect_true(supportsSetBackend(MsBackendSql()))
+    expect_true(isReadOnly(MsBackendSql()))
+})
+
+test_that("setBackend works with MsBackendSql", {
+    tmpcon <- dbConnect(SQLite(), tempfile())
+    expect_error(res <- setBackend(mm8_sps, MsBackendSql()), "dbcon")
+    res <- setBackend(mm8_sps, MsBackendSql(), dbcon = tmpcon)
+    expect_equal(dbListTables(tmpcon),
+                 c("msms_spectrum", "msms_spectrum_peak_blob"))
+    expect_equal(mz(res), mz(mm8_sps))
+    expect_equal(rtime(res), rtime(mm8_sps))
+    expect_s4_class(res@backend, "MsBackendSql")
+
+    dbDisconnect(tmpcon)
+    tmpcon <- dbConnect(SQLite(), tempfile())
+    res <- setBackend(mm8_sps, MsBackendSql(),
+                      dbcon = tmpcon, blob = FALSE)
+    expect_equal(dbListTables(tmpcon),
+                 c("msms_spectrum", "msms_spectrum_peak"))
+    expect_equal(mz(res), mz(mm8_sps))
+    expect_equal(rtime(res), rtime(mm8_sps))
+    expect_s4_class(res@backend, "MsBackendSql")
+
+    dbDisconnect(tmpcon)
+    tmpcon <- dbConnect(SQLite(), tempfile())
+    res <- setBackend(mm8_sps[integer()], MsBackendSql(),
+                      dbcon = tmpcon, blob = FALSE)
+    expect_equal(dbListTables(tmpcon),
+                 c("msms_spectrum", "msms_spectrum_peak"))
+    dbDisconnect(tmpcon)
 })
