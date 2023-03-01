@@ -112,7 +112,7 @@ addition also a connection to an (empty) database using the `dbcon`
 parameter. Below we create a new empty SQLite database and store all data
 from the `Spectra` object into this database using the `setBackend` method.
 
-```{r}
+```{r, warnings = FALSE}
 tmpcon <- dbConnect(SQLite(), tempfile())
 sps2 <- setBackend(sps_mem, MsBackendSql(), dbcon = tmpcon)
 sps2
@@ -236,14 +236,26 @@ We next compare the performance to access the full peaks data from each
 `Spectra` object.
 
 ```{r}
-microbenchmark(peaksData(sps),
-               peaksData(sps_mzr),
-               peaksData(sps_im), times = 10)
+microbenchmark(peaksData(sps, BPPARAM = SerialParam()),
+               peaksData(sps_mzr, BPPARAM = SerialParam()),
+               peaksData(sps_im, BPPARAM = SerialParam()), times = 10)
 ```
 
 As expected, the `MsBackendMemory` has the fasted access to the full peaks
 data. The `MsBackendSql` outperforms however the `MsBackendMzR` providing faster
 access to the m/z and intensity values.
+
+Performance can be improved for the `MsBackendMzR` using parallel
+processing. Note that the `MsBackendSql` does **not support** parallel
+processing and thus parallel processing is (silently) disabled in functions such
+as `peaksData`.
+
+```{r}
+m2 <- MulticoreParam(2)
+microbenchmark(peaksData(sps, BPPARAM = m2),
+               peaksData(sps_mzr, BPPARAM = m2),
+               peaksData(sps_im, BPPARAM = m2), times = 10)
+```
 
 We next compare the performance of subsetting operations.
 
@@ -254,10 +266,15 @@ microbenchmark(filterRt(sps, rt = c(50, 100)),
 ```
 
 The two *on-disk* backends `MsBackendSql` and `MsBackendMzR` show a comparable
-performance for this operation. This filtering does however involve also access
-to spectra variables (the retention time in this case). To evaluate the
-performance of a *pure* subsetting operation we first define the indices of 10
-random spectra and subset the `Spectra` objects to these.
+performance for this operation. This filtering does involves access to a spectra
+variables (the retention time in this case) which, for the `MsBackendSql` needs
+first to be retrieved from the backend. The `MsBackendSql` backend allows
+however also to *cache* spectra variables (i.e. they are stored within the
+`MsBackendSql` object). Any access to such cached spectra variables can
+eventually be faster because no dedicated SQL query is needed.
+
+To evaluate the performance of a *pure* subsetting operation we first define the
+indices of 10 random spectra and subset the `Spectra` objects to these.
 
 ```{r}
 idx <- sample(seq_along(sps), 10)
@@ -292,10 +309,10 @@ The `MsBackendSql` outperforms the `MsBackendMzR` while, not unexpectedly, the
 # Other properties of the `MsBackendSql`
 
 The `MsBackendSql` backend does not support parallel processing since the
-database connection can not be shared across the different parallel
-processes. Thus, it is suggested to either disable parallel processing in
-general in the R session with `register(SerialParam())` or to pass the parameter
-`BPPARAM = SerialParam()` to functions such as `peaksData`.
+database connection can not be shared across the different (parallel)
+processes. Thus, all methods on `Spectra` objects that use a `MsBackendSql` will
+automatically (and silently) disable parallel processing even if a dedicated
+parallel processing setup was passed along with the `BPPARAM` method.
 
 Some functions on `Spectra` objects require to load the MS peak data (i.e., m/z
 and intensity values) into memory. For very large data sets (or computers with

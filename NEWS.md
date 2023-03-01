@@ -1,5 +1,10 @@
 # MsBackendSql 0.99
 
+## Changes in 0.99.4
+
+- Add `backendBpparam` method to ensure parallel processing is disabled for the
+ `MsBackendSql` backend.
+
 ## Changes in 0.99.3
 
 - Add `backendMerge` method.
