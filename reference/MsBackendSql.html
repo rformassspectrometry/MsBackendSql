@@ -16,7 +16,7 @@ createMsBackendSqlDatabase."><meta property="og:image" content="https://rformass
     
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.4</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -148,7 +148,10 @@ smoothed(object)
 tic(object, initial = TRUE)
 
 # S4 method for MsBackendSql
-supportsSetBackend(object, ...)</code></pre></div>
+supportsSetBackend(object, ...)
+
+# S4 method for MsBackendSql
+backendBpparam(object, BPPARAM = bpparam())</code></pre></div>
     </div>
 
     <div class="section level2">
@@ -302,6 +305,11 @@ or equal to <code>length(mz)</code>.</p></dd>
 should be returned (<code>initial = TRUE</code>, the default) or whether it
 should be calculated on the spectras' intensities (<code>initial = FALSE</code>).</p></dd>
 
+
+<dt>BPPARAM</dt>
+<dd><p>for <code>backendBpparam</code>: <code>BiocParallel</code> parallel processing
+setup. See <code><a href="https://rdrr.io/pkg/BiocParallel/man/register.html" class="external-link">bpparam()</a></code> for more information.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -311,10 +319,17 @@ should be calculated on the spectras' intensities (<code>initial = FALSE</code>)
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The <code>MsBackendSql</code> class is in principle a <em>read-only</em> backend but by
+    <p>The <code>MsBackendSql</code> class is principally a <em>read-only</em> backend but by
 extending the <code><a href="https://rdrr.io/pkg/Spectra/man/MsBackendCached.html" class="external-link">MsBackendCached()</a></code> backend from the <code>Spectra</code> package it
 allows changing and adding (<strong>temporarily</strong>) spectra variables <strong>without</strong>
 changing the original data in the SQL database.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
+    <p>The <code>MsBackendSql</code> does not support parallel processing because the database
+connection stored within the object can not be shared across different
+processes. Thus, the <code>backendBpparam</code> method for <code>MsBackendSql</code> will always
+return a <code><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam()</a></code> object.</p>
     </div>
     <div class="section level2">
     <h2 id="creation-of-backend-objects">Creation of backend objects<a class="anchor" aria-label="anchor" href="#creation-of-backend-objects"></a></h2>
@@ -389,6 +404,10 @@ is provided in addition with parameter <code>dbcon</code> (i.e.
 connection to an <strong>empty</strong> database would store the full spectra
 data from the <code>Spectra</code> object <code>sps</code> into the specified database and
 would return a <code>Spectra</code> object that uses a <code>MsBackendSql</code>).</p></li>
+<li><p><code>backendBpparam</code>: whether a <code>MsBackendSql</code> supports parallel processing.
+Takes a <code>MsBackendSql</code> and a parallel processing setup (see <code><a href="https://rdrr.io/pkg/BiocParallel/man/register.html" class="external-link">bpparam()</a></code>
+for details) as input and always returns a <code><a href="https://rdrr.io/pkg/BiocParallel/man/SerialParam-class.html" class="external-link">SerialParam()</a></code> since
+<code>MsBackendSql</code> does <strong>not</strong> support parallel processing.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="subsetting-merging-and-filtering-data">Subsetting, merging and filtering data<a class="anchor" aria-label="anchor" href="#subsetting-merging-and-filtering-data"></a></h2>
@@ -520,7 +539,7 @@ memory demand of the object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Initialize a MsBackendSql</span></span></span>
 <span class="r-in"><span><span class="va">dbc</span> <span class="op">&lt;-</span> <span class="fu">dbConnect</span><span class="op">(</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">db_file</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">be</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Spectra/man/hidden_aliases.html" class="external-link">backendInitialize</a></span><span class="op">(</span><span class="fu">MsBackendSql</span><span class="op">(</span><span class="op">)</span>, <span class="va">dbc</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">be</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Spectra/man/MsBackend.html" class="external-link">backendInitialize</a></span><span class="op">(</span><span class="fu">MsBackendSql</span><span class="op">(</span><span class="op">)</span>, <span class="va">dbc</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">be</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> MsBackendSql with 198 spectra</span>
@@ -539,7 +558,7 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmparVhnY/filecc460a6d1b4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/Rtmp1w3zaP/filec81736d42af</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Original data source</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span></span>
@@ -552,9 +571,9 @@ memory demand of the object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Data storage</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">dataStorage</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmparVhnY/filecc460a6d1b4" "/tmp/RtmparVhnY/filecc460a6d1b4"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmparVhnY/filecc460a6d1b4" "/tmp/RtmparVhnY/filecc460a6d1b4"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmparVhnY/filecc460a6d1b4" "/tmp/RtmparVhnY/filecc460a6d1b4"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp1w3zaP/filec81736d42af" "/tmp/Rtmp1w3zaP/filec81736d42af"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/Rtmp1w3zaP/filec81736d42af" "/tmp/Rtmp1w3zaP/filec81736d42af"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/Rtmp1w3zaP/filec81736d42af" "/tmp/Rtmp1w3zaP/filec81736d42af"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access all spectra data</span></span></span>
 <span class="r-in"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -575,17 +594,17 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1   66.7818            198       198    111.044,112.024,112.518,...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           intensity            dataStorage             dataOrigin centroided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NumericList&gt;            &lt;character&gt;            &lt;character&gt;  &lt;logical&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...             ...                    ...                    ...        ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/RtmparVhnY/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/Rtmp1w3zaP/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      smoothed  polarity precScanNum precursorMz precursorIntensity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;logical&gt; &lt;integer&gt;   &lt;integer&gt;   &lt;numeric&gt;          &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          NA         1          NA          NA                 NA</span>
@@ -730,7 +749,7 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmparVhnY/filecc460a6d1b4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/Rtmp1w3zaP/filec81736d42af</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span></span>
