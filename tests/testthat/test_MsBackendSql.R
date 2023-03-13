@@ -361,3 +361,9 @@ test_that("setBackend works with MsBackendSql", {
                  c("msms_spectrum", "msms_spectrum_peak"))
     dbDisconnect(tmpcon)
 })
+
+test_that("backendBpparam,MsBackendSql works", {
+    expect_s4_class(backendBpparam(MsBackendSql()), "SerialParam")
+    expect_s4_class(backendBpparam(MsBackendSql(), MulticoreParam(2)),
+                    "SerialParam")
+})

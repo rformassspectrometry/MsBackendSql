@@ -11,10 +11,17 @@
 #'
 #' @details
 #'
-#' The `MsBackendSql` class is in principle a *read-only* backend but by
+#' The `MsBackendSql` class is principally a *read-only* backend but by
 #' extending the [MsBackendCached()] backend from the `Spectra` package it
 #' allows changing and adding (**temporarily**) spectra variables **without**
 #' changing the original data in the SQL database.
+#'
+#' @note
+#'
+#' The `MsBackendSql` does not support parallel processing because the database
+#' connection stored within the object can not be shared across different
+#' processes. Thus, the `backendBpparam` method for `MsBackendSql` will always
+#' return a [SerialParam()] object.
 #'
 #' @section Creation of backend objects:
 #'
@@ -91,6 +98,10 @@
 #'   data from the `Spectra` object `sps` into the specified database and
 #'   would return a `Spectra` object that uses a `MsBackendSql`).
 #'
+#' - `backendBpparam`: whether a `MsBackendSql` supports parallel processing.
+#'   Takes a `MsBackendSql` and a parallel processing setup (see [bpparam()]
+#'   for details) as input and always returns a [SerialParam()] since
+#'   `MsBackendSql` does **not** support parallel processing.
 #'
 #' @section Subsetting, merging and filtering data:
 #'
@@ -210,6 +221,9 @@
 #'     (`blob = FALSE`) or if the m/z and intensity values for each spectrum
 #'     should be stored as a single *BLOB* SQL data type (`blob = TRUE`,
 #'     the default).
+#'
+#' @param BPPARAM for `backendBpparam`: `BiocParallel` parallel processing
+#'     setup. See [bpparam()] for more information.
 #'
 #' @param chunksize For `createMsBackendSqlDatabase`: `integer(1)` defining
 #'     the number of input that should be processed per iteration. With
@@ -772,3 +786,14 @@ setMethod("tic", "MsBackendSql", function(object, initial = TRUE) {
 setMethod("supportsSetBackend", "MsBackendSql", function(object, ...) {
     TRUE
 })
+
+#' @importMethodsFrom Spectra backendBpparam
+#'
+#' @importFrom BiocParallel SerialParam bpparam
+#'
+#' @rdname MsBackendSql
+setMethod(
+    "backendBpparam", signature = "MsBackendSql",
+    function(object, BPPARAM = bpparam()) {
+        SerialParam()
+    })

@@ -29,6 +29,7 @@
 \alias{smoothed,MsBackendSql-method}
 \alias{tic,MsBackendSql-method}
 \alias{supportsSetBackend,MsBackendSql-method}
+\alias{backendBpparam,MsBackendSql-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsBackendSql()
@@ -92,6 +93,8 @@ createMsBackendSqlDatabase(
 \S4method{tic}{MsBackendSql}(object, initial = TRUE)
 
 \S4method{supportsSetBackend}{MsBackendSql}(object, ...)
+
+\S4method{backendBpparam}{MsBackendSql}(object, BPPARAM = bpparam())
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -195,6 +198,9 @@ or equal to \code{length(mz)}.}
 \item{initial}{For \code{tic}: \code{logical(1)} whether the original total ion count
 should be returned (\code{initial = TRUE}, the default) or whether it
 should be calculated on the spectras' intensities (\code{initial = FALSE}).}
+
+\item{BPPARAM}{for \code{backendBpparam}: \code{BiocParallel} parallel processing
+setup. See \code{\link[=bpparam]{bpparam()}} for more information.}
 }
 \value{
 See documentation of respective function.
@@ -206,10 +212,16 @@ New databases can be created from raw MS data files using
 \code{createMsBackendSqlDatabase}.
 }
 \details{
-The \code{MsBackendSql} class is in principle a \emph{read-only} backend but by
+The \code{MsBackendSql} class is principally a \emph{read-only} backend but by
 extending the \code{\link[=MsBackendCached]{MsBackendCached()}} backend from the \code{Spectra} package it
 allows changing and adding (\strong{temporarily}) spectra variables \strong{without}
 changing the original data in the SQL database.
+}
+\note{
+The \code{MsBackendSql} does not support parallel processing because the database
+connection stored within the object can not be shared across different
+processes. Thus, the \code{backendBpparam} method for \code{MsBackendSql} will always
+return a \code{\link[=SerialParam]{SerialParam()}} object.
 }
 \section{Creation of backend objects}{
 
@@ -284,6 +296,10 @@ is provided in addition with parameter \code{dbcon} (i.e.
 connection to an \strong{empty} database would store the full spectra
 data from the \code{Spectra} object \code{sps} into the specified database and
 would return a \code{Spectra} object that uses a \code{MsBackendSql}).
+\item \code{backendBpparam}: whether a \code{MsBackendSql} supports parallel processing.
+Takes a \code{MsBackendSql} and a parallel processing setup (see \code{\link[=bpparam]{bpparam()}}
+for details) as input and always returns a \code{\link[=SerialParam]{SerialParam()}} since
+\code{MsBackendSql} does \strong{not} support parallel processing.
 }
 }
 
