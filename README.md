@@ -2,8 +2,12 @@
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![R-CMD-check-bioc](https://github.com/RforMassSpectrometry/MsBackendSql/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/RforMassSpectrometry/MsBackendSql/actions?query=workflow%3AR-CMD-check-bioc)
-[![codecov.io](http://codecov.io/github/RforMassSpectrometry/MsBackendSql/coverage.svg?branch=devel)](http://codecov.io/github/RforMassSpectrometry/MsBackendSql?branch=devel)
+
 [![license](https://img.shields.io/badge/license-Artistic--2.0-brightgreen.svg)](https://opensource.org/licenses/Artistic-2.0)
+[![years in bioc](http://bioconductor.org/shields/years-in-bioc/MsBackendSql.svg)](https://bioconductor.org/packages/release/bioc/html/MsBackendSql.html)
+[![Ranking by downloads](http://bioconductor.org/shields/downloads/release/MsBackendSql.svg)](https://bioconductor.org/packages/stats/bioc/MsBackendSql/)
+[![build release](http://bioconductor.org/shields/build/release/bioc/MsBackendSql.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/MsBackendSql/)
+[![build devel](http://bioconductor.org/shields/build/devel/bioc/MsBackendSql.svg)](https://bioconductor.org/checkResults/devel/bioc-LATEST/MsBackendSql/)
 
 This repository provides a *backend* for
 [Spectra](https://github.com/RforMassSpectrometry/Spectra) objects that supports
