@@ -2,7 +2,7 @@
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![R-CMD-check-bioc](https://github.com/RforMassSpectrometry/MsBackendSql/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/RforMassSpectrometry/MsBackendSql/actions?query=workflow%3AR-CMD-check-bioc)
-
+[![codecov](https://codecov.io/gh/rformassspectrometry/MsBackendSql/branch/devel/graph/badge.svg?token=9qCNOICdYv)](https://codecov.io/gh/rformassspectrometry/MsBackendSql)
 [![license](https://img.shields.io/badge/license-Artistic--2.0-brightgreen.svg)](https://opensource.org/licenses/Artistic-2.0)
 [![years in bioc](http://bioconductor.org/shields/years-in-bioc/MsBackendSql.svg)](https://bioconductor.org/packages/release/bioc/html/MsBackendSql.html)
 [![Ranking by downloads](http://bioconductor.org/shields/downloads/release/MsBackendSql.svg)](https://bioconductor.org/packages/stats/bioc/MsBackendSql/)
