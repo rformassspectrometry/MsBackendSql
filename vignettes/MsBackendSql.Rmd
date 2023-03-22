@@ -31,7 +31,7 @@ The `r Biocpkg("Spectra")` Bioconductor package provides a flexible and
 expandable infrastructure for Mass Spectrometry (MS) data. The package supports
 interchangeable use of different *backends* that provide additional file support
 or different ways to store and represent MS data. The
-`r Biocpkg("MsBackendSql")` package provides a backend to store data from whole
+`r Biocpkg("MsBackendSql")` package provides backends to store data from whole
 MS experiments in SQL databases. The data in such databases can be easily (and
 efficiently) accessed using `Spectra` objects that use the `MsBackendSql` class
 as an interface to the data in the database. Such `Spectra` objects have a
@@ -85,10 +85,16 @@ MySQL/MariaDB databases by taking advantage of table partitioning and
 specialized table storage options. Any other SQL database server is however also
 supported (also portable, self-contained SQLite databases).
 
-We can now create a `Spectra` object by providing the connection to the database
-in the constructor call and specifying to use the `MsBackendSql` (provided by
-this package) as *backend* using the `source` parameter to get access to the
-data in this database:
+The *MsBackendSql* package provides two backends to interact with such
+databases: the (default) `MsBackendSql` class and the `MsBackendOfflineSql`,
+that inherits all properties and functions from the former, but which does not
+store the connection to the database within the object but connects (and
+disconnects) to (and from) the database in each function call. This allows to
+use the latter also for parallel processing setups.
+
+To access the data in the database we create below a `Spectra` object providing
+the connection to the database in the constructor call and specifying to use the
+`MsBackendSql` as *backend* using the `source` parameter.
 
 ```{r}
 sps <- Spectra(con, source = MsBackendSql())
@@ -176,6 +182,40 @@ initialized with the original data in the database).
 
 ```{r}
 sps <- reset(sps)
+```
+
+To use the `MsBackendOfflineSql` backend we need to provide all information
+required to connect to the database along with the *database driver* to the
+`Spectra` function. Which parameters are required to connect to the database
+depends on the SQL database and the used driver. In our example the data is
+stored in a SQLite database, hence we use the `SQLite()` database driver and
+only need to provide the database name with the `dbname` parameter. For a
+MySQL/MariaDB database we would use the `MariaDB()` driver and would have to
+provide the database name, user name, password as well as the host name and port
+through which the database is accessible.
+
+```{r}
+sps_off <- Spectra(SQLite(), dbname = dbfile,
+                   source = MsBackendOfflineSql())
+sps_off
+```
+
+This backend provides the exact same functionality than `MsBackendSql` with the
+difference that the connection to the database is opened and closed for each
+function call. While this leads to a slightly lower performance, it allows to
+use the backend (and hence the `Spectra` object) also in a parallel processing
+setup. In contrast, for the `MsBackendSql` parallel processing is disabled since
+it is not possible to share the active backend connection within the object
+across different parallel processes.
+
+Below we compare the performance of the two backends. The performance difference
+is the result from opening and closing the database connection for each
+call. Note that this will also depend on the SQL server that is being used. For
+SQLite databases there is almost no overhead.
+
+```{r}
+library(microbenchmark)
+microbenchmark(msLevel(sps), msLevel(sps_off))
 ```
 
 

@@ -1,5 +1,10 @@
 # MsBackendSql 0.99
 
+## Changes in 0.99.5
+
+- Add `MsBackendOfflineSql` backend that re-connects to the database for each
+  query.
+
 ## Changes in 0.99.4
 
 - Add `backendBpparam` method to ensure parallel processing is disabled for the
