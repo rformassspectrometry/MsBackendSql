@@ -4,6 +4,21 @@
 \alias{MsBackendSql}
 \alias{createMsBackendSqlDatabase}
 \alias{MsBackendSql-class}
+\alias{backendMerge,MsBackendOfflineSql-method}
+\alias{dataStorage,MsBackendOfflineSql-method}
+\alias{filterDataOrigin,MsBackendOfflineSql-method}
+\alias{filterMsLevel,MsBackendOfflineSql-method}
+\alias{filterPrecursorMzRange,MsBackendOfflineSql-method}
+\alias{filterPrecursorMzValues,MsBackendOfflineSql-method}
+\alias{filterRt,MsBackendOfflineSql-method}
+\alias{peaksData,MsBackendOfflineSql-method}
+\alias{peaksVariables,MsBackendOfflineSql-method}
+\alias{reset,MsBackendOfflineSql-method}
+\alias{show,MsBackendOfflineSql-method}
+\alias{spectraData,MsBackendOfflineSql-method}
+\alias{supportsSetBackend,MsBackendOfflineSql-method}
+\alias{tic,MsBackendOfflineSql-method}
+\alias{uniqueMsLevels,MsBackendOfflineSql-method}
 \alias{show,MsBackendSql-method}
 \alias{backendInitialize,MsBackendSql-method}
 \alias{dataStorage,MsBackendSql-method}
@@ -221,7 +236,10 @@ changing the original data in the SQL database.
 The \code{MsBackendSql} does not support parallel processing because the database
 connection stored within the object can not be shared across different
 processes. Thus, the \code{backendBpparam} method for \code{MsBackendSql} will always
-return a \code{\link[=SerialParam]{SerialParam()}} object.
+return a \code{\link[=SerialParam]{SerialParam()}} object. For parallel processing, the
+\code{\link[=MsBackendOfflineSql]{MsBackendOfflineSql()}} backend might be used that can interact with the
+same SQL databases but supports parallel processing (by
+connecting/disconnecting to/from the database for each function call).
 }
 \section{Creation of backend objects}{
 

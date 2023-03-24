@@ -1,6 +1,23 @@
+#' @include MsBackendSql-functions.R
+
 #' @title `Spectra` MS backend storing data in a SQL database
 #'
 #' @aliases MsBackendSql-class
+#' @aliases backendMerge,MsBackendOfflineSql-method
+#' @aliases dataStorage,MsBackendOfflineSql-method
+#' @aliases filterDataOrigin,MsBackendOfflineSql-method
+#' @aliases filterMsLevel,MsBackendOfflineSql-method
+#' @aliases filterPrecursorMzRange,MsBackendOfflineSql-method
+#' @aliases filterPrecursorMzValues,MsBackendOfflineSql-method
+#' @aliases filterRt,MsBackendOfflineSql-method
+#' @aliases peaksData,MsBackendOfflineSql-method
+#' @aliases peaksVariables,MsBackendOfflineSql-method
+#' @aliases reset,MsBackendOfflineSql-method
+#' @aliases show,MsBackendOfflineSql-method
+#' @aliases spectraData,MsBackendOfflineSql-method
+#' @aliases supportsSetBackend,MsBackendOfflineSql-method
+#' @aliases tic,MsBackendOfflineSql-method
+#' @aliases uniqueMsLevels,MsBackendOfflineSql-method
 #'
 #' @description
 #'
@@ -21,7 +38,10 @@
 #' The `MsBackendSql` does not support parallel processing because the database
 #' connection stored within the object can not be shared across different
 #' processes. Thus, the `backendBpparam` method for `MsBackendSql` will always
-#' return a [SerialParam()] object.
+#' return a [SerialParam()] object. For parallel processing, the
+#' [MsBackendOfflineSql()] backend might be used that can interact with the
+#' same SQL databases but supports parallel processing (by
+#' connecting/disconnecting to/from the database for each function call).
 #'
 #' @section Creation of backend objects:
 #'
@@ -412,7 +432,11 @@ setClass(
 #'
 #' @noRd
 setValidity("MsBackendSql", function(object) {
-    msg <- .valid_dbcon(object@dbcon)
+    msg <- NULL
+    if (length(object@spectraIds) != object@nspectra)
+        msg <- paste0("Number of spectra IDs does not match the number ",
+                      "of spectra")
+    ## msg <- .valid_dbcon(object@dbcon)
     if (is.null(msg)) TRUE
     else msg
 })
