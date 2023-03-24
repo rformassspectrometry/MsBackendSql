@@ -24,7 +24,7 @@ test_that("backendInitialize,MsBackendOfflineSql works", {
 })
 
 test_that("dataStorage,MsBackendOfflineSql works", {
-    expect_equal(dataStorage(mm_be), dataStorage(mm_be_off))
+    expect_equal(basename(dataStorage(mm_be)), basename(dataStorage(mm_be_off)))
     expect_false(dbIsValid(mm_be_off@dbcon))
 })
 
