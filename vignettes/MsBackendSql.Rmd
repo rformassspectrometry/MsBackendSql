@@ -8,7 +8,7 @@ vignette: >
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
     %\VignettePackage{MsBackendSql}
-    %\VignetteDepends{MsBackendSql,BiocStyle,RSQLite,msdata,microbenchmark}
+    %\VignetteDepends{MsBackendSql,BiocStyle,RSQLite,msdata,microbenchmark,mzR}
 ---
 
 ```{r style, echo = FALSE, results = 'asis', message=FALSE}
