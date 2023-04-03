@@ -1,5 +1,9 @@
 # MsBackendSql 0.99
 
+## Changes in 0.99.6
+
+- Add `mzR` to *Suggests* to ensure package vignettes can be build properly.
+
 ## Changes in 0.99.5
 
 - Add `MsBackendOfflineSql` backend that re-connects to the database for each
