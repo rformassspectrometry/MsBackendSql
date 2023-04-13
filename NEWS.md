@@ -1,5 +1,9 @@
 # MsBackendSql 0.99
 
+## Changes in 0.99.7
+
+- Decrease required R version to 4.2.
+
 ## Changes in 0.99.6
 
 - Add `mzR` to *Suggests* to ensure package vignettes can be build properly.
