@@ -651,13 +651,17 @@ setMethod(
 #' @exportMethod filterRt
 setMethod("filterRt", "MsBackendSql", function(object, rt = numeric(),
                                               msLevel. = integer()) {
-    if (!length(rt))
+    if (!length(rt) || all(is.infinite(rt)))
         return(object)
     rt <- range(rt)
     if (.has_local_variable(object, c("msLevel", "rtime")) |
         (.has_local_variable(object, "msLevel") & length(msLevel.))) {
         callNextMethod()
     } else {
+        if (rt[1L] == -Inf)
+            rt[1L] <- -1e12
+        if (rt[2L] == Inf)
+            rt[2L] <- 1e12
         if (length(msLevel.)) {
             msl <- paste0(msLevel., collapse = ",")
             qry <- paste0(.id_query(object),
