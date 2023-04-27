@@ -198,6 +198,15 @@ test_that("filterRt,MsBackendSql works", {
     res <- filterRt(mm8_be)
     expect_equal(res, mm8_be)
 
+    res <- filterRt(mm8_be, c(-Inf, Inf))
+    expect_equal(res, mm8_be)
+
+    res <- filterRt(mm8_be, c(-Inf, 50000))
+    expect_true(length(res) == length(mm8_be))
+
+    res <- filterRt(mm8_be, c(0, Inf))
+    expect_true(length(res) == length(mm8_be))
+
     res <- filterRt(mm8_be, rt = c(1000, 2000))
     expect_true(length(res) == 0)
 

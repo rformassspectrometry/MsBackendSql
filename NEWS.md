@@ -1,3 +1,10 @@
+# MsBackendSql 1.0
+
+## Changes in 1.0.1
+
+- Fix handling of infinite values in `filterRt`.
+
+
 # MsBackendSql 0.99
 
 ## Changes in 0.99.7
