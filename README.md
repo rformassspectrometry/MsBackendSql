@@ -1,5 +1,8 @@
 # SQL-based Mass Spectrometry Data Backend
 
+![MsBackendSql logo](man/figures/logo.png)
+
+
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![R-CMD-check-bioc](https://github.com/RforMassSpectrometry/MsBackendSql/workflows/R-CMD-check-bioc/badge.svg)](https://github.com/RforMassSpectrometry/MsBackendSql/actions?query=workflow%3AR-CMD-check-bioc)
 [![codecov](https://codecov.io/gh/rformassspectrometry/MsBackendSql/branch/main/graph/badge.svg?token=9qCNOICdYv)](https://codecov.io/gh/rformassspectrometry/MsBackendSql)
