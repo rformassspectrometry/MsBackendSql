@@ -233,17 +233,19 @@ allows changing and adding (\strong{temporarily}) spectra variables \strong{with
 changing the original data in the SQL database.
 }
 \note{
-The \code{MsBackendSql} does not support parallel processing because the database
-connection stored within the object can not be shared across different
-processes. Thus, the \code{backendBpparam} method for \code{MsBackendSql} will always
-return a \code{\link[=SerialParam]{SerialParam()}} object. For parallel processing, the
-\code{\link[=MsBackendOfflineSql]{MsBackendOfflineSql()}} backend might be used that can interact with the
-same SQL databases but supports parallel processing (by
-connecting/disconnecting to/from the database for each function call).
+The \code{MsBackendSql} backend keeps an (open) connection to the SQL database
+with the data and hence does not support saving/loading of a backend to
+disk (e.g. using \code{save} or \code{saveRDS}). Also, for the same reason, the
+\code{MsBackendSql} does not support parallel processing. The \code{backendBpparam}
+method for \code{MsBackendSql} will thus always return a \code{\link[=SerialParam]{SerialParam()}} object.
+
+The \code{\link[=MsBackendOfflineSql]{MsBackendOfflineSql()}} could be used as an alternative as it supports
+saving/loading the data to/from disk and supports also parallel processing.
 }
 \section{Creation of backend objects}{
 
 
+New backend objects can be created with the \code{MsBackendSql()} function.
 SQL databases can be created and filled with MS data from raw data files
 using the \code{createMsBackendSqlDatabase} function or using
 \code{backendInitialize} and providing all data with parameter \code{data}. Existing

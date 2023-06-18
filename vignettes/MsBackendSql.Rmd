@@ -52,8 +52,8 @@ The package can be installed with the `BiocManager` package. To install
 
 # Creating and using `MsBackendSql` SQL databases
 
-`MsBackendSql` databases can be created either by importing (raw) MS data from
-MS data files using the `createMsBackendSqlDatabase` or using the
+`MsBackendSql` SQL databases can be created either by importing (raw) MS data
+from MS data files using the `createMsBackendSqlDatabase` or using the
 `backendInitialize` function by providing in addition to the database connection
 also the full MS data to import as a `DataFrame`. In the first example we use
 the `createMsBackendSqlDatabase` function which takes a connection to an (empty)
@@ -90,7 +90,9 @@ databases: the (default) `MsBackendSql` class and the `MsBackendOfflineSql`,
 that inherits all properties and functions from the former, but which does not
 store the connection to the database within the object but connects (and
 disconnects) to (and from) the database in each function call. This allows to
-use the latter also for parallel processing setups.
+use the latter also for parallel processing setups or to save/load the object
+(e.g. using `save` and `saveRDS`). Thus, for most applications the
+`MsBackendOfflineSql` might be used as the preferred backend to SQL databases.
 
 To access the data in the database we create below a `Spectra` object providing
 the connection to the database in the constructor call and specifying to use the
@@ -100,6 +102,12 @@ the connection to the database in the constructor call and specifying to use the
 sps <- Spectra(con, source = MsBackendSql())
 sps
 ```
+
+As an alternative the `MsBackendOfflineSql` backend could be used instead, which
+supports serializing the data to disk and allows, if supported by the SQL
+database, also parallel processing. Thus, for most use cases the
+`MsBackendOfflineSql` should be used instead. See further below for more
+information on that backend..
 
 `Spectra` objects allow also to change the backend to any other backend
 (extending `MsBackend`) using the `setBackend` function. Below we use this
@@ -195,18 +203,19 @@ provide the database name, user name, password as well as the host name and port
 through which the database is accessible.
 
 ```{r}
-sps_off <- Spectra(SQLite(), dbname = dbfile,
+sps_off <- Spectra(dbfile, drv = SQLite(),
                    source = MsBackendOfflineSql())
 sps_off
 ```
 
 This backend provides the exact same functionality than `MsBackendSql` with the
 difference that the connection to the database is opened and closed for each
-function call. While this leads to a slightly lower performance, it allows to
-use the backend (and hence the `Spectra` object) also in a parallel processing
-setup. In contrast, for the `MsBackendSql` parallel processing is disabled since
-it is not possible to share the active backend connection within the object
-across different parallel processes.
+function call. While this leads to a slightly lower performance, it allows to to
+serialize the object (i.e. save/load the object to/from disk) and to use it (and
+hence the `Spectra` object) also in a parallel processing setup. In contrast,
+for the `MsBackendSql` parallel processing is disabled since it is not possible
+to share the active backend connection within the object across different
+parallel processes.
 
 Below we compare the performance of the two backends. The performance difference
 is the result from opening and closing the database connection for each

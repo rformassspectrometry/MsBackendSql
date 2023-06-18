@@ -1,5 +1,10 @@
 # MsBackendSql 1.1
 
+## Changes in 1.1.2
+
+- Mention in documentation that `MsBackendSql` can not be saved to disk.
+- Expand vignette adding related documentation.
+
 ## Changes in 1.1.1
 
 - Fix for `filterRt` avoiding to filter if range is infinite.
