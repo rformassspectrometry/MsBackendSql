@@ -1,5 +1,9 @@
 # MsBackendSql 1.1
 
+## Changes in 1.1.3
+
+- Add support for `setBackend` to `MsBackendOfflineSql`.
+
 ## Changes in 1.1.2
 
 - Mention in documentation that `MsBackendSql` can not be saved to disk.

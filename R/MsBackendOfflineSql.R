@@ -27,6 +27,13 @@
 #'
 #' @param object A `MsBackendOfflineSql` object.
 #'
+#' @param data For `backendInitialize`: optional `DataFrame` with the full
+#'     spectra data that should be inserted into a (new) `MsBackendSql`
+#'     database. If provided, it is assumed that the provided database
+#'     connection information if for a (writeable) empty database into which
+#'     `data` should be inserted. `data` could be the output of `spectraData`
+#'     from another backend.
+#'
 #' @param drv A *DBI* database driver object (such as `SQLite()` from the
 #'     `RSQLite` package or `MariaDB()` from the `RMariaDB` package). See
 #'     [dbConnect()] for more information.
@@ -120,11 +127,16 @@ setMethod("show", "MsBackendOfflineSql", function(object) {
 setMethod("backendInitialize", "MsBackendOfflineSql",
           function(object, drv = NULL, dbname = character(),
                    user = character(), password = character(),
-                   host = character(), port = NA_integer_, ...) {
+                   host = character(), port = NA_integer_, data, ...) {
               if (is.null(drv))
                   stop("Parameter 'drv' must be specified and needs to be ",
                        "an instance of 'DBIDriver' such as returned e.g. ",
                        "by 'SQLite()'")
+              if (!length(dbname))
+                  stop("At least the database name has to be provided with ",
+                       "parameter 'dbname'. Other possibly required parameters",
+                       " (depending on the used database system) could be ",
+                       "'user', 'password', 'host' and 'port'.")
               object@driver <- drv
               object@dbname <- dbname
               object@user <- user
@@ -132,10 +144,15 @@ setMethod("backendInitialize", "MsBackendOfflineSql",
               object@host <- host
               object@port <- as.integer(port)
               object@flags <- 1L        # that's SQLITE_RO
-              dbc <- dbConnect(drv, dbname = dbname, user = user,
-                               password = password, host = host, port = port,
-                               flags = object@flags)
-              object <- callNextMethod(object, dbcon = dbc)
+              if (missing(data))
+                  dbc <- dbConnect(drv, dbname = dbname, user = user,
+                                   password = password, host = host,
+                                   port = port, flags = object@flags)
+              else
+                  dbc <- dbConnect(drv, dbname = dbname, user = user,
+                                   password = password, host = host,
+                                   port = port)
+              object <- callNextMethod(object, dbcon = dbc, data = data)
               .db_disconnect(object)
               object
 })
@@ -235,10 +252,10 @@ setMethod("tic", "MsBackendOfflineSql",
               callNextMethod()
           })
 
-setMethod("supportsSetBackend", "MsBackendOfflineSql",
-          function(object, ...) {
-              FALSE
-          })
+## setMethod("supportsSetBackend", "MsBackendOfflineSql",
+##           function(object, ...) {
+##               FALSE
+##           })
 
 setMethod("backendBpparam", signature = "MsBackendOfflineSql",
           function(object, BPPARAM = bpparam()) {

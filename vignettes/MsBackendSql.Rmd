@@ -121,14 +121,22 @@ sps_mem
 
 With this function it is also possible to change from any backend to a
 `MsBackendSql` in which case a new database is created and all data from the
-originating backend is stored in this database. We thus have to provide in
-addition also a connection to an (empty) database using the `dbcon`
-parameter. Below we create a new empty SQLite database and store all data
-from the `Spectra` object into this database using the `setBackend` method.
+originating backend is stored in this database. To change the backend to an
+`MsBackendOfflineSql` we need to provide the connection information to the SQL
+database as additional parameters. These are the same as we would need to
+connect to the database through a `dbConnect` call and includes the database
+driver to be used (parameter `drv`) as well as additional parameters such as the
+database name and eventually the user name, host etc (see `?dbConnect` for more
+information). In the simple example below we store the data into a SQLite
+database and thus only need to provide the database name, which corresponds
+SQLite database file. In our example we store the data into a temporary
+file. Importantly, we also need to disable parallel processing by specifying
+`BPPARAM = SerialParam()` since (most) SQL databases don't provide parallel data
+insertion.
 
 ```{r, warnings = FALSE}
-tmpcon <- dbConnect(SQLite(), tempfile())
-sps2 <- setBackend(sps_mem, MsBackendSql(), dbcon = tmpcon)
+sps2 <- setBackend(sps_mem, MsBackendOfflineSql(), drv = SQLite(),
+                   dbname = tempfile())
 sps2
 ```
 

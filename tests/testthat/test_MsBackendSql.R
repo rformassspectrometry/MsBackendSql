@@ -343,6 +343,7 @@ test_that("supportsSetBackend,MsBackendSql works", {
 })
 
 test_that("setBackend works with MsBackendSql", {
+    expect_error(setBackend(mm8_sps, MsBackendSql()), "required")
     tmpcon <- dbConnect(SQLite(), tempfile())
     expect_error(res <- setBackend(mm8_sps, MsBackendSql()), "dbcon")
     res <- setBackend(mm8_sps, MsBackendSql(), dbcon = tmpcon)
