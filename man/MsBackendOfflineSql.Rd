@@ -16,6 +16,7 @@ MsBackendOfflineSql()
   password = character(),
   host = character(),
   port = NA_integer_,
+  data,
   ...
 )
 }
@@ -41,6 +42,13 @@ directly to \code{\link[=dbConnect]{dbConnect()}}.}
 
 \item{port}{\code{integer(1)} with the port number (optional). Passed directly to
 \code{\link[=dbConnect]{dbConnect()}}.}
+
+\item{data}{For \code{backendInitialize}: optional \code{DataFrame} with the full
+spectra data that should be inserted into a (new) \code{MsBackendSql}
+database. If provided, it is assumed that the provided database
+connection information if for a (writeable) empty database into which
+\code{data} should be inserted. \code{data} could be the output of \code{spectraData}
+from another backend.}
 
 \item{...}{ignored.}
 }

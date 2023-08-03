@@ -246,8 +246,20 @@ test_that("tic,MsBackendOfflineSql works", {
 })
 
 test_that("supportsSetBackend,MsBackendOfflineSql works", {
-    expect_false(supportsSetBackend(MsBackendOfflineSql()))
+    expect_true(supportsSetBackend(MsBackendOfflineSql()))
     expect_true(isReadOnly(MsBackendOfflineSql()))
+})
+
+test_that("setBackend works with MsBackendOfflineSql", {
+    expect_error(setBackend(mm8_sps, MsBackendOfflineSql()), "'drv'")
+    expect_error(setBackend(mm8_sps, MsBackendOfflineSql(), drv = SQLite()),
+                 "'dbname'")
+    dbn <- tempfile()
+    res <- setBackend(mm8_sps, MsBackendOfflineSql(), drv = SQLite(),
+                      dbname = dbn)
+    expect_true(inherits(res@backend, "MsBackendOfflineSql"))
+    expect_equal(rtime(res), rtime(mm8_sps))
+    expect_equal(peaksData(res), peaksData(mm8_sps))
 })
 
 test_that("backendBpparam,MsBackendOfflineSql works", {
