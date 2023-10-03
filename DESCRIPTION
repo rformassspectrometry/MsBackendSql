@@ -1,6 +1,6 @@
 Package: MsBackendSql
 Title: SQL-based Mass Spectrometry Data Backend
-Version: 1.1.3
+Version: 1.1.4
 Authors@R:
     c(person(given = "Johannes", family = "Rainer",
              email = "Johannes.Rainer@eurac.edu",

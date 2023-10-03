@@ -1,5 +1,10 @@
 # MsBackendSql 1.1
 
+## Changes in 1.1.4
+
+- Improve performance of `createMsBackendSqlDatabase` by using also parallel
+  processing for the `peaksData` call.
+
 ## Changes in 1.1.3
 
 - Add support for `setBackend` to `MsBackendOfflineSql`.
