@@ -6,6 +6,7 @@
 \alias{MsBackendSql-class}
 \alias{backendMerge,MsBackendOfflineSql-method}
 \alias{dataStorage,MsBackendOfflineSql-method}
+\alias{dbconn,MsBackendOfflineSql-method}
 \alias{filterDataOrigin,MsBackendOfflineSql-method}
 \alias{filterMsLevel,MsBackendOfflineSql-method}
 \alias{filterPrecursorMzRange,MsBackendOfflineSql-method}
@@ -45,6 +46,7 @@
 \alias{tic,MsBackendSql-method}
 \alias{supportsSetBackend,MsBackendSql-method}
 \alias{backendBpparam,MsBackendSql-method}
+\alias{dbconn,MsBackendSql-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsBackendSql()
@@ -110,6 +112,8 @@ createMsBackendSqlDatabase(
 \S4method{supportsSetBackend}{MsBackendSql}(object, ...)
 
 \S4method{backendBpparam}{MsBackendSql}(object, BPPARAM = bpparam())
+
+\S4method{dbconn}{MsBackendSql}(x)
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -320,6 +324,7 @@ would return a \code{Spectra} object that uses a \code{MsBackendSql}).
 Takes a \code{MsBackendSql} and a parallel processing setup (see \code{\link[=bpparam]{bpparam()}}
 for details) as input and always returns a \code{\link[=SerialParam]{SerialParam()}} since
 \code{MsBackendSql} does \strong{not} support parallel processing.
+\item \code{dbconn}: returns the connection to the database.
 }
 }
 

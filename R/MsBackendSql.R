@@ -5,6 +5,7 @@
 #' @aliases MsBackendSql-class
 #' @aliases backendMerge,MsBackendOfflineSql-method
 #' @aliases dataStorage,MsBackendOfflineSql-method
+#' @aliases dbconn,MsBackendOfflineSql-method
 #' @aliases filterDataOrigin,MsBackendOfflineSql-method
 #' @aliases filterMsLevel,MsBackendOfflineSql-method
 #' @aliases filterPrecursorMzRange,MsBackendOfflineSql-method
@@ -124,6 +125,8 @@
 #'   Takes a `MsBackendSql` and a parallel processing setup (see [bpparam()]
 #'   for details) as input and always returns a [SerialParam()] since
 #'   `MsBackendSql` does **not** support parallel processing.
+#'
+#' - `dbconn`: returns the connection to the database.
 #'
 #' @section Subsetting, merging and filtering data:
 #'
@@ -438,6 +441,7 @@ setValidity("MsBackendSql", function(object) {
     if (length(object@spectraIds) != object@nspectra)
         msg <- paste0("Number of spectra IDs does not match the number ",
                       "of spectra")
+    ## Can not validate the connection because of the MsBackendOfflineSql
     ## msg <- .valid_dbcon(object@dbcon)
     if (is.null(msg)) TRUE
     else msg
@@ -827,3 +831,8 @@ setMethod(
     function(object, BPPARAM = bpparam()) {
         SerialParam()
     })
+
+#' @importMethodsFrom BiocGenerics dbconn
+#'
+#' @rdname MsBackendSql
+setMethod("dbconn", "MsBackendSql", .dbcon)

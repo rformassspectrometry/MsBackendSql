@@ -268,7 +268,8 @@ MsBackendSql <- function() {
 #'
 #' @param con database
 #'
-#' @param x `MsBackend`
+#' @param x `MsBackend` or `Spectra`. Advantage of using a `Spectra` is that it
+#'     performs by default parallel processing also on the `peaksData` call.
 #'
 #' @param index `integer(1)` defining the last used spectrum_id for peaks.
 #'
@@ -289,7 +290,7 @@ MsBackendSql <- function() {
     spectrum_id <- seq(index + 1L, index + nrow(spd))
     spd$spectrum_id_ <- spectrum_id
     .insert_spectra_variables(con, spd)
-    pks <- peaksData(x, columns = c("mz", "intensity"))
+    pks <- as(x, "list")
     lns <- lengths(pks) / 2
     pks <- as.data.frame(do.call(rbind, pks))
     pks$spectrum_id_ <- rep(spectrum_id, lns)
@@ -371,6 +372,8 @@ MsBackendSql <- function() {
 #'
 #' @importFrom BiocParallel bpparam
 #'
+#' @importFrom Spectra Spectra
+#'
 #' @noRd
 .insert_data <- function(con, x, backend = MsBackendMzR(), chunksize = 10,
                          partitionBy = c("none", "spectrum", "chunk"),
@@ -409,12 +412,12 @@ MsBackendSql <- function() {
                          paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
     }
     for (i in seq_along(chunks)) {
-        be <- backendInitialize(backend, x[chunks[[i]]], BPPARAM = bpparam())
+        s <- Spectra(source = backend, x[chunks[[i]]], BPPARAM = bpparam())
         if (blob)
-            index <- .insert_backend_blob(con, be, index = index)
+            index <- .insert_backend_blob(con, s, index = index)
         else
-            index <- .insert_backend(con, be, index = index, partitionBy, i)
-        rm(be)
+            index <- .insert_backend(con, s, index = index, partitionBy, i)
+        rm(s)
         gc()
         pb$tick(1)
     }
