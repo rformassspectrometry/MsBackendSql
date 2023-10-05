@@ -437,7 +437,6 @@ setClass(
 #'
 #' @noRd
 setValidity("MsBackendSql", function(object) {
-    cat("validObject", class(object), "\n")
     msg <- NULL
     if (length(object@spectraIds) != object@nspectra)
         msg <- paste0("Number of spectra IDs does not match the number ",
