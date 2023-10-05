@@ -262,6 +262,8 @@ setMethod("backendBpparam", signature = "MsBackendOfflineSql",
               BPPARAM
           })
 
+setMethod("dbconn", "MsBackendOfflineSql", .db_connect)
+
 ## setReplaceMethod("$", "MsBackendOfflineSql", function(x, name, value) {
 ##     object@dbcon <- .db_connect(object)
 ##     on.exit(.db_disconnect(object))

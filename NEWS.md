@@ -1,5 +1,9 @@
 # MsBackendSql 1.1
 
+## Changes in 1.1.5
+
+- Add `dbconn` methods for `MsBackendSql` and `MsBackendOfflineSql`.
+
 ## Changes in 1.1.4
 
 - Improve performance of `createMsBackendSqlDatabase` by using also parallel

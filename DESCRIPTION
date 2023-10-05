@@ -1,6 +1,6 @@
 Package: MsBackendSql
 Title: SQL-based Mass Spectrometry Data Backend
-Version: 1.1.4
+Version: 1.1.5
 Authors@R:
     c(person(given = "Johannes", family = "Rainer",
              email = "Johannes.Rainer@eurac.edu",
@@ -31,7 +31,8 @@ Imports:
     MsCoreUtils,
     IRanges,
     data.table,
-    progress
+    progress,
+    BiocGenerics
 Suggests:
     testthat,
     knitr (>= 1.1.0),
