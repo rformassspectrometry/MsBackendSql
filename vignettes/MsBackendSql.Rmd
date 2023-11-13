@@ -363,6 +363,29 @@ The `MsBackendSql` outperforms the `MsBackendMzR` while, not unexpectedly, the
 `MsBackendMemory` provides fasted access.
 
 
+## Considerations for database systems/servers
+
+The backends from the *MsBackendSql* package use standard SQL calls to retrieve
+MS data from the database and hence any SQL database system (for which an R
+package is available) is supported. SQLite-based databases would represent the
+easiest and most user friendly solution since no database server administration
+and user management is required. Indeed, performance of SQLite is very high,
+even for very large data sets. Server-based databases on the other hand have the
+advantage to enable a centralized storage and control of MS data (inclusive user
+management etc). Also, such server systems would also allow data set or
+server-specific configurations to improve performance.
+
+A comparison between a SQLite-based with a MariaDB-based *MsBackendSql* database
+for a large data set comprising over 8,000 samples and over 15,000,000 spectra
+is available
+[here](https://github.com/rformassspectrometry/MsBackendSql/issues/15). In
+brief, performance to extract data was comparable and for individual spectra
+variables even faster for the SQLite database. Only when more complex SQL
+queries were involved (combining several primary keys or data fields) the more
+advanced MariaDB database outperformed SQLite.
+
+
+
 # Other properties of the `MsBackendSql`
 
 The `MsBackendSql` backend does not support parallel processing since the
