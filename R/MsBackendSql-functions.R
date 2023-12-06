@@ -424,6 +424,57 @@ MsBackendSql <- function() {
     .create_indices(con, peak_table)
 }
 
+#' Similar to the .insert_data but takes data from the provided `Spectra`
+#' object and inserts that (chunk-wise) into the database.
+#'
+#' @noRd
+.set_backend_insert_data <- function(object, f = processingChunkFactor(object),
+                                     con, BPPARAM = SerialParam(),
+                                     blob = TRUE, ...) {
+    if (!length(f))
+        f <- rep(1L, length(object))
+    if (!is.factor(f))
+        f <- force(factor(f, levels = unique(f)))
+    if (length(f) != length(object))
+        stop("length of 'f' has to match length of 'object'")
+    sv <- spectraVariables(object)
+    sv <- sv[!sv %in% c("mz", "intensity", "spectrum_id_")]
+    spd <- as.data.frame(spectraData(object[1], columns = sv))
+    if (inherits(con, "MySQLConnection"))
+        cols <- vapply(spd, function(z) dbDataType(con, z), character(1))
+    else cols <- dbDataType(con, spd)
+    if (blob) {
+        .initialize_tables_blob(con, cols, partitionBy = "none", 10)
+        peak_table <- "msms_spectrum_peak_blob"
+    } else {
+        .initialize_tables(con, cols, partitionBy = "none", 10)
+        peak_table <- "msms_spectrum_peak"
+    }
+    if (inherits(con, "MariaDBConnection")) {
+        res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
+        res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
+        res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
+        res <- dbExecute(con,
+                         paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
+    }
+    index <- 0
+    message("Importing data ... ")
+    pb <- progress_bar$new(format = paste0("[:bar] :current/:",
+                                           "total (:percent) in ",
+                                           ":elapsed"),
+                           total = length(levels(f)), clear = FALSE,
+                           force = TRUE)
+    pb$tick(0)
+    for (l in levels(f)) {
+        s <- Spectra(object@backend[f == l])
+        if (blob)
+            index <- .insert_backend_blob(con, s, index = index)
+        else index <- .insert_backend(con, s, index = index)
+        pb$tick(1)
+    }
+    .create_indices(con, peak_table)
+}
+
 .create_indices <- function(con, peak_table) {
     message("Creating indices ", appendLF = FALSE)
     if (inherits(con, "MariaDBConnection")) {
@@ -559,7 +610,11 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
 #' the `insert_backend` and `insert_backend_blob` functions. These functions
 #' are not (yet) merged, because the latter are designed to be more memory
 #' efficient and to enable import of large data set. This function assumes
-#' that data is already loaded into memory.
+#' that the full data is already loaded into memory and passed through the
+#' `data` parameter to this function (`data` being a `data.frame` such as
+#' returned by `spectraData`). The main reason why this function (or
+#' `setBackend`) does not support parallel or chunk-wise insertion is the
+#' primary keys of the spectra and the index creation.
 #'
 #' @author Johannes Rainer
 #'
@@ -570,7 +625,9 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
     tbls <- dbListTables(dbcon)
     if (any(c("msms_spectrum", "msms_spectrum_peak",
               "msms_spectrum_peak_blob") %in% tbls))
-        stop("'dbcon' contains already tables of a 'MsBackendSql' database")
+        stop("'dbcon' contains already tables of a 'MsBackendSql' database. ",
+             "If this error occurred during a 'setBackend' call, try ",
+             "passing 'f = factor()' to that function.", call. = FALSE)
     if (!all(c("mz", "intensity") %in% colnames(data)))
         stop("'data' lacks required columns \"mz\" and \"intensity\"")
     if (any(colnames(data) == "spectrum_id_")) {

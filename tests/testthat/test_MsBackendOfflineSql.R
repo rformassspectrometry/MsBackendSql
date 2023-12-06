@@ -266,3 +266,18 @@ test_that("backendBpparam,MsBackendOfflineSql works", {
     mcp <- MulticoreParam(2)
     expect_equal(backendBpparam(MsBackendOfflineSql(), mcp), mcp)
 })
+
+test_that("setBackend,Spectra,MsBackendOfflineSql works", {
+    ref <- Spectra(c(mm14_file, mm8_file))
+    expect_error(setBackend(ref, MsBackendOfflineSql()), "'drv'")
+    expect_error(setBackend(ref, MsBackendOfflineSql(), drv = SQLite()),
+                 "'dbname'")
+
+    dbname_test <- tempfile()
+    res <- setBackend(ref, MsBackendOfflineSql(), drv = SQLite(),
+                      dbname = dbname_test)
+    expect_equal(spectraData(ref, c("rtime", "dataOrigin")),
+                 spectraData(res, c("rtime", "dataOrigin")))
+    expect_equal(peaksData(ref), peaksData(res))
+    expect_true(length(processingLog(res)) > length(processingLog(ref)))
+})

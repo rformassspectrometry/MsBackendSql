@@ -252,17 +252,48 @@ setMethod("tic", "MsBackendOfflineSql",
               callNextMethod()
           })
 
-## setMethod("supportsSetBackend", "MsBackendOfflineSql",
-##           function(object, ...) {
-##               FALSE
-##           })
-
 setMethod("backendBpparam", signature = "MsBackendOfflineSql",
           function(object, BPPARAM = bpparam()) {
               BPPARAM
           })
 
 setMethod("dbconn", "MsBackendOfflineSql", .db_connect)
+
+setMethod(
+    "setBackend", c("Spectra", "MsBackendOfflineSql"),
+    function(object, backend, f = processingChunkFactor(object), drv = NULL,
+             dbname = character(), user = character(), password = character(),
+             host = character(), port = NA_integer_, ...,
+             BPPARAM = SerialParam()) {
+        backend_class <- class(object@backend)[1L]
+        if (is.null(drv))
+            stop("Parameter 'drv' must be specified and needs to be ",
+                 "an instance of 'DBIDriver' such as returned e.g. ",
+                 "by 'SQLite()'")
+        if (!length(dbname))
+            stop("At least the database name has to be provided with ",
+                 "parameter 'dbname'. Other possibly required parameters",
+                 " (depending on the used database system) could be ",
+                 "'user', 'password', 'host' and 'port'.")
+        if (length(object)) {
+            dbcon <- dbConnect(drv, dbname = dbname, user = user,
+                               password = password, host = host,
+                               port = port)
+            .set_backend_insert_data(object, f = f, con = dbcon, ...)
+            object@backend <- backendInitialize(
+                backend, drv = drv, dbname = dbname, user = user,
+                password = password, host = host, port = port)
+            dbDisconnect(dbcon)
+        } else object@backend <- backendInitialize(
+                   backend, data = spectraData(object@backend), drv = drv,
+                   dbname = dbname, user = user, password = password,
+                   host = host, port = port, ...)
+        object@processing <- Spectra:::.logging(object@processing,
+                                                "Switch backend from ",
+                                                backend_class, " to ",
+                                                class(object@backend))
+        object
+})
 
 ## setReplaceMethod("$", "MsBackendOfflineSql", function(x, name, value) {
 ##     object@dbcon <- .db_connect(object)

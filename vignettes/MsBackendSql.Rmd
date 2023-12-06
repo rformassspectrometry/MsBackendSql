@@ -103,11 +103,14 @@ sps <- Spectra(con, source = MsBackendSql())
 sps
 ```
 
-As an alternative the `MsBackendOfflineSql` backend could be used instead, which
-supports serializing the data to disk and allows, if supported by the SQL
-database, also parallel processing. Thus, for most use cases the
-`MsBackendOfflineSql` should be used instead. See further below for more
-information on that backend..
+As an alternative, the `MsBackendOfflineSql` backend could also be used to
+interface with MS data in a SQL database. In contrast to the `MsBackendSql`, the
+`MsBackendOfflineSql` does not contain an active (open) connection to the
+database and hence supports serializing (saving) the object to disk using
+e.g. the `save` function, or parallel processing (if supported by the database
+system). Thus, for most use cases the `MsBackendOfflineSql` should be used
+instead of the `MsBackendSql`. See further below for more information on the
+`MsBackendOfflineSql`.
 
 `Spectra` objects allow also to change the backend to any other backend
 (extending `MsBackend`) using the `setBackend` function. Below we use this
@@ -123,16 +126,14 @@ With this function it is also possible to change from any backend to a
 `MsBackendSql` in which case a new database is created and all data from the
 originating backend is stored in this database. To change the backend to an
 `MsBackendOfflineSql` we need to provide the connection information to the SQL
-database as additional parameters. These are the same as we would need to
-connect to the database through a `dbConnect` call and includes the database
-driver to be used (parameter `drv`) as well as additional parameters such as the
+database as additional parameters. These parameters are the same that need to
+be passed to a `dbConnect` call to establish the connection to the
+database. These parameters include the database driver (parameter `drv`), the
 database name and eventually the user name, host etc (see `?dbConnect` for more
 information). In the simple example below we store the data into a SQLite
 database and thus only need to provide the database name, which corresponds
 SQLite database file. In our example we store the data into a temporary
-file. Importantly, we also need to disable parallel processing by specifying
-`BPPARAM = SerialParam()` since (most) SQL databases don't provide parallel data
-insertion.
+file.
 
 ```{r, warnings = FALSE}
 sps2 <- setBackend(sps_mem, MsBackendOfflineSql(), drv = SQLite(),
