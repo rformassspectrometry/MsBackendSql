@@ -25,6 +25,56 @@ test_that(".insert_data et al work", {
     dbDisconnect(db)
 })
 
+test_that(".set_backend_insert_data works", {
+    s <- Spectra(c(mm8_file, mm14_file))
+    expect_error(.set_backend_insert_data(object, f = c(1, 2, 3)))
+
+    con_ref <- dbConnect(SQLite(), tempfile())
+    createMsBackendSqlDatabase(con_ref, c(mm8_file, mm14_file))
+    be_ref <- backendInitialize(MsBackendSql(), dbcon = con_ref)
+
+    con_test <- dbConnect(SQLite(), tempfile())
+    .set_backend_insert_data(s, con = con_test)
+    be_test <- backendInitialize(MsBackendSql(), dbcon = con_test)
+    expect_equal(length(be_ref), length(be_test))
+    expect_equal(spectraData(be_ref, c("rtime", "dataOrigin")),
+                 spectraData(be_test, c("rtime", "dataOrigin")))
+    expect_equal(peaksData(be_ref), peaksData(be_test))
+    expect_equal(be_ref$spectrum_id_, be_test$spectrum_id_)
+    expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak_blob"),
+                 dbGetQuery(con_test, "select * from msms_spectrum_peak_blob"))
+
+    ## No chunk-wise processing
+    dbDisconnect(con_test)
+    con_test <- dbConnect(SQLite(), tempfile())
+    .set_backend_insert_data(s, f = factor(), con = con_test)
+    be_test <- backendInitialize(MsBackendSql(), dbcon = con_test)
+    expect_equal(length(be_ref), length(be_test))
+    expect_equal(spectraData(be_ref, c("rtime", "dataOrigin")),
+                 spectraData(be_test, c("rtime", "dataOrigin")))
+    expect_equal(peaksData(be_ref), peaksData(be_test))
+    expect_equal(be_ref$spectrum_id_, be_test$spectrum_id_)
+    expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak_blob"),
+                 dbGetQuery(con_test, "select * from msms_spectrum_peak_blob"))
+
+    ## Arbitrary chunks.
+    dbDisconnect(con_test)
+    con_test <- dbConnect(SQLite(), tempfile())
+    f <- sort(rep(1:10, length.out = length(s)))
+    .set_backend_insert_data(s, f = f, con = con_test)
+    be_test <- backendInitialize(MsBackendSql(), dbcon = con_test)
+    expect_equal(length(be_ref), length(be_test))
+    expect_equal(spectraData(be_ref, c("rtime", "dataOrigin")),
+                 spectraData(be_test, c("rtime", "dataOrigin")))
+    expect_equal(peaksData(be_ref), peaksData(be_test))
+    expect_equal(be_ref$spectrum_id_, be_test$spectrum_id_)
+    expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak_blob"),
+                 dbGetQuery(con_test, "select * from msms_spectrum_peak_blob"))
+
+    dbDisconnect(con_ref)
+    dbDisconnect(con_test)
+})
+
 test_that("createMsBackendSqlDatabase works", {
     cn <- dbConnect(SQLite(), tempfile())
 

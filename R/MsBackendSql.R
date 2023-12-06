@@ -50,11 +50,14 @@
 #' New backend objects can be created with the `MsBackendSql()` function.
 #' SQL databases can be created and filled with MS data from raw data files
 #' using the `createMsBackendSqlDatabase` function or using
-#' `backendInitialize` and providing all data with parameter `data`. Existing
-#' SQL databases (created previously with `createMsBackendSqlDatabase` or
-#' `backendInitialize` with the `data` parameter) can be loaded using the
-#' *conventional* way to create/initialize `MsBackend` classes, i.e. using
-#' `backendInitialize`.
+#' `backendInitialize` and providing all data with parameter `data`. In
+#' addition it is possible to create a database from a `Spectra` object
+#' changing its backend to a `MsBackendSql` or `MsBackendOfflineSql` using
+#' the [setBackend()] function.
+#' Existing SQL databases (created previously with
+#' `createMsBackendSqlDatabase` or `backendInitialize` with the `data`
+#' parameter) can be loaded using the *conventional* way to create/initialize
+#' `MsBackend` classes, i.e. using `backendInitialize`.
 #'
 #' - `createMsBackendSqlDatabase`: create a database and fill it with MS data.
 #'   Parameter `dbcon` is expected to be a database connection, parameter `x`
@@ -101,7 +104,7 @@
 #'   `createMsBackendSqlDatabase`). `backendInitialize` can alternatively also
 #'   be used to create a **new** `MsBackendSql` database using the optional
 #'   `data` parameter. In this case, `dbcon` is expected to be a writeable
-#'   connection to an empty database and `data` a `DataFrame` with the full
+#'   connection to an empty database and `data` a `DataFrame` with the **full**
 #'   spectra data to be inserted into this database. The format of `data`
 #'   should match the format of the `DataFrame` returned by the `spectraData`
 #'   function and requires columns `"mz"` and `"intensity"` with the m/z and
@@ -109,7 +112,10 @@
 #'   then create all necessary tables in the database, will fill these tables
 #'   with the provided data and will return an `MsBackendSql` for this
 #'   database. Thus, the `MsBackendSql` supports the `setBackend` method
-#'   from `Spectra` to change from (any) backend to a `MsBackendSql`.
+#'   from `Spectra` to change from (any) backend to a `MsBackendSql`. Note
+#'   however that chunk-wise (or parallel) processing needs to be disabled
+#'   in this case by passing eventually `f = factor()` to the `setBackend`
+#'   call.
 #'
 #' - `supportsSetBackend`: whether `MsBackendSql` supports the `setBackend`
 #'   method to change the `MsBackend` of a `Spectra` object to a
@@ -836,3 +842,28 @@ setMethod(
 #'
 #' @rdname MsBackendSql
 setMethod("dbconn", "MsBackendSql", .dbcon)
+
+#' @importMethodsFrom Spectra setBackend
+#'
+#' @importFrom Spectra processingChunkFactor
+#'
+#' @noRd
+setMethod(
+    "setBackend", c("Spectra", "MsBackendSql"),
+    function(object, backend, f = processingChunkFactor(object), dbcon, ...,
+             BPPARAM = SerialParam()) {
+        backend_class <- class(object@backend)[1L]
+        if (missing(dbcon))
+            stop("Parameter 'dbcon' is required for 'MsBackendSql'")
+        if (length(object)) {
+            .set_backend_insert_data(object, f = f, con = dbcon, ...)
+            object@backend <- backendInitialize(backend, dbcon = dbcon)
+        } else object@backend <- backendInitialize(
+                   backend, data = spectraData(object@backend),
+                   dbcon = dbcon, ...)
+        object@processing <- Spectra:::.logging(object@processing,
+                                                "Switch backend from ",
+                                                backend_class, " to ",
+                                                class(object@backend))
+        object
+    })

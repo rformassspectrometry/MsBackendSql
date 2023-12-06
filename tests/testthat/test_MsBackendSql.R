@@ -377,3 +377,17 @@ test_that("backendBpparam,MsBackendSql works", {
     expect_s4_class(backendBpparam(MsBackendSql(), MulticoreParam(2)),
                     "SerialParam")
 })
+
+test_that("setBackend,Spectra,MsBackendSql works", {
+    ref <- Spectra(c(mm14_file, mm8_file))
+    expect_error(setBackend(ref, MsBackendSql()), "'dbcon'")
+
+    con_test <- dbConnect(SQLite(), tempfile())
+    res <- setBackend(ref, MsBackendSql(), dbcon = con_test)
+    expect_equal(spectraData(ref, c("rtime", "dataOrigin")),
+                 spectraData(res, c("rtime", "dataOrigin")))
+    expect_equal(peaksData(ref), peaksData(res))
+    expect_true(length(processingLog(res)) > length(processingLog(ref)))
+
+    dbDisconnect(con_test)
+})

@@ -252,11 +252,14 @@ saving/loading the data to/from disk and supports also parallel processing.
 New backend objects can be created with the \code{MsBackendSql()} function.
 SQL databases can be created and filled with MS data from raw data files
 using the \code{createMsBackendSqlDatabase} function or using
-\code{backendInitialize} and providing all data with parameter \code{data}. Existing
-SQL databases (created previously with \code{createMsBackendSqlDatabase} or
-\code{backendInitialize} with the \code{data} parameter) can be loaded using the
-\emph{conventional} way to create/initialize \code{MsBackend} classes, i.e. using
-\code{backendInitialize}.
+\code{backendInitialize} and providing all data with parameter \code{data}. In
+addition it is possible to create a database from a \code{Spectra} object
+changing its backend to a \code{MsBackendSql} or \code{MsBackendOfflineSql} using
+the \code{\link[=setBackend]{setBackend()}} function.
+Existing SQL databases (created previously with
+\code{createMsBackendSqlDatabase} or \code{backendInitialize} with the \code{data}
+parameter) can be loaded using the \emph{conventional} way to create/initialize
+\code{MsBackend} classes, i.e. using \code{backendInitialize}.
 \itemize{
 \item \code{createMsBackendSqlDatabase}: create a database and fill it with MS data.
 Parameter \code{dbcon} is expected to be a database connection, parameter \code{x}
@@ -302,7 +305,7 @@ connection to an existing \emph{MsBackendSql} SQL database (created e.g. with
 \code{createMsBackendSqlDatabase}). \code{backendInitialize} can alternatively also
 be used to create a \strong{new} \code{MsBackendSql} database using the optional
 \code{data} parameter. In this case, \code{dbcon} is expected to be a writeable
-connection to an empty database and \code{data} a \code{DataFrame} with the full
+connection to an empty database and \code{data} a \code{DataFrame} with the \strong{full}
 spectra data to be inserted into this database. The format of \code{data}
 should match the format of the \code{DataFrame} returned by the \code{spectraData}
 function and requires columns \code{"mz"} and \code{"intensity"} with the m/z and
@@ -310,7 +313,10 @@ intensity values of each spectrum. The \code{backendInitialize} call will
 then create all necessary tables in the database, will fill these tables
 with the provided data and will return an \code{MsBackendSql} for this
 database. Thus, the \code{MsBackendSql} supports the \code{setBackend} method
-from \code{Spectra} to change from (any) backend to a \code{MsBackendSql}.
+from \code{Spectra} to change from (any) backend to a \code{MsBackendSql}. Note
+however that chunk-wise (or parallel) processing needs to be disabled
+in this case by passing eventually \code{f = factor()} to the \code{setBackend}
+call.
 \item \code{supportsSetBackend}: whether \code{MsBackendSql} supports the \code{setBackend}
 method to change the \code{MsBackend} of a \code{Spectra} object to a
 \code{MsBackendSql}. Returns \code{TRUE}, thus, changing the backend to a

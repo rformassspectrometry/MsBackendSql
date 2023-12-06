@@ -1,5 +1,11 @@
 # MsBackendSql 1.3
 
+## Changes in 1.3.2
+
+- Add a dedicated `setBackend` method for `MsBackendSql` and
+  `MsBackendOfflineSql` backends (issue
+  [#17](https://github.com/rformassspectrometry/MsBackendSql/issues/17)).
+
 ## Changes in 1.3.1
 
 - Add description on the use/advantages of different SQL database systems to the
