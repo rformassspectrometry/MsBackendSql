@@ -1,5 +1,9 @@
 # MsBackendSql 1.3
 
+## Changes in 1.3.3
+
+- Import method generics from `ProtGenerics`.
+
 ## Changes in 1.3.2
 
 - Add a dedicated `setBackend` method for `MsBackendSql` and

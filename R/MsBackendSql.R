@@ -468,7 +468,7 @@ setMethod("show", "MsBackendSql", function(object) {
 
 #' @exportMethod backendInitialize
 #'
-#' @importMethodsFrom Spectra backendInitialize
+#' @importMethodsFrom ProtGenerics backendInitialize
 #'
 #' @importFrom DBI dbGetQuery
 #'
@@ -531,7 +531,7 @@ setMethod("[", "MsBackendSql", function(x, i, j, ..., drop = FALSE) {
     x
 })
 
-#' @importMethodsFrom Spectra peaksData
+#' @importMethodsFrom ProtGenerics peaksData
 #'
 #' @exportMethod peaksData
 #'
@@ -561,7 +561,7 @@ setMethod(
         }
     })
 
-#' @importMethodsFrom Spectra peaksVariables
+#' @importMethodsFrom ProtGenerics peaksVariables
 #'
 #' @exportMethod peaksVariables
 #'
@@ -637,7 +637,7 @@ setReplaceMethod("spectraNames", "MsBackendSql", function(object, value) {
     stop("Replacing spectraNames is not supported for ", class(object)[1L])
 })
 
-#' @importMethodsFrom Spectra filterMsLevel uniqueMsLevels
+#' @importMethodsFrom ProtGenerics filterMsLevel uniqueMsLevels
 #'
 #' @rdname MsBackendSql
 #'
@@ -656,7 +656,7 @@ setMethod(
         }
     })
 
-#' @importMethodsFrom Spectra filterRt
+#' @importMethodsFrom ProtGenerics filterRt
 #'
 #' @rdname MsBackendSql
 #'
@@ -688,7 +688,7 @@ setMethod("filterRt", "MsBackendSql", function(object, rt = numeric(),
     }
 })
 
-#' @importMethodsFrom Spectra filterDataOrigin dataOrigin
+#' @importMethodsFrom ProtGenerics filterDataOrigin dataOrigin
 #'
 #' @rdname MsBackendSql
 #'
@@ -711,7 +711,7 @@ setMethod(
         }
     })
 
-#' @importMethodsFrom Spectra filterPrecursorMzRange
+#' @importMethodsFrom ProtGenerics filterPrecursorMzRange
 #'
 #' @rdname MsBackendSql
 #'
@@ -731,7 +731,7 @@ setMethod(
         } else object
     })
 
-#' @importMethodsFrom Spectra filterPrecursorMzValues
+#' @importMethodsFrom ProtGenerics filterPrecursorMzValues
 #'
 #' @rdname MsBackendSql
 #'
@@ -763,7 +763,7 @@ setMethod("uniqueMsLevels", "MsBackendSql", function(object, ...) {
 
 #' @rdname MsBackendSql
 #'
-#' @importMethodsFrom Spectra backendMerge
+#' @importMethodsFrom ProtGenerics backendMerge
 #'
 #' @exportMethod backendMerge
 setMethod("backendMerge", "MsBackendSql", function(object, ...) {
@@ -843,7 +843,7 @@ setMethod(
 #' @rdname MsBackendSql
 setMethod("dbconn", "MsBackendSql", .dbcon)
 
-#' @importMethodsFrom Spectra setBackend
+#' @importMethodsFrom ProtGenerics setBackend
 #'
 #' @importFrom Spectra processingChunkFactor
 #'
