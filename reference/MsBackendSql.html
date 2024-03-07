@@ -12,11 +12,11 @@ createMsBackendSqlDatabase."><meta property="og:image" content="https://rformass
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-primary"><div class="container">
+    <nav class="navbar fixed-top navbar-dark navbar-expand-lg bg-primary" data-bs-theme="dark"><div class="container">
     
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.4</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -348,7 +348,7 @@ using the <code>createMsBackendSqlDatabase</code> function or using
 <code>backendInitialize</code> and providing all data with parameter <code>data</code>. In
 addition it is possible to create a database from a <code>Spectra</code> object
 changing its backend to a <code>MsBackendSql</code> or <code>MsBackendOfflineSql</code> using
-the <code><a href="https://rdrr.io/pkg/Spectra/man/hidden_aliases.html" class="external-link">setBackend()</a></code> function.
+the <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">setBackend()</a></code> function.
 Existing SQL databases (created previously with
 <code>createMsBackendSqlDatabase</code> or <code>backendInitialize</code> with the <code>data</code>
 parameter) can be loaded using the <em>conventional</em> way to create/initialize
@@ -553,7 +553,7 @@ memory demand of the object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Initialize a MsBackendSql</span></span></span>
 <span class="r-in"><span><span class="va">dbc</span> <span class="op">&lt;-</span> <span class="fu">dbConnect</span><span class="op">(</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">db_file</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">be</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Spectra/man/MsBackend.html" class="external-link">backendInitialize</a></span><span class="op">(</span><span class="fu">MsBackendSql</span><span class="op">(</span><span class="op">)</span>, <span class="va">dbc</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">be</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize</a></span><span class="op">(</span><span class="fu">MsBackendSql</span><span class="op">(</span><span class="op">)</span>, <span class="va">dbc</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">be</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> MsBackendSql with 198 spectra</span>
@@ -572,7 +572,7 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/Rtmp5FseQE/file839552a543b8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpEfGlAD/file1d2b6355a16</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Original data source</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span></span>
@@ -585,9 +585,9 @@ memory demand of the object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Data storage</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">dataStorage</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp5FseQE/file839552a543b8" "/tmp/Rtmp5FseQE/file839552a543b8"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/Rtmp5FseQE/file839552a543b8" "/tmp/Rtmp5FseQE/file839552a543b8"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/Rtmp5FseQE/file839552a543b8" "/tmp/Rtmp5FseQE/file839552a543b8"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpEfGlAD/file1d2b6355a16" "/tmp/RtmpEfGlAD/file1d2b6355a16"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpEfGlAD/file1d2b6355a16" "/tmp/RtmpEfGlAD/file1d2b6355a16"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpEfGlAD/file1d2b6355a16" "/tmp/RtmpEfGlAD/file1d2b6355a16"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access all spectra data</span></span></span>
 <span class="r-in"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -608,17 +608,17 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1   66.7818            198       198    111.044,112.024,112.518,...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           intensity            dataStorage             dataOrigin centroided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NumericList&gt;            &lt;character&gt;            &lt;character&gt;  &lt;logical&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...             ...                    ...                    ...        ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/Rtmp5FseQE/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/RtmpEfGlAD/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      smoothed  polarity precScanNum precursorMz precursorIntensity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;logical&gt; &lt;integer&gt;   &lt;integer&gt;   &lt;numeric&gt;          &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          NA         1          NA          NA                 NA</span>
@@ -763,7 +763,7 @@ memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/Rtmp5FseQE/file839552a543b8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpEfGlAD/file1d2b6355a16</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span></span>
