@@ -484,7 +484,8 @@ setMethod("backendInitialize", "MsBackendSql",
     if (length(msg)) stop(msg)
     object@dbcon <- dbcon
     object@spectraIds <- dbGetQuery(
-        dbcon, "select spectrum_id_ from msms_spectrum")[, 1L]
+        dbcon, paste0("select spectrum_id_ from msms_spectrum ",
+                      "order by spectrum_id_"))[, 1L]
     object@.tables <- list(
         msms_spectrum = colnames(
             dbGetQuery(dbcon, "select * from msms_spectrum limit 0")))

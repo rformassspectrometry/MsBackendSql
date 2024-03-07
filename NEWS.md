@@ -1,5 +1,10 @@
 # MsBackendSql 1.3
 
+## Changes in 1.3.4
+
+- Ensure primary keys from the database are in the correct order for
+  `backendInitialize()`.
+
 ## Changes in 1.3.3
 
 - Import method generics from `ProtGenerics`.
