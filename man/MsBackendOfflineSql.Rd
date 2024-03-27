@@ -43,7 +43,7 @@ directly to \code{\link[=dbConnect]{dbConnect()}}.}
 \item{port}{\code{integer(1)} with the port number (optional). Passed directly to
 \code{\link[=dbConnect]{dbConnect()}}.}
 
-\item{data}{For \code{backendInitialize}: optional \code{DataFrame} with the full
+\item{data}{For \code{backendInitialize()}: optional \code{DataFrame} with the full
 spectra data that should be inserted into a (new) \code{MsBackendSql}
 database. If provided, it is assumed that the provided database
 connection information if for a (writeable) empty database into which
@@ -67,7 +67,7 @@ also be used in a parallel processing environment.
 
 An empty instance of an \code{MsBackendOfflineSql} class can be created using the
 \code{MsBackendOfflineSql()} function. An existing \emph{MsBackendSql} SQL database
-can be loaded with the \code{backendInitialize} function. This function takes
+can be loaded with the \code{backendInitialize()} function. This function takes
 parameters \code{drv}, \code{dbname}, \code{user}, \code{password}, \code{host} and \code{port}, all
 parameters that are passed to the \code{dbConnect()} function to connect to
 the (\strong{existing}) SQL database.

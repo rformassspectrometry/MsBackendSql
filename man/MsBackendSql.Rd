@@ -118,15 +118,15 @@ createMsBackendSqlDatabase(
 \arguments{
 \item{dbcon}{Connection to a database.}
 
-\item{x}{For \code{createMsBackendSqlDatabase}: \code{character} with the names of
+\item{x}{For \code{createMsBackendSqlDatabase()}: \code{character} with the names of
 the raw data files from which the data should be imported. For other
 methods an \code{MsqlBackend} instance.}
 
-\item{backend}{For \code{createMsBackendSqlDatabase}: MS backend that can be
+\item{backend}{For \code{createMsBackendSqlDatabase()}: MS backend that can be
 used to import MS data from the raw files specified with
 parameter \code{x}.}
 
-\item{chunksize}{For \code{createMsBackendSqlDatabase}: \code{integer(1)} defining
+\item{chunksize}{For \code{createMsBackendSqlDatabase()}: \code{integer(1)} defining
 the number of input that should be processed per iteration. With
 \code{chunksize = 1} each file specified with \code{x} will be imported and its
 data inserted to the database. With \code{chunksize = 5} data from 5 files
@@ -134,13 +134,13 @@ will be imported (in parallel) and inserted to the database. Thus,
 higher values might result in faster database creation, but require
 also more memory.}
 
-\item{blob}{For \code{createMsBackendSqlDatabase}: \code{logical(1)} whether
+\item{blob}{For \code{createMsBackendSqlDatabase()}: \code{logical(1)} whether
 individual m/z and intensity values should be stored separately
 (\code{blob = FALSE}) or if the m/z and intensity values for each spectrum
 should be stored as a single \emph{BLOB} SQL data type (\code{blob = TRUE},
 the default).}
 
-\item{partitionBy}{For \code{createMsBackendSqlDatabase}: \code{character(1)}
+\item{partitionBy}{For \code{createMsBackendSqlDatabase()}: \code{character(1)}
 defining if and how the peak data table should be partitioned. \code{"none"}
 (default): no partitioning, \code{"spectrum"}: peaks are assigned to the
 partition based on the spectrum ID (number), i.e. spectra are evenly
@@ -154,13 +154,13 @@ only available for MySQL/MariaDB databases, i.e., if \code{con} is a
 \code{MariaDBConnection}.
 See details for more information.}
 
-\item{partitionNumber}{For \code{createMsBackendSqlDatabase}: \code{integer(1)}
+\item{partitionNumber}{For \code{createMsBackendSqlDatabase()}: \code{integer(1)}
 defining the number of partitions the database table will be
 partitioned into (only supported for MySQL/MariaDB databases).}
 
 \item{object}{A \code{MsBackendSql} instance.}
 
-\item{data}{For \code{backendInitialize}: optional \code{DataFrame} with the full
+\item{data}{For \code{backendInitialize()}: optional \code{DataFrame} with the full
 spectra data that should be inserted into a (new) \code{MsBackendSql}
 database. If provided, it is assumed that \code{dbcon} is a (writeable)
 connection to an empty database into which \code{data} should be inserted.
@@ -176,7 +176,7 @@ database such as \code{blob}.}
 
 \item{drop}{For \code{[}: \code{logical(1)}, ignored.}
 
-\item{columns}{For \code{spectraData}: \code{character()} optionally defining a
+\item{columns}{For \code{spectraData()}: \code{character()} optionally defining a
 subset of spectra variables that should be returned. Defaults to
 \code{columns = spectraVariables(object)} hence all variables are returned.
 For \code{peaksData} accessor: optional \code{character} with requested columns
@@ -189,36 +189,36 @@ in the individual \code{matrix} of the returned \code{list}. Defaults to
 \item{name}{For \verb{<-}: \code{character(1)} with the name of the spectra variable
 to replace.}
 
-\item{msLevel}{For \code{filterMsLevel}: \code{integer} specifying the MS levels to
+\item{msLevel}{For \code{filterMsLevel()}: \code{integer} specifying the MS levels to
 filter the data.}
 
-\item{rt}{For \code{filterRt}: \code{numeric(2)} with the lower and upper retention
+\item{rt}{For \code{filterRt()}: \code{numeric(2)} with the lower and upper retention
 time. Spectra with a retention time \verb{>= rt[1]} and \verb{<= rt[2]} are
 returned.}
 
-\item{msLevel.}{For \verb{filterRt: }integer\verb{with the MS level(s) on which the retention time filter should be applied (all spectra from other MS levels are considered for the filter and are returned *as is*). If not specified, the retention time filter is applied to all MS levels in}object`.}
+\item{msLevel.}{For \verb{filterRt(): }integer\verb{with the MS level(s) on which the retention time filter should be applied (all spectra from other MS levels are considered for the filter and are returned *as is*). If not specified, the retention time filter is applied to all MS levels in}object`.}
 
-\item{dataOrigin}{For \code{filterDataOrigin}: \code{character} with \emph{data origin}
+\item{dataOrigin}{For \code{filterDataOrigin()}: \code{character} with \emph{data origin}
 values to which the data should be subsetted.}
 
-\item{mz}{For \code{filterPrecursorMzRange}: \code{numeric(2)} with the desired lower
+\item{mz}{For \code{filterPrecursorMzRange()}: \code{numeric(2)} with the desired lower
 and upper limit of the precursor m/z range.
-For \code{filterPrecursorMzValues}: \code{numeric} with the m/z value(s) to
+For \code{filterPrecursorMzValues()}: \code{numeric} with the m/z value(s) to
 filter the object.}
 
-\item{ppm}{For \code{filterPrecursorMzValues}: \code{numeric} with the m/z-relative
+\item{ppm}{For \code{filterPrecursorMzValues()}: \code{numeric} with the m/z-relative
 maximal acceptable difference for a m/z value to be considered
 matching. Can be of length 1 or equal to \code{length(mz)}.}
 
-\item{tolerance}{For \code{filterPrecursorMzValues}: \code{numeric} with the absolute
+\item{tolerance}{For \code{filterPrecursorMzValues()}: \code{numeric} with the absolute
 difference for m/z values to be considered matching. Can be of length 1
 or equal to \code{length(mz)}.}
 
-\item{initial}{For \code{tic}: \code{logical(1)} whether the original total ion count
+\item{initial}{For \code{tic()}: \code{logical(1)} whether the original total ion count
 should be returned (\code{initial = TRUE}, the default) or whether it
 should be calculated on the spectras' intensities (\code{initial = FALSE}).}
 
-\item{BPPARAM}{for \code{backendBpparam}: \code{BiocParallel} parallel processing
+\item{BPPARAM}{for \code{backendBpparam()}: \code{BiocParallel} parallel processing
 setup. See \code{\link[=bpparam]{bpparam()}} for more information.}
 }
 \value{
@@ -228,7 +228,7 @@ See documentation of respective function.
 The \code{MsBackendSql} is an implementation for the \code{\link[=MsBackend]{MsBackend()}} class for
 \code{\link[=Spectra]{Spectra()}} objects which stores and retrieves MS data from a SQL database.
 New databases can be created from raw MS data files using
-\code{createMsBackendSqlDatabase}.
+\code{createMsBackendSqlDatabase()}.
 }
 \details{
 The \code{MsBackendSql} class is principally a \emph{read-only} backend but by
@@ -240,7 +240,7 @@ changing the original data in the SQL database.
 The \code{MsBackendSql} backend keeps an (open) connection to the SQL database
 with the data and hence does not support saving/loading of a backend to
 disk (e.g. using \code{save} or \code{saveRDS}). Also, for the same reason, the
-\code{MsBackendSql} does not support parallel processing. The \code{backendBpparam}
+\code{MsBackendSql} does not support parallel processing. The \code{backendBpparam()}
 method for \code{MsBackendSql} will thus always return a \code{\link[=SerialParam]{SerialParam()}} object.
 
 The \code{\link[=MsBackendOfflineSql]{MsBackendOfflineSql()}} could be used as an alternative as it supports
@@ -251,17 +251,17 @@ saving/loading the data to/from disk and supports also parallel processing.
 
 New backend objects can be created with the \code{MsBackendSql()} function.
 SQL databases can be created and filled with MS data from raw data files
-using the \code{createMsBackendSqlDatabase} function or using
-\code{backendInitialize} and providing all data with parameter \code{data}. In
+using the \code{createMsBackendSqlDatabase()} function or using
+\code{backendInitialize()} and providing all data with parameter \code{data}. In
 addition it is possible to create a database from a \code{Spectra} object
 changing its backend to a \code{MsBackendSql} or \code{MsBackendOfflineSql} using
 the \code{\link[=setBackend]{setBackend()}} function.
 Existing SQL databases (created previously with
-\code{createMsBackendSqlDatabase} or \code{backendInitialize} with the \code{data}
+\code{createMsBackendSqlDatabase()} or \code{backendInitialize()} with the \code{data}
 parameter) can be loaded using the \emph{conventional} way to create/initialize
-\code{MsBackend} classes, i.e. using \code{backendInitialize}.
+\code{MsBackend} classes, i.e. using \code{backendInitialize()}.
 \itemize{
-\item \code{createMsBackendSqlDatabase}: create a database and fill it with MS data.
+\item \code{createMsBackendSqlDatabase()}: create a database and fill it with MS data.
 Parameter \code{dbcon} is expected to be a database connection, parameter \code{x}
 a \code{character} vector with the file names from which to import the data.
 Parameter \code{backend} is used for the actual data import and defaults to
@@ -298,26 +298,26 @@ Both options have about the same performance but
 Note that, while inserting the data takes a considerable amount of
 time, also the subsequent creation of database indices can take very
 long (even longer than data insertion for \code{blob = FALSE}).
-\item \code{backendInitialize}: get access and initialize a \code{MsBackendSql} object.
+\item \code{backendInitialize()}: get access and initialize a \code{MsBackendSql} object.
 Parameter \code{object} is supposed to be a \code{MsBackendSql} instance, created
 e.g. with \code{MsBackendSql()}. Parameter \code{dbcon} is expected to be a
 connection to an existing \emph{MsBackendSql} SQL database (created e.g. with
-\code{createMsBackendSqlDatabase}). \code{backendInitialize} can alternatively also
-be used to create a \strong{new} \code{MsBackendSql} database using the optional
+\code{createMsBackendSqlDatabase()}). \code{backendInitialize()} can alternatively
+also be used to create a \strong{new} \code{MsBackendSql} database using the optional
 \code{data} parameter. In this case, \code{dbcon} is expected to be a writeable
 connection to an empty database and \code{data} a \code{DataFrame} with the \strong{full}
 spectra data to be inserted into this database. The format of \code{data}
-should match the format of the \code{DataFrame} returned by the \code{spectraData}
+should match the format of the \code{DataFrame} returned by the \code{spectraData()}
 function and requires columns \code{"mz"} and \code{"intensity"} with the m/z and
-intensity values of each spectrum. The \code{backendInitialize} call will
+intensity values of each spectrum. The \code{backendInitialize()} call will
 then create all necessary tables in the database, will fill these tables
 with the provided data and will return an \code{MsBackendSql} for this
 database. Thus, the \code{MsBackendSql} supports the \code{setBackend} method
 from \code{Spectra} to change from (any) backend to a \code{MsBackendSql}. Note
 however that chunk-wise (or parallel) processing needs to be disabled
-in this case by passing eventually \code{f = factor()} to the \code{setBackend}
+in this case by passing eventually \code{f = factor()} to the \code{setBackend()}
 call.
-\item \code{supportsSetBackend}: whether \code{MsBackendSql} supports the \code{setBackend}
+\item \code{supportsSetBackend()}: whether \code{MsBackendSql} supports the \code{setBackend()}
 method to change the \code{MsBackend} of a \code{Spectra} object to a
 \code{MsBackendSql}. Returns \code{TRUE}, thus, changing the backend to a
 \code{MsBackendSql} is supported \strong{if} a writeable database connection
@@ -326,11 +326,11 @@ is provided in addition with parameter \code{dbcon} (i.e.
 connection to an \strong{empty} database would store the full spectra
 data from the \code{Spectra} object \code{sps} into the specified database and
 would return a \code{Spectra} object that uses a \code{MsBackendSql}).
-\item \code{backendBpparam}: whether a \code{MsBackendSql} supports parallel processing.
+\item \code{backendBpparam()}: whether a \code{MsBackendSql} supports parallel processing.
 Takes a \code{MsBackendSql} and a parallel processing setup (see \code{\link[=bpparam]{bpparam()}}
 for details) as input and always returns a \code{\link[=SerialParam]{SerialParam()}} since
 \code{MsBackendSql} does \strong{not} support parallel processing.
-\item \code{dbconn}: returns the connection to the database.
+\item \code{dbconn()}: returns the connection to the database.
 }
 }
 
@@ -341,34 +341,34 @@ for details) as input and always returns a \code{\link[=SerialParam]{SerialParam
 this will simply subset the \code{integer} vector of the primary keys and
 eventually cached data. The original data in the database \strong{is not}
 affected by any subsetting operation. Any subsetting operation can be
-\emph{undone} by resetting the object with the \code{reset} function. Subsetting
+\emph{undone} by resetting the object with the \code{reset()} function. Subsetting
 in arbitrary order as well as index replication is supported.
 
 Multiple \code{MsBackendSql} objects can also be merged (combined) with the
-\code{backendMerge} function. Note that this requires that all \code{MsBackendSql}
+\code{backendMerge()} function. Note that this requires that all \code{MsBackendSql}
 objects are connected to the \strong{same} database. This function is thus
 mostly used for combining \code{MsBackendSql} objects that were previously
-splitted using e.g. \code{split}.
+splitted using e.g. \code{split()}.
 
 In addition, \code{MsBackendSql} supports all other filtering methods available
 through \code{\link[=MsBackendCached]{MsBackendCached()}}. Implementation of filter functions optimized
 for \code{MsBackendSql} objects are:
 \itemize{
-\item \code{filterDataOrigin}: filter the object retaining spectra with \code{dataOrigin}
+\item \code{filterDataOrigin()}: filter the object retaining spectra with \code{dataOrigin}
 spectra variable values matching the provided ones with parameter
 \code{dataOrigin}. The function returns the results in the order of the
 values provided with parameter \code{dataOrigin}.
-\item \code{filterMsLevel}: filter the object based on the MS levels specified with
+\item \code{filterMsLevel()}: filter the object based on the MS levels specified with
 parameter \code{msLevel}. The function does the filtering using SQL queries.
 If \code{"msLevel"} is a \emph{local} variable stored within the object (and hence
 in memory) the default implementation in \code{MsBackendCached} is used
 instead.
-\item \code{filterPrecursorMzRange}: filters the data keeping only spectra with a
+\item \code{filterPrecursorMzRange()}: filters the data keeping only spectra with a
 \code{precursorMz} within the m/z value range provided with parameter \code{mz}
 (i.e. all spectra with a precursor m/z \verb{>= mz[1L]} and \verb{<= mz[2L]}).
-\item filterPrecursorMzValues\verb{: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter }mz\verb{. Parameters }ppm\code{and}tolerance\verb{allow to specify acceptable differences between compared values. Lengths of}ppm\code{and}tolerance\verb{can be either}1\verb{or equal to}length(mz)` to use different values for ppm and
+\item filterPrecursorMzValues()\verb{: filters the data keeping only spectra with precursor m/z values matching the value(s) provided with parameter }mz\verb{. Parameters }ppm\code{and}tolerance\verb{allow to specify acceptable differences between compared values. Lengths of}ppm\code{and}tolerance\verb{can be either}1\verb{or equal to}length(mz)` to use different values for ppm and
 tolerance for each provided m/z value.
-\item \code{filterRt}: filter the object keeping only spectra with retention times
+\item \code{filterRt()}: filter the object keeping only spectra with retention times
 within the specified retention time range (parameter \code{rt}). Optional
 parameter \code{msLevel.} allows to restrict the retention time filter only
 on the provided MS level(s) returning all spectra from other MS levels.
@@ -387,32 +387,32 @@ filtering functions and data manipulation functions from
 variables added or modified using the \verb{$<-} are \emph{cached} locally within
 the object (data in the database is never changed). To restore an object
 (i.e. drop all cached values) the \code{reset} function can be used.
-\item \code{dataStorage}: returns a \code{character} vector same length as there are
+\item \code{dataStorage()}: returns a \code{character} vector same length as there are
 spectra in \code{object} with the name of the database containing the data.
 \item \verb{intensity<-}: not supported.
 \item \verb{mz<-}: not supported.
-\item \code{peaksData}: returns a \code{list} with the spectras' peak data. The length of
+\item \code{peaksData()}: returns a \code{list} with the spectras' peak data. The length of
 the list is equal to the number of spectra in \code{object}. Each element of
 the list is a \code{matrix} with columns according to parameter \code{columns}. For
 an empty spectrum, a \code{matrix} with 0 rows is returned. Use
 \code{peaksVariables(object)} to list supported values for parameter
 \code{columns}.
-\item \code{peaksVariables}: returns a \code{character} with the available peak
-variables, i.e. columns that could be queried with \code{peaksData}.
-\item \code{reset}: \emph{restores} an \code{MsBackendSql} by re-initializing it with the
+\item \code{peaksVariables()}: returns a \code{character} with the available peak
+variables, i.e. columns that could be queried with \code{peaksData()}.
+\item \code{reset()}: \emph{restores} an \code{MsBackendSql} by re-initializing it with the
 data from the database. Any subsetting or cached spectra variables will
 be lost.
-\item \code{spectraData}: gets or general spectrum metadata.  \code{spectraData} returns
+\item \code{spectraData()}: gets general spectrum metadata. \code{spectraData()} returns
 a \code{DataFrame} with the same number of rows as there are spectra in
 \code{object}. Parameter \code{columns} allows to select specific spectra
 variables.
-\item \code{spectraNames}, \verb{spectraNames<-}: returns a \code{character} of length equal
+\item \code{spectraNames()}, \verb{spectraNames<-}: returns a \code{character} of length equal
 to the number of spectra in \code{object} with the primary keys of the spectra
 from the database (converted to \code{character}). Replacing spectra names
 with \verb{spectraNames<-} is not supported.
-\item \code{uniqueMsLevels}: returns the unique MS levels of all spectra in
+\item \code{uniqueMsLevels()}: returns the unique MS levels of all spectra in
 \code{object}.
-\item \code{tic}: returns the originally reported total ion count (for
+\item \code{tic()}: returns the originally reported total ion count (for
 \code{initial = TRUE}) or calculates the total ion count from the intensities
 of each spectrum (for \code{initial = FALSE}).
 }

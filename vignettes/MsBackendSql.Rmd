@@ -53,15 +53,15 @@ The package can be installed with the `BiocManager` package. To install
 # Creating and using `MsBackendSql` SQL databases
 
 `MsBackendSql` SQL databases can be created either by importing (raw) MS data
-from MS data files using the `createMsBackendSqlDatabase` or using the
-`backendInitialize` function by providing in addition to the database connection
-also the full MS data to import as a `DataFrame`. In the first example we use
-the `createMsBackendSqlDatabase` function which takes a connection to an (empty)
-database and the names of the files from which the data should be imported as
-input parameters creates all necessary database tables and stores the full data
-into the database. Below we create an empty SQLite database (in a temporary
-file) and fill that with MS data from two mzML files (from the `r
-Biocpkg("msdata")` package).
+from MS data files using the `createMsBackendSqlDatabase()` or using the
+`backendInitialize()` function by providing in addition to the database
+connection also the full MS data to import as a `DataFrame`. In the first
+example we use the `createMsBackendSqlDatabase()` function which takes a
+connection to an (empty) database and the names of the files from which the data
+should be imported as input parameters creates all necessary database tables and
+stores the full data into the database. Below we create an empty SQLite database
+(in a temporary file) and fill that with MS data from two mzML files (from the
+`r Biocpkg("msdata")` package).
 
 ```{r, message = FALSE, results = "hide"}
 library(RSQLite)
@@ -107,13 +107,13 @@ As an alternative, the `MsBackendOfflineSql` backend could also be used to
 interface with MS data in a SQL database. In contrast to the `MsBackendSql`, the
 `MsBackendOfflineSql` does not contain an active (open) connection to the
 database and hence supports serializing (saving) the object to disk using
-e.g. the `save` function, or parallel processing (if supported by the database
+e.g. the `save()` function, or parallel processing (if supported by the database
 system). Thus, for most use cases the `MsBackendOfflineSql` should be used
 instead of the `MsBackendSql`. See further below for more information on the
 `MsBackendOfflineSql`.
 
 `Spectra` objects allow also to change the backend to any other backend
-(extending `MsBackend`) using the `setBackend` function. Below we use this
+(extending `MsBackend`) using the `setBackend()` function. Below we use this
 function to first load all data into memory by changing from the `MsBackendSql`
 to a `MsBackendMemory`.
 
@@ -127,7 +127,7 @@ With this function it is also possible to change from any backend to a
 originating backend is stored in this database. To change the backend to an
 `MsBackendOfflineSql` we need to provide the connection information to the SQL
 database as additional parameters. These parameters are the same that need to
-be passed to a `dbConnect` call to establish the connection to the
+be passed to a `dbConnect()` call to establish the connection to the
 database. These parameters include the database driver (parameter `drv`), the
 database name and eventually the user name, host etc (see `?dbConnect` for more
 information). In the simple example below we store the data into a SQLite
@@ -142,15 +142,15 @@ sps2
 ```
 
 Similar to any other `Spectra` object we can retrieve the available *spectra
-variables* using the `spectraVariables` function.
+variables* using the `spectraVariables()` function.
 
 ```{r}
 spectraVariables(sps)
 ```
 
-The MS peak data can be accessed using either the `mz`, `intensity` or
-`peaksData` functions. Below we extract the peaks matrix of the 5th spectrum and
-display the first 6 rows.
+The MS peak data can be accessed using either the `mz()`, `intensity()` or
+`peaksData()` functions. Below we extract the peaks matrix of the 5th spectrum
+and display the first 6 rows.
 
 ```{r}
 peaksData(sps)[[5]] |>
@@ -193,7 +193,7 @@ sps$msLevel <- msLevel(sps)
 system.time(msLevel(sps))
 ```
 
-We can also use the `reset` function to *reset* the data to its original state
+We can also use the `reset()` function to *reset* the data to its original state
 (this will cause any local spectra variables to be deleted and the backend to be
 initialized with the original data in the database).
 
@@ -306,7 +306,7 @@ access to the m/z and intensity values.
 Performance can be improved for the `MsBackendMzR` using parallel
 processing. Note that the `MsBackendSql` does **not support** parallel
 processing and thus parallel processing is (silently) disabled in functions such
-as `peaksData`.
+as `peaksData()`.
 
 ```{r}
 m2 <- MulticoreParam(2)
@@ -398,9 +398,9 @@ parallel processing setup was passed along with the `BPPARAM` method.
 Some functions on `Spectra` objects require to load the MS peak data (i.e., m/z
 and intensity values) into memory. For very large data sets (or computers with
 limited hardware resources) such function calls can cause out-of-memory
-errors. One example is the `lengths` function that determines the number of
+errors. One example is the `lengths()` function that determines the number of
 peaks per spectrum by loading the peak matrix first into memory. Such functions
-should ideally be called using the `peaksapply` function with parameter
+should ideally be called using the `peaksapply()` function with parameter
 `chunkSize` (e.g., `peaksapply(sps, lengths, chunkSize = 5000L)`). Instead of
 processing the full data set, the data will be first split into chunks of size
 `chunkSize` that are stepwise processed. Hence, only data from `chunkSize`

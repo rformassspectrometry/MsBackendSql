@@ -25,7 +25,7 @@
 #' The `MsBackendSql` is an implementation for the [MsBackend()] class for
 #' [Spectra()] objects which stores and retrieves MS data from a SQL database.
 #' New databases can be created from raw MS data files using
-#' `createMsBackendSqlDatabase`.
+#' `createMsBackendSqlDatabase()`.
 #'
 #' @details
 #'
@@ -39,7 +39,7 @@
 #' The `MsBackendSql` backend keeps an (open) connection to the SQL database
 #' with the data and hence does not support saving/loading of a backend to
 #' disk (e.g. using `save` or `saveRDS`). Also, for the same reason, the
-#' `MsBackendSql` does not support parallel processing. The `backendBpparam`
+#' `MsBackendSql` does not support parallel processing. The `backendBpparam()`
 #' method for `MsBackendSql` will thus always return a [SerialParam()] object.
 #'
 #' The [MsBackendOfflineSql()] could be used as an alternative as it supports
@@ -49,17 +49,17 @@
 #'
 #' New backend objects can be created with the `MsBackendSql()` function.
 #' SQL databases can be created and filled with MS data from raw data files
-#' using the `createMsBackendSqlDatabase` function or using
-#' `backendInitialize` and providing all data with parameter `data`. In
+#' using the `createMsBackendSqlDatabase()` function or using
+#' `backendInitialize()` and providing all data with parameter `data`. In
 #' addition it is possible to create a database from a `Spectra` object
 #' changing its backend to a `MsBackendSql` or `MsBackendOfflineSql` using
 #' the [setBackend()] function.
 #' Existing SQL databases (created previously with
-#' `createMsBackendSqlDatabase` or `backendInitialize` with the `data`
+#' `createMsBackendSqlDatabase()` or `backendInitialize()` with the `data`
 #' parameter) can be loaded using the *conventional* way to create/initialize
-#' `MsBackend` classes, i.e. using `backendInitialize`.
+#' `MsBackend` classes, i.e. using `backendInitialize()`.
 #'
-#' - `createMsBackendSqlDatabase`: create a database and fill it with MS data.
+#' - `createMsBackendSqlDatabase()`: create a database and fill it with MS data.
 #'   Parameter `dbcon` is expected to be a database connection, parameter `x`
 #'   a `character` vector with the file names from which to import the data.
 #'   Parameter `backend` is used for the actual data import and defaults to
@@ -97,27 +97,27 @@
 #'   time, also the subsequent creation of database indices can take very
 #'   long (even longer than data insertion for `blob = FALSE`).
 #'
-#' - `backendInitialize`: get access and initialize a `MsBackendSql` object.
+#' - `backendInitialize()`: get access and initialize a `MsBackendSql` object.
 #'   Parameter `object` is supposed to be a `MsBackendSql` instance, created
 #'   e.g. with `MsBackendSql()`. Parameter `dbcon` is expected to be a
 #'   connection to an existing *MsBackendSql* SQL database (created e.g. with
-#'   `createMsBackendSqlDatabase`). `backendInitialize` can alternatively also
-#'   be used to create a **new** `MsBackendSql` database using the optional
+#'   `createMsBackendSqlDatabase()`). `backendInitialize()` can alternatively
+#'   also be used to create a **new** `MsBackendSql` database using the optional
 #'   `data` parameter. In this case, `dbcon` is expected to be a writeable
 #'   connection to an empty database and `data` a `DataFrame` with the **full**
 #'   spectra data to be inserted into this database. The format of `data`
-#'   should match the format of the `DataFrame` returned by the `spectraData`
+#'   should match the format of the `DataFrame` returned by the `spectraData()`
 #'   function and requires columns `"mz"` and `"intensity"` with the m/z and
-#'   intensity values of each spectrum. The `backendInitialize` call will
+#'   intensity values of each spectrum. The `backendInitialize()` call will
 #'   then create all necessary tables in the database, will fill these tables
 #'   with the provided data and will return an `MsBackendSql` for this
 #'   database. Thus, the `MsBackendSql` supports the `setBackend` method
 #'   from `Spectra` to change from (any) backend to a `MsBackendSql`. Note
 #'   however that chunk-wise (or parallel) processing needs to be disabled
-#'   in this case by passing eventually `f = factor()` to the `setBackend`
+#'   in this case by passing eventually `f = factor()` to the `setBackend()`
 #'   call.
 #'
-#' - `supportsSetBackend`: whether `MsBackendSql` supports the `setBackend`
+#' - `supportsSetBackend()`: whether `MsBackendSql` supports the `setBackend()`
 #'   method to change the `MsBackend` of a `Spectra` object to a
 #'   `MsBackendSql`. Returns `TRUE`, thus, changing the backend to a
 #'   `MsBackendSql` is supported **if** a writeable database connection
@@ -127,12 +127,12 @@
 #'   data from the `Spectra` object `sps` into the specified database and
 #'   would return a `Spectra` object that uses a `MsBackendSql`).
 #'
-#' - `backendBpparam`: whether a `MsBackendSql` supports parallel processing.
+#' - `backendBpparam()`: whether a `MsBackendSql` supports parallel processing.
 #'   Takes a `MsBackendSql` and a parallel processing setup (see [bpparam()]
 #'   for details) as input and always returns a [SerialParam()] since
 #'   `MsBackendSql` does **not** support parallel processing.
 #'
-#' - `dbconn`: returns the connection to the database.
+#' - `dbconn()`: returns the connection to the database.
 #'
 #' @section Subsetting, merging and filtering data:
 #'
@@ -140,42 +140,42 @@
 #' this will simply subset the `integer` vector of the primary keys and
 #' eventually cached data. The original data in the database **is not**
 #' affected by any subsetting operation. Any subsetting operation can be
-#' *undone* by resetting the object with the `reset` function. Subsetting
+#' *undone* by resetting the object with the `reset()` function. Subsetting
 #' in arbitrary order as well as index replication is supported.
 #'
 #' Multiple `MsBackendSql` objects can also be merged (combined) with the
-#' `backendMerge` function. Note that this requires that all `MsBackendSql`
+#' `backendMerge()` function. Note that this requires that all `MsBackendSql`
 #' objects are connected to the **same** database. This function is thus
 #' mostly used for combining `MsBackendSql` objects that were previously
-#' splitted using e.g. `split`.
+#' splitted using e.g. `split()`.
 #'
 #' In addition, `MsBackendSql` supports all other filtering methods available
 #' through [MsBackendCached()]. Implementation of filter functions optimized
 #' for `MsBackendSql` objects are:
 #'
-#' - `filterDataOrigin`: filter the object retaining spectra with `dataOrigin`
+#' - `filterDataOrigin()`: filter the object retaining spectra with `dataOrigin`
 #'   spectra variable values matching the provided ones with parameter
 #'   `dataOrigin`. The function returns the results in the order of the
 #'   values provided with parameter `dataOrigin`.
 #'
-#' - `filterMsLevel`: filter the object based on the MS levels specified with
+#' - `filterMsLevel()`: filter the object based on the MS levels specified with
 #'   parameter `msLevel`. The function does the filtering using SQL queries.
 #'   If `"msLevel"` is a *local* variable stored within the object (and hence
 #'   in memory) the default implementation in `MsBackendCached` is used
 #'   instead.
 #'
-#' - `filterPrecursorMzRange`: filters the data keeping only spectra with a
+#' - `filterPrecursorMzRange()`: filters the data keeping only spectra with a
 #'   `precursorMz` within the m/z value range provided with parameter `mz`
 #'   (i.e. all spectra with a precursor m/z `>= mz[1L]` and `<= mz[2L]`).
 #'
-#' - filterPrecursorMzValues`: filters the data keeping only spectra with
+#' - filterPrecursorMzValues()`: filters the data keeping only spectra with
 #'   precursor m/z values matching the value(s) provided with parameter `mz`.
 #'   Parameters `ppm` and `tolerance` allow to specify acceptable differences
 #'   between compared values. Lengths of `ppm` and `tolerance` can be either
 #'   `1` or equal to `length(mz)` to use different values for ppm and
 #'   tolerance for each provided m/z value.
 #'
-#' - `filterRt`: filter the object keeping only spectra with retention times
+#' - `filterRt()`: filter the object keeping only spectra with retention times
 #'   within the specified retention time range (parameter `rt`). Optional
 #'   parameter `msLevel.` allows to restrict the retention time filter only
 #'   on the provided MS level(s) returning all spectra from other MS levels.
@@ -192,41 +192,41 @@
 #'   the object (data in the database is never changed). To restore an object
 #'   (i.e. drop all cached values) the `reset` function can be used.
 #'
-#' - `dataStorage`: returns a `character` vector same length as there are
+#' - `dataStorage()`: returns a `character` vector same length as there are
 #'   spectra in `object` with the name of the database containing the data.
 #'
 #' - `intensity<-`: not supported.
 #'
 #' - `mz<-`: not supported.
 #'
-#' - `peaksData`: returns a `list` with the spectras' peak data. The length of
+#' - `peaksData()`: returns a `list` with the spectras' peak data. The length of
 #'   the list is equal to the number of spectra in `object`. Each element of
 #'   the list is a `matrix` with columns according to parameter `columns`. For
 #'   an empty spectrum, a `matrix` with 0 rows is returned. Use
 #'   `peaksVariables(object)` to list supported values for parameter
 #'   `columns`.
 #'
-#' - `peaksVariables`: returns a `character` with the available peak
-#'   variables, i.e. columns that could be queried with `peaksData`.
+#' - `peaksVariables()`: returns a `character` with the available peak
+#'   variables, i.e. columns that could be queried with `peaksData()`.
 #'
-#' - `reset`: *restores* an `MsBackendSql` by re-initializing it with the
+#' - `reset()`: *restores* an `MsBackendSql` by re-initializing it with the
 #'   data from the database. Any subsetting or cached spectra variables will
 #'   be lost.
 #'
-#' - `spectraData`: gets or general spectrum metadata.  `spectraData` returns
+#' - `spectraData()`: gets general spectrum metadata. `spectraData()` returns
 #'   a `DataFrame` with the same number of rows as there are spectra in
 #'   `object`. Parameter `columns` allows to select specific spectra
 #'   variables.
 #'
-#' - `spectraNames`, `spectraNames<-`: returns a `character` of length equal
+#' - `spectraNames()`, `spectraNames<-`: returns a `character` of length equal
 #'   to the number of spectra in `object` with the primary keys of the spectra
 #'   from the database (converted to `character`). Replacing spectra names
 #'   with `spectraNames<-` is not supported.
 #'
-#' - `uniqueMsLevels`: returns the unique MS levels of all spectra in
+#' - `uniqueMsLevels()`: returns the unique MS levels of all spectra in
 #'   `object`.
 #'
-#' - `tic`: returns the originally reported total ion count (for
+#' - `tic()`: returns the originally reported total ion count (for
 #'   `initial = TRUE`) or calculates the total ion count from the intensities
 #'   of each spectrum (for `initial = FALSE`).
 #'
@@ -243,20 +243,20 @@
 #' however stored in a `data.frame` within the object thus increasing the
 #' memory demand of the object.
 #'
-#' @param backend For `createMsBackendSqlDatabase`: MS backend that can be
+#' @param backend For `createMsBackendSqlDatabase()`: MS backend that can be
 #'     used to import MS data from the raw files specified with
 #'     parameter `x`.
 #'
-#' @param blob For `createMsBackendSqlDatabase`: `logical(1)` whether
+#' @param blob For `createMsBackendSqlDatabase()`: `logical(1)` whether
 #'     individual m/z and intensity values should be stored separately
 #'     (`blob = FALSE`) or if the m/z and intensity values for each spectrum
 #'     should be stored as a single *BLOB* SQL data type (`blob = TRUE`,
 #'     the default).
 #'
-#' @param BPPARAM for `backendBpparam`: `BiocParallel` parallel processing
+#' @param BPPARAM for `backendBpparam()`: `BiocParallel` parallel processing
 #'     setup. See [bpparam()] for more information.
 #'
-#' @param chunksize For `createMsBackendSqlDatabase`: `integer(1)` defining
+#' @param chunksize For `createMsBackendSqlDatabase()`: `integer(1)` defining
 #'     the number of input that should be processed per iteration. With
 #'     `chunksize = 1` each file specified with `x` will be imported and its
 #'     data inserted to the database. With `chunksize = 5` data from 5 files
@@ -264,7 +264,7 @@
 #'     higher values might result in faster database creation, but require
 #'     also more memory.
 #'
-#' @param columns For `spectraData`: `character()` optionally defining a
+#' @param columns For `spectraData()`: `character()` optionally defining a
 #'     subset of spectra variables that should be returned. Defaults to
 #'     `columns = spectraVariables(object)` hence all variables are returned.
 #'     For `peaksData` accessor: optional `character` with requested columns
@@ -272,20 +272,20 @@
 #'     `columns = c("mz", "intensity")` but all columns listed by
 #'     `peaksVariables` would be supported.
 #'
-#' @param data For `backendInitialize`: optional `DataFrame` with the full
+#' @param data For `backendInitialize()`: optional `DataFrame` with the full
 #'     spectra data that should be inserted into a (new) `MsBackendSql`
 #'     database. If provided, it is assumed that `dbcon` is a (writeable)
 #'     connection to an empty database into which `data` should be inserted.
 #'     `data` could be the output of `spectraData` from another backend.
 #'
-#' @param dataOrigin For `filterDataOrigin`: `character` with *data origin*
+#' @param dataOrigin For `filterDataOrigin()`: `character` with *data origin*
 #'     values to which the data should be subsetted.
 #'
 #' @param dbcon Connection to a database.
 #'
 #' @param drop For `[`: `logical(1)`, ignored.
 #'
-#' @param initial For `tic`: `logical(1)` whether the original total ion count
+#' @param initial For `tic()`: `logical(1)` whether the original total ion count
 #'     should be returned (`initial = TRUE`, the default) or whether it
 #'     should be calculated on the spectras' intensities (`initial = FALSE`).
 #'
@@ -293,18 +293,18 @@
 #'
 #' @param j For `[`: ignored.
 #'
-#' @param msLevel For `filterMsLevel`: `integer` specifying the MS levels to
+#' @param msLevel For `filterMsLevel()`: `integer` specifying the MS levels to
 #'     filter the data.
 #'
-#' @param msLevel. For `filterRt: `integer` with the MS level(s) on which the
+#' @param msLevel. For `filterRt(): `integer` with the MS level(s) on which the
 #'     retention time filter should be applied (all spectra from other MS
 #'     levels are considered for the filter and are returned *as is*). If not
 #'     specified, the retention time filter is applied to all MS levels in
 #'     `object`.
 #'
-#' @param mz For `filterPrecursorMzRange`: `numeric(2)` with the desired lower
+#' @param mz For `filterPrecursorMzRange()`: `numeric(2)` with the desired lower
 #'     and upper limit of the precursor m/z range.
-#'     For `filterPrecursorMzValues`: `numeric` with the m/z value(s) to
+#'     For `filterPrecursorMzValues()`: `numeric` with the m/z value(s) to
 #'     filter the object.
 #'
 #' @param name For `<-`: `character(1)` with the name of the spectra variable
@@ -312,7 +312,7 @@
 #'
 #' @param object A `MsBackendSql` instance.
 #'
-#' @param partitionBy For `createMsBackendSqlDatabase`: `character(1)`
+#' @param partitionBy For `createMsBackendSqlDatabase()`: `character(1)`
 #'     defining if and how the peak data table should be partitioned. `"none"`
 #'     (default): no partitioning, `"spectrum"`: peaks are assigned to the
 #'     partition based on the spectrum ID (number), i.e. spectra are evenly
@@ -326,25 +326,25 @@
 #'     `MariaDBConnection`.
 #'     See details for more information.
 #'
-#' @param partitionNumber For `createMsBackendSqlDatabase`: `integer(1)`
+#' @param partitionNumber For `createMsBackendSqlDatabase()`: `integer(1)`
 #'     defining the number of partitions the database table will be
 #'     partitioned into (only supported for MySQL/MariaDB databases).
 #'
-#' @param ppm For `filterPrecursorMzValues`: `numeric` with the m/z-relative
+#' @param ppm For `filterPrecursorMzValues()`: `numeric` with the m/z-relative
 #'     maximal acceptable difference for a m/z value to be considered
 #'     matching. Can be of length 1 or equal to `length(mz)`.
 #'
-#' @param rt For `filterRt`: `numeric(2)` with the lower and upper retention
+#' @param rt For `filterRt()`: `numeric(2)` with the lower and upper retention
 #'     time. Spectra with a retention time `>= rt[1]` and `<= rt[2]` are
 #'     returned.
 #'
-#' @param tolerance For `filterPrecursorMzValues`: `numeric` with the absolute
+#' @param tolerance For `filterPrecursorMzValues()`: `numeric` with the absolute
 #'     difference for m/z values to be considered matching. Can be of length 1
 #'     or equal to `length(mz)`.
 #'
 #' @param value For all setter methods: replacement value.
 #'
-#' @param x For `createMsBackendSqlDatabase`: `character` with the names of
+#' @param x For `createMsBackendSqlDatabase()`: `character` with the names of
 #'     the raw data files from which the data should be imported. For other
 #'     methods an `MsqlBackend` instance.
 #'
