@@ -1,5 +1,11 @@
 # MsBackendSql 1.3
 
+## Changes in 1.3.5
+
+- Improve input argument check and error message for `backendInitialize()` for
+  `MsBackendOfflineSql`.
+- Update documentation adding `()` to all function names.
+
 ## Changes in 1.3.4
 
 - Ensure primary keys from the database are in the correct order for

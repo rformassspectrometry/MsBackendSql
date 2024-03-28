@@ -17,7 +17,7 @@
 #'
 #' An empty instance of an `MsBackendOfflineSql` class can be created using the
 #' `MsBackendOfflineSql()` function. An existing *MsBackendSql* SQL database
-#' can be loaded with the `backendInitialize` function. This function takes
+#' can be loaded with the `backendInitialize()` function. This function takes
 #' parameters `drv`, `dbname`, `user`, `password`, `host` and `port`, all
 #' parameters that are passed to the `dbConnect()` function to connect to
 #' the (**existing**) SQL database.
@@ -27,7 +27,7 @@
 #'
 #' @param object A `MsBackendOfflineSql` object.
 #'
-#' @param data For `backendInitialize`: optional `DataFrame` with the full
+#' @param data For `backendInitialize()`: optional `DataFrame` with the full
 #'     spectra data that should be inserted into a (new) `MsBackendSql`
 #'     database. If provided, it is assumed that the provided database
 #'     connection information if for a (writeable) empty database into which
@@ -128,7 +128,7 @@ setMethod("backendInitialize", "MsBackendOfflineSql",
           function(object, drv = NULL, dbname = character(),
                    user = character(), password = character(),
                    host = character(), port = NA_integer_, data, ...) {
-              if (is.null(drv))
+              if (is.null(drv) || !inherits(drv, "DBIDriver"))
                   stop("Parameter 'drv' must be specified and needs to be ",
                        "an instance of 'DBIDriver' such as returned e.g. ",
                        "by 'SQLite()'")
