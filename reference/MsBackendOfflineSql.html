@@ -24,7 +24,7 @@ also be used in a parallel processing environment."><meta property="og:image" co
     
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.5</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,7 +130,7 @@ directly to <code>dbConnect()</code>.</p></dd>
 
 
 <dt>data</dt>
-<dd><p>For <code>backendInitialize</code>: optional <code>DataFrame</code> with the full
+<dd><p>For <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code>: optional <code>DataFrame</code> with the full
 spectra data that should be inserted into a (new) <code>MsBackendSql</code>
 database. If provided, it is assumed that the provided database
 connection information if for a (writeable) empty database into which
@@ -149,7 +149,7 @@ from another backend.</p></dd>
 
 <p>An empty instance of an <code>MsBackendOfflineSql</code> class can be created using the
 <code>MsBackendOfflineSql()</code> function. An existing <em>MsBackendSql</em> SQL database
-can be loaded with the <code>backendInitialize</code> function. This function takes
+can be loaded with the <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code> function. This function takes
 parameters <code>drv</code>, <code>dbname</code>, <code>user</code>, <code>password</code>, <code>host</code> and <code>port</code>, all
 parameters that are passed to the <code>dbConnect()</code> function to connect to
 the (<strong>existing</strong>) SQL database.</p>
