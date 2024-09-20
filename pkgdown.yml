@@ -3,7 +3,7 @@ pkgdown: 2.1.1.9000
 pkgdown_sha: c0cbde4221b87c7e81273e804f210213129c3d83
 articles:
   MsBackendSql: MsBackendSql.html
-last_built: 2024-09-20T14:43Z
+last_built: 2024-09-20T20:07Z
 urls:
   reference: https://rformassspectrometry.github.io/MsBackendSql/reference
   article: https://rformassspectrometry.github.io/MsBackendSql/articles
