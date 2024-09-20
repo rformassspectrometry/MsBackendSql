@@ -1,14 +1,27 @@
 mm_be_off <- backendInitialize(MsBackendOfflineSql(), SQLite(),
                                dbname = dbGetInfo(mm_db)$dbname)
 
+tmt_be_off <- backendInitialize(MsBackendOfflineSql(), SQLite(),
+                                dbname = dbGetInfo(tmt_db)$dbname)
+
 test_that("MsBackendOfflineSql works", {
     res <- MsBackendOfflineSql()
     expect_s4_class(res, "MsBackendOfflineSql")
     expect_true(validObject(res))
 })
 
+test_that(".db_connect works", {
+    res <- .db_connect(MsBackendOfflineSql())
+    expect_equal(res, NULL)
+    res <- .db_connect(mm_be_off)
+    expect_s4_class(res, "SQLiteConnection")
+    dbDisconnect(res)
+})
+
 test_that("backendInitialize,MsBackendOfflineSql works", {
     expect_error(backendInitialize(MsBackendOfflineSql()), "must be specified")
+    expect_error(backendInitialize(MsBackendOfflineSql(), SQLite()),
+                 "At least the database name")
 
     dbn <- dbGetInfo(mm8_db)$dbname
 
@@ -21,6 +34,15 @@ test_that("backendInitialize,MsBackendOfflineSql works", {
     expect_true(validObject(res))
 
     expect_output(show(res), "MsBackendOfflineSql")
+
+    ## with data.
+    data <- spectraData(mm8_be)
+    tf <- tempfile()
+    res <- backendInitialize(MsBackendOfflineSql(), SQLite(), dbname = tf,
+                             data = data)
+    expect_s4_class(res, "MsBackendOfflineSql")
+    expect_equal(rtime(res), data$rtime)
+    unlink(tf)
 })
 
 test_that("dataStorage,MsBackendOfflineSql works", {
@@ -201,6 +223,26 @@ test_that("filterDataOrigin,MsBackendOfflineSql works", {
     expect_equal(unique(dataOrigin(res)), normalizePath(c(mm14_file, mm8_file)))
 })
 
+test_that("filterPrecursorMzRange,MsBackendOfflineSql works", {
+    res <- filterPrecursorMzRange(mm_be_off, c(100, 200))
+    expect_s4_class(res, "MsBackendOfflineSql")
+    expect_true(length(res) == 0)
+
+    res <- filterPrecursorMzRange(tmt_be_off, c(500, 600))
+    expect_s4_class(res, "MsBackendOfflineSql")
+    expect_true(length(res) > 0)
+    expect_true(all(msLevel(res) == 2L))
+    expect_true(all(precursorMz(res) > 500 & precursorMz(res) < 600))
+})
+
+test_that("filterPrecursorMzValues,MsBackendOfflineSql works", {
+    res <- filterPrecursorMzValues(tmt_be_off, 517, tolerance = 1)
+    expect_s4_class(res, "MsBackendOfflineSql")
+    expect_true(length(res) > 0)
+    expect_true(all(msLevel(res) == 2L))
+    expect_true(all(precursorMz(res) > 515 & precursorMz(res) < 519))
+})
+
 test_that("uniqueMsLevels,MsBackendOfflineSql works", {
     expect_equal(uniqueMsLevels(mm_be_off), 1L)
     expect_false(dbIsValid(mm_be_off@dbcon))
@@ -280,4 +322,12 @@ test_that("setBackend,Spectra,MsBackendOfflineSql works", {
                  spectraData(res, c("rtime", "dataOrigin")))
     expect_equal(peaksData(ref), peaksData(res))
     expect_true(length(processingLog(res)) > length(processingLog(ref)))
+
+    ref <- Spectra()
+    dbf <- tempfile()
+    res <- setBackend(ref, MsBackendOfflineSql(), drv = SQLite(), dbname = dbf)
+    expect_s4_class(res, "Spectra")
+    expect_true(length(res) == 0)
+    expect_equal(msLevel(ref), msLevel(res))
+    unlink(dbf)
 })

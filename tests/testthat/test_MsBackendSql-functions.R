@@ -1,3 +1,13 @@
+test_that(".valid_dbcon works", {
+    expect_equal(.valid_dbcon(NULL), NULL)
+    expect_match(.valid_dbcon(3), "expected to be")
+    tf <- tempfile()
+    cn <- dbConnect(SQLite(), tf)
+    expect_match(.valid_dbcon(cn), "Database lacks")
+    dbDisconnect(cn)
+    unlink(tf)
+})
+
 test_that(".insert_data et al work", {
     db_file <- tempfile()
     db <- dbConnect(SQLite(), db_file)
@@ -133,6 +143,10 @@ test_that(".spectra_data_sql works", {
     expect_identical(length(mm8_be), nrow(res))
     expect_s4_class(res$mz, "NumericList")
 
+    expect_error(
+        .spectra_data_sql(mm8_be, columns = c("rtime", "other_column")),
+        " not available.")
+
     tmp <- mm8_be[c(3, 2, 2, 3, 1, 10, 1)]
     res <- .spectra_data_sql(tmp, c("rtime", "msLevel", "mz"))
     expect_identical(colnames(res), c("rtime", "msLevel", "mz"))
@@ -151,6 +165,10 @@ test_that(".spectra_data_sql works", {
     expect_identical(length(tmp), nrow(res))
     expect_s4_class(res$mz, "NumericList")
 
+    expect_error(
+        .spectra_data_sql(mm8_be_blob, columns = c("rtime", "other_column")),
+        " not available.")
+
     expect_equal(tmp_sps$mz, res$mz)
     expect_equal(tmp_sps$rtime, res$rtime)
     expect_equal(tmp_sps$intensity, tmp$intensity)
@@ -159,6 +177,12 @@ test_that(".spectra_data_sql works", {
 test_that(".available_peaks_variables works", {
     res <- .available_peaks_variables(mm8_be)
     expect_equal(res, c("mz", "intensity"))
+
+    res <- .available_peaks_variables(mm8_be_blob)
+    expect_equal(res, c("mz", "intensity"))
+
+    res <- .available_peaks_variables(MsBackendSql())
+    expect_equal(res, character())
 })
 
 test_that(".has_local_variable works", {
@@ -168,6 +192,10 @@ test_that(".has_local_variable works", {
     tmp$other_id <- "a"
     res <- .has_local_variable(tmp, c("other_id"))
     expect_true(res)
+})
+
+test_that(".is_maria_db works", {
+    expect_false(.is_maria_db(10))
 })
 
 test_that(".precursor_mz_query works", {
@@ -200,6 +228,106 @@ test_that(".combine works", {
     res <- .combine(tmp)
     expect_s4_class(res, "MsBackendSql")
     expect_equal(mm8_be[1:10], res)
+})
+
+test_that(".initialize_tables_sql works", {
+    res <- .initialize_tables_sql(3, c("a", "b"))
+    expect_true(length(res) == 2L)
+    expect_equal(res[[2L]], paste0("CREATE TABLE msms_spectrum_peak (mz ",
+                                   "DOUBLE, intensity REAL, spectrum_id_ ",
+                                   "INTEGER);"))
+    with_mock(
+        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
+        res <- .initialize_tables_sql(3, c("a", "b"))
+    )
+    expect_match(res[[1L]], "ENGINE=ARIA;")
+    expect_match(res[[2L]], "ENGINE=ARIA;")
+    with_mock(
+        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
+        res <- .initialize_tables_sql(3, c("a", "b"), partitionBy = "spectrum")
+    )
+    expect_match(res[[2L]], "ENGINE=ARIA PARTITION BY HASH (spectrum_id_",
+                 fixed = TRUE)
+    with_mock(
+        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
+        res <- .initialize_tables_sql(3, c("a", "b"), partitionBy = "chunk")
+    )
+    expect_match(res[[2L]], "ENGINE=ARIA PARTITION BY HASH (partition_",
+                 fixed = TRUE)
+})
+
+test_that(".load_data_file works", {
+    d <- data.frame(a = 1:4, b = TRUE, c = FALSE, d = 5)
+    with_mock(
+        "dbExecute" = function(...) TRUE,
+        expect_true(.load_data_file(3, d))
+    )
+})
+
+test_that(".insert_peaks works", {
+    d <- data.frame(a = 1:4, b = TRUE, c = FALSE, d = 5)
+    with_mocked_bindings(
+        "dbExecute" = function(...) TRUE,
+        ".is_maria_db" = function(x) TRUE,
+        code = expect_true(.insert_peaks(3, d))
+    )
+})
+
+test_that(".insert_spectra_variables works", {
+    d <- data.frame(a = 1:4, b = TRUE, c = FALSE, d = 5)
+    with_mocked_bindings(
+        "dbExecute" = function(...) TRUE,
+        ".is_maria_db" = function(x) TRUE,
+        ".load_data_file" = function(con, data, name) {},
+        code = expect_true(.insert_spectra_variables(mm_db, d))
+    )
+    s <- new("SQLiteConnection")
+    with_mocked_bindings(
+        "dbExecute" = function(...) TRUE,
+        ".is_maria_db" = function(x) TRUE,
+        ".load_data_file" = function(con, data, name) {},
+        code = expect_true(.insert_spectra_variables(s, d))
+    )
+})
+
+test_that(".insert_backend works", {
+    with_mocked_bindings(
+        ".insert_spectra_variables" = function(...) {},
+        ".insert_peaks" = function(...) {},
+        ".is_maria_db" = function(x) TRUE,
+        code = expect_true(
+            length(.insert_backend(3, mm8_sps, partitionBy = "chunk", 1L)) == 1L
+        )
+    )
+})
+
+
+test_that(".initialize_tables_blob_sql works", {
+    res <- .initialize_tables_blob_sql(3, c("a", "b"))
+    expect_true(length(res) == 2L)
+    expect_equal(res[[2L]], paste0("CREATE TABLE msms_spectrum_peak_blob (mz ",
+                                   "MEDIUMBLOB, intensity MEDIUMBLOB, ",
+                                   "spectrum_id_ INTEGER);"))
+    with_mock(
+        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
+        res <- .initialize_tables_blob_sql(3, c("a", "b"))
+    )
+    expect_match(res[[1L]], "ENGINE=ARIA;")
+    expect_match(res[[2L]], "ENGINE=ARIA;")
+    with_mock(
+        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
+        res <- .initialize_tables_blob_sql(3, c("a", "b"),
+                                           partitionBy = "spectrum")
+    )
+    expect_match(res[[2L]], "ENGINE=ARIA PARTITION BY HASH (spectrum_id_",
+                 fixed = TRUE)
+    with_mock(
+        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
+        res <- .initialize_tables_blob_sql(3, c("a", "b"),
+                                           partitionBy = "chunk")
+    )
+    expect_match(res[[2L]], "ENGINE=ARIA PARTITION BY HASH (partition_",
+                 fixed = TRUE)
 })
 
 test_that(".create_from_spectra_data works", {

@@ -157,19 +157,22 @@ MsBackendSql <- function() {
     } else character()
 }
 
+.is_maria_db <- function(x) {
+    inherits(x, "MariaDBConnection")
+}
+
 ##
 ## Insertion of data below.
 ##
-
-.initialize_tables <- function(con, cols, partitionBy = "none",
-                               partitionNumber = 10) {
+.initialize_tables_sql <- function(con, cols, partitionBy = "none",
+                                   partitionNumber = 10) {
     sql_a <- paste0("CREATE TABLE msms_spectrum (",
                     paste(names(cols), cols, collapse = ", "),
                     ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
     sql_b <- paste0("CREATE TABLE msms_spectrum_peak (mz DOUBLE, intensity ",
                     "REAL, spectrum_id_ INTEGER")
     ## MySQL/MariaDB supports partitioning
-    if (inherits(con, "MariaDBConnection")) {
+    if (.is_maria_db(con)) {
         sql_a <- paste0(sql_a, " ENGINE=ARIA;")
         if (partitionBy == "none")
             sql_b <- paste0(sql_b, ", INDEX (spectrum_id_)) ENGINE=ARIA;")
@@ -184,19 +187,25 @@ MsBackendSql <- function() {
                             partitionNumber, ";")
     } else
         sql_b <- paste0(sql_b, ");")
-    res <- dbExecute(con, sql_a)
-    res <- dbExecute(con, sql_b)
+    list(sql_a, sql_b)
 }
 
-.initialize_tables_blob <- function(con, cols, partitionBy = "none",
-                                    partitionNumber = 10) {
+.initialize_tables <- function(con, cols, partitionBy = "none",
+                               partitionNumber = 10) {
+    sql <- .initialize_tables_sql(con, cols, partitionBy, partitionNumber)
+    res <- dbExecute(con, sql[[1L]])
+    res <- dbExecute(con, sql[[2L]])
+}
+
+.initialize_tables_blob_sql <- function(con, cols, partitionBy = "none",
+                                        partitionNumber = 10) {
     sql_a <- paste0("CREATE TABLE msms_spectrum (",
                     paste(names(cols), cols, collapse = ", "),
                     ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
     sql_b <- paste0("CREATE TABLE msms_spectrum_peak_blob (mz MEDIUMBLOB, ",
                     "intensity MEDIUMBLOB, spectrum_id_ INTEGER")
     ## MySQL/MariaDB supports partitioning
-    if (inherits(con, "MariaDBConnection")) {
+    if (.is_maria_db(con)) {
         sql_a <- paste0(sql_a, " ENGINE=ARIA;")
         if (partitionBy == "none")
             sql_b <- paste0(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
@@ -211,8 +220,14 @@ MsBackendSql <- function() {
                             partitionNumber, ";")
     } else
         sql_b <- paste0(sql_b, ");")
-    res <- dbExecute(con, sql_a)
-    res <- dbExecute(con, sql_b)
+    list(sql_a, sql_b)
+}
+
+.initialize_tables_blob <- function(con, cols, partitionBy = "none",
+                                    partitionNumber = 10) {
+    sql <- .initialize_tables_blob_sql(con, cols, partitionBy, partitionNumber)
+    res <- dbExecute(con, sql[[1L]])
+    res <- dbExecute(con, sql[[2L]])
 }
 
 #' @importFrom DBI dbWriteTable
@@ -223,18 +238,20 @@ MsBackendSql <- function() {
     if (length(info$dbname))
         data$dataStorage <- info$dbname
     else data$dataStorage <- "<database>"
-    if (inherits(con, "MariaDBConnection") || inherits(con, "MySQLConnection"))
+    if (.is_maria_db(con) || inherits(con, "MySQLConnection"))
         .load_data_file(con, data, "msms_spectrum")
     else
         dbWriteTable(con, name = "msms_spectrum", value = data, append = TRUE)
+    invisible(TRUE)
 }
 
 .insert_peaks <- function(con, data) {
-    if (inherits(con, "MariaDBConnection") || inherits(con, "MySQLConnection"))
+    if (.is_maria_db(con) || inherits(con, "MySQLConnection"))
         .load_data_file(con, data, "msms_spectrum_peak")
     else
         dbWriteTable(con, name = "msms_spectrum_peak",
                      value = data, append = TRUE)
+    invisible(TRUE)
 }
 
 #' For MySQL databases: export data and use LOAD DATA FILE to import.
@@ -246,22 +263,16 @@ MsBackendSql <- function() {
 #' @noRd
 .load_data_file <- function(con, data, name) {
     f <- tempfile()
-    logicals <- which(vapply(data, is.logical, logical(1)))
+    logicals <- which(vapply(data, is.logical, TRUE))
     if (length(logicals))
         for (i in logicals)
             data[, i] <- as.integer(data[, i])
-    ## message("writing file")
     fwrite(data, file = f, row.names = FALSE, col.names = FALSE, sep = "\t",
            na = "\\N", eol = "\n", quote = FALSE, showProgress = FALSE)
-    ## message("connection valid ", dbIsValid(conm))
-    ## message("executing insert")
     res <- dbExecute(
         con, paste0("LOAD DATA LOCAL INFILE '", f, "' INTO TABLE ", name,
                     " FIELDS TERMINATED BY 0x09;"))
-    ## message("removing file")
-    res <- file.remove(f)
-    if (!res)
-        stop("failed to remove temporary file")
+    file.remove(f)
 }
 
 #' Inserts the data of a single backend to a database.
@@ -294,7 +305,7 @@ MsBackendSql <- function() {
     lns <- lengths(pks) / 2
     pks <- as.data.frame(do.call(rbind, pks))
     pks$spectrum_id_ <- rep(spectrum_id, lns)
-    if (partitionBy == "chunk" && inherits(con, "MariaDBConnection")) {
+    if (partitionBy == "chunk" && .is_maria_db(con)) {
         ## Append an integer for the current processed chunk to be used for
         ## the partitioning
         pks$partition_ <- chunk
@@ -404,7 +415,7 @@ MsBackendSql <- function() {
                                            ":elapsed"),
                            total = length(chunks), clear = FALSE, force = TRUE)
     pb$tick(0)
-    if (inherits(con, "MariaDBConnection")) {
+    if (.is_maria_db(con)) {
         res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
         res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
         res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
@@ -450,7 +461,7 @@ MsBackendSql <- function() {
         .initialize_tables(con, cols, partitionBy = "none", 10)
         peak_table <- "msms_spectrum_peak"
     }
-    if (inherits(con, "MariaDBConnection")) {
+    if (.is_maria_db(con)) {
         res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
         res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
         res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
@@ -477,7 +488,7 @@ MsBackendSql <- function() {
 
 .create_indices <- function(con, peak_table) {
     message("Creating indices ", appendLF = FALSE)
-    if (inherits(con, "MariaDBConnection")) {
+    if (.is_maria_db(con)) {
         res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 1;")
         message(".", appendLF = FALSE)
         res <- dbExecute(con, "SET UNIQUE_CHECKS = 1;")
@@ -662,7 +673,7 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
         .initialize_tables(dbcon, cols)
     }
     if (nrow(data)) {
-        if (inherits(dbcon, "MariaDBConnection")) {
+        if (.is_maria_db(dbcon)) {
             res <- dbExecute(dbcon, "SET FOREIGN_KEY_CHECKS = 0;")
             res <- dbExecute(dbcon, "SET UNIQUE_CHECKS = 0;")
             res <- dbExecute(dbcon, "ALTER TABLE msms_spectrum DISABLE KEYS;")
