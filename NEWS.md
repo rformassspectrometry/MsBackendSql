@@ -1,3 +1,9 @@
+# MsBackendSql 1.5
+
+## Changes in 1.5.1
+
+- Implement the new `extractByIndex()` methods.
+
 # MsBackendSql 1.3
 
 ## Changes in 1.3.5

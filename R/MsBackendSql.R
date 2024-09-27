@@ -136,12 +136,12 @@
 #'
 #' @section Subsetting, merging and filtering data:
 #'
-#' `MsBackendSql` objects can be subsetted using the `[` function. Internally,
-#' this will simply subset the `integer` vector of the primary keys and
-#' eventually cached data. The original data in the database **is not**
-#' affected by any subsetting operation. Any subsetting operation can be
-#' *undone* by resetting the object with the `reset()` function. Subsetting
-#' in arbitrary order as well as index replication is supported.
+#' `MsBackendSql` objects can be subsetted using the `[` or `extractByIndex()`
+#' functions. Internally, this will simply subset the `integer` vector of the
+#' primary keys and eventually cached data. The original data in the database
+#' **is not** affected by any subsetting operation. Any subsetting operation
+#' can be *undone* by resetting the object with the `reset()` function.
+#' Subsetting in arbitrary order as well as index replication is supported.
 #'
 #' Multiple `MsBackendSql` objects can also be merged (combined) with the
 #' `backendMerge()` function. Note that this requires that all `MsBackendSql`
@@ -527,9 +527,17 @@ setMethod("[", "MsBackendSql", function(x, i, j, ..., drop = FALSE) {
     if (missing(i))
         return(x)
     i <- i2index(i, length(x), x@spectraIds)
-    slot(x, "spectraIds", check = FALSE) <- x@spectraIds[i]
-    x <- callNextMethod(x, i = i)
-    x
+    extractByIndex(x, i)
+})
+
+#' @rdname MsBackendSql
+#'
+#' @importMethodsFrom Spectra extractByIndex
+#'
+#' @export
+setMethod("extractByIndex", c("MsBackendSql", "ANY"), function(object, i) {
+    slot(object, "spectraIds", check = FALSE) <- object@spectraIds[i]
+    callNextMethod(object, i = i)
 })
 
 #' @importMethodsFrom ProtGenerics peaksData
@@ -707,7 +715,8 @@ setMethod(
             object <- .subset_query(object, qry)
             ## Need to ensure the order is correct.
             if (length(dataOrigin) > 1L)
-                object <- object[order(match(dataOrigin(object), dataOrigin))]
+                object <- extractByIndex(
+                    object, order(match(dataOrigin(object), dataOrigin)))
             object
         }
     })

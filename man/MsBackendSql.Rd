@@ -24,6 +24,7 @@
 \alias{backendInitialize,MsBackendSql-method}
 \alias{dataStorage,MsBackendSql-method}
 \alias{[,MsBackendSql-method}
+\alias{extractByIndex,MsBackendSql,ANY-method}
 \alias{peaksData,MsBackendSql-method}
 \alias{peaksVariables,MsBackendSql-method}
 \alias{intensity<-,MsBackendSql-method}
@@ -68,6 +69,8 @@ createMsBackendSqlDatabase(
 \S4method{dataStorage}{MsBackendSql}(object)
 
 \S4method{[}{MsBackendSql}(x, i, j, ..., drop = FALSE)
+
+\S4method{extractByIndex}{MsBackendSql,ANY}(object, i)
 
 \S4method{peaksData}{MsBackendSql}(object, columns = c("mz", "intensity"))
 
@@ -337,12 +340,12 @@ for details) as input and always returns a \code{\link[=SerialParam]{SerialParam
 \section{Subsetting, merging and filtering data}{
 
 
-\code{MsBackendSql} objects can be subsetted using the \code{[} function. Internally,
-this will simply subset the \code{integer} vector of the primary keys and
-eventually cached data. The original data in the database \strong{is not}
-affected by any subsetting operation. Any subsetting operation can be
-\emph{undone} by resetting the object with the \code{reset()} function. Subsetting
-in arbitrary order as well as index replication is supported.
+\code{MsBackendSql} objects can be subsetted using the \code{[} or \code{extractByIndex()}
+functions. Internally, this will simply subset the \code{integer} vector of the
+primary keys and eventually cached data. The original data in the database
+\strong{is not} affected by any subsetting operation. Any subsetting operation
+can be \emph{undone} by resetting the object with the \code{reset()} function.
+Subsetting in arbitrary order as well as index replication is supported.
 
 Multiple \code{MsBackendSql} objects can also be merged (combined) with the
 \code{backendMerge()} function. Note that this requires that all \code{MsBackendSql}

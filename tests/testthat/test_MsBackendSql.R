@@ -32,7 +32,16 @@ test_that("dataStorage works", {
     expect_identical(length(res), length(mm8_be))
 })
 
+test_that("extractByIndex,MsBackendSql works", {
+    idx <- c(4L, 12L, 100L, 14L)
+    res <- extractByIndex(mm8_be, idx)
+    expect_identical(res@spectraIds, idx)
+})
+
 test_that("[,MsBackendSql works", {
+    res <- mm8_be[]
+    expect_equal(res, mm8_be)
+
     idx <- c(4L, 12L, 100L, 14L)
     res <- mm8_be[idx]
     expect_identical(res@spectraIds, idx)

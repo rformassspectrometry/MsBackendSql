@@ -545,7 +545,7 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
 
 .subset_query <- function(object, qry) {
             ids <- dbGetQuery(.dbcon(object), qry)[, "spectrum_id_"]
-            object[object@spectraIds %in% ids]
+            extractByIndex(object, which(object@spectraIds %in% ids))
 }
 
 .precursor_mz_query <- function(mz, ppm = 20, tolerance = 0) {
