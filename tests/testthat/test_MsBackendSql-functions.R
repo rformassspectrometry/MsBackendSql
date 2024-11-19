@@ -33,11 +33,21 @@ test_that(".insert_data et al work", {
     names(pks) <- NULL
     expect_equal(as.list(peaksData(mm8_sps)), pks)
     dbDisconnect(db)
+
+    ## Mocking a MySQL connection
+    db_file <- tempfile()
+    db <- dbConnect(SQLite(), db_file)
+    db <- as(db, "DummySQL")
+    with_mocked_bindings(
+        ".is_maria_db" = function(x) TRUE,
+        code = .insert_data(db, mm8_file)
+    )
+    dbDisconnect(db)
 })
 
 test_that(".set_backend_insert_data works", {
     s <- Spectra(c(mm8_file, mm14_file))
-    expect_error(.set_backend_insert_data(object, f = c(1, 2, 3)))
+    expect_error(.set_backend_insert_data(s, f = c(1, 2, 3)), "match length")
 
     con_ref <- dbConnect(SQLite(), tempfile())
     createMsBackendSqlDatabase(con_ref, c(mm8_file, mm14_file))
@@ -80,6 +90,17 @@ test_that(".set_backend_insert_data works", {
     expect_equal(be_ref$spectrum_id_, be_test$spectrum_id_)
     expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak_blob"),
                  dbGetQuery(con_test, "select * from msms_spectrum_peak_blob"))
+
+    ## mock a MySQL connection
+    dbDisconnect(con_test)
+    con_test <- dbConnect(SQLite(), tempfile())
+    con_test <- as(con_test, "DummySQL")
+    with_mocked_bindings(
+        ".insert_backend_blob" = function(...) TRUE,
+        ".is_maria_db" = function(x) TRUE,
+        code = expect_true(.set_backend_insert_data(s, f = factor(),
+                                                    con = con_test))
+    )
 
     dbDisconnect(con_ref)
     dbDisconnect(con_test)
@@ -136,7 +157,15 @@ test_that(".fetch_spectra_data_sql works", {
     expect_identical(length(mm8_be), nrow(res))
 })
 
+test_that(".disable_mysql_keys works", {
+    ## Mocking the call since we don't have a MySQL database connection for
+    ## testing
+    expect_true(.disable_mysql_keys(new("DummySQL")))
+})
+
 test_that(".spectra_data_sql works", {
+    expect_error(.spectra_data_sql(mm8_be, c("rtime", "other_col")),
+                 "other_col not available.")
     res <- .spectra_data_sql(mm8_be, c("rtime", "msLevel", "mz"))
     expect_s4_class(res, "DataFrame")
     expect_identical(colnames(res), c("rtime", "msLevel", "mz"))
@@ -172,6 +201,15 @@ test_that(".spectra_data_sql works", {
     expect_equal(tmp_sps$mz, res$mz)
     expect_equal(tmp_sps$rtime, res$rtime)
     expect_equal(tmp_sps$intensity, tmp$intensity)
+})
+
+test_that(".db_data_type works", {
+    x <- data.frame(a = 1:4, b = TRUE, c = "TRUE")
+    res <- .db_data_type(new("SQLiteConnection"), x)
+    expect_equal(res, c(a = "INT", b = "SMALLINT", c = "TEXT"))
+    setClass("MySQLConnection", contains = "SQLiteConnection")
+    res <- .db_data_type(new("MySQLConnection"), x)
+    expect_equal(res, c(a = "INTEGER", b = "INTEGER", c = "TEXT"))
 })
 
 test_that(".available_peaks_variables works", {
@@ -228,6 +266,25 @@ test_that(".combine works", {
     res <- .combine(tmp)
     expect_s4_class(res, "MsBackendSql")
     expect_equal(mm8_be[1:10], res)
+
+    tmp <- .combine(list(mm8_be))
+    expect_equal(length(tmp), length(mm8_be))
+    expect_equal(rtime(tmp), rtime(mm8_be))
+
+    a <- mm8_be[1:10]
+    b <- setBackend(Spectra(a), MsBackendMemory())@backend
+    expect_error(.combine(list(a, b)), "Can only merge backends of the same")
+
+    expect_error(.combine(list(mm8_be, mm_be)), "connected to the same")
+})
+
+test_that(".initialize_tables works", {
+    a <- new("DummySQL")
+    MsBackendSql:::.initialize_tables(a, cols = c(a = "TEXT"))
+    with_mock(
+        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
+        .initialize_tables(a, cols = c(a = "TEXT"))
+    )
 })
 
 test_that(".initialize_tables_sql works", {
@@ -349,6 +406,20 @@ test_that(".create_from_spectra_data works", {
     tbls <- dbListTables(tmpcon)
     expect_equal(tbls, c("msms_spectrum", "msms_spectrum_peak_blob"))
 
+    expect_error(.create_from_spectra_data(tmpcon, dta),
+                 "contains already tables of a")
+
+    dbDisconnect(tmpcon)
+
+    tmpf <- tempfile()
+    tmpcon <- dbConnect(SQLite(), tmpf)
+    dta_2 <- dta[, !colnames(dta) %in% c("rtime", "msLevel")]
+    .create_from_spectra_data(tmpcon, dta_2, blob = FALSE)
+    res2 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
+    expect_true(all(is.na(res2$msLevel)))
+    expect_true(all(is.na(res2$rtime)))
+    dbDisconnect(tmpcon)
+
     ## long format
     tmpf <- tempfile()
     tmpcon <- dbConnect(SQLite(), tmpf)
@@ -356,10 +427,11 @@ test_that(".create_from_spectra_data works", {
     tbls <- dbListTables(tmpcon)
     expect_equal(tbls, c("msms_spectrum", "msms_spectrum_peak"))
     res2 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
-    expect_true(all(res2$dataStorage != res$dataStorage))
-    expect_equal(rtime(res2), rtime(res))
-    expect_equal(mz(res2), mz(res))
-    expect_equal(intensity(res2), intensity(res))
+    expect_true(all(res2$dataStorage != mm8_be$dataStorage))
+    expect_equal(rtime(res2), rtime(mm8_be))
+    expect_equal(mz(res2), mz(mm8_be))
+    expect_equal(intensity(res2), intensity(mm8_be))
+    dbDisconnect(tmpcon)
 
     ## empty data frame
     tmpf <- tempfile()
@@ -370,8 +442,8 @@ test_that(".create_from_spectra_data works", {
     .create_from_spectra_data(tmpcon, dta)
     res3 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
     expect_true(validObject(res3))
-    expect_equal(spectraVariables(res2), spectraVariables(res3))
-    expect_equal(colnames(spectraData(res2)), colnames(spectraData(res3)))
+    expect_equal(spectraVariables(mm8_be), spectraVariables(res3))
+    expect_equal(colnames(spectraData(mm8_be)), colnames(spectraData(res3)))
     expect_true(length(res3) == 0L)
     dbDisconnect(tmpcon)
 
@@ -393,6 +465,21 @@ test_that(".create_from_spectra_data works", {
                                      compress = FALSE))
     expect_equal(tmp$msLevel, dta$msLevel)
     expect_equal(tmp$rtime, dta$rtime)
+    dbDisconnect(tmpcon)
+
+    tmpf <- tempfile()
+    tmpcon <- dbConnect(SQLite(), tmpf)
+    tmpcon <- as(tmpcon, "DummySQL")
+    dta <- spectraData(
+        mm8_sps, columns = c(spectraVariables(mm8_sps), "mz", "intensity"))
+    ## With mock to simulate MariaDB
+    with_mocked_bindings(
+        ".insert_spectra_variables" = function(...) TRUE,
+        ".insert_peaks" = function(...) TRUE,
+        ".is_maria_db" = function(x) TRUE,
+        code = .create_from_spectra_data(tmpcon, dta, blob = FALSE)
+    )
+    dbDisconnect(tmpcon)
 })
 
 test_that(".drop_na_columns works", {

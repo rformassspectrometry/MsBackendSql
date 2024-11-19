@@ -78,10 +78,10 @@ MsBackendSql <- function() {
             res$intensity <- NumericList(ints, compress = FALSE)
         }
     }
-    if (!all(columns %in% colnames(res)))
-        stop("Column(s) ", paste0(columns[!columns %in% names(res)],
-                                  collapse = ", "), " not available.",
-             call. = FALSE)
+    ## if (!all(columns %in% colnames(res)))
+    ##     stop("Column(s) ", paste0(columns[!columns %in% names(res)],
+    ##                               collapse = ", "), " not available.",
+    ##          call. = FALSE)
     if (any(columns == "centroided") && !is.logical(res$centroided))
         res$centroided <- as.logical(res$centroided)
     if (any(columns == "smoothed") && !is.logical(res$smoothed))
@@ -290,8 +290,6 @@ MsBackendSql <- function() {
 #'
 #' @return `integer(1)` last used spectrum_id
 #'
-#' @importFrom DBI dbDataType
-#'
 #' @noRd
 .insert_backend <- function(con, x, index = 0L,
                             partitionBy = "none", chunk = 0L) {
@@ -395,9 +393,7 @@ MsBackendSql <- function() {
     sv <- spectraVariables(be)
     sv <- sv[!sv %in% c("mz", "intensity")]
     spd <- as.data.frame(spectraData(be, columns = sv))
-    if (inherits(con, "MySQLConnection"))
-        cols <- vapply(spd, function(z) dbDataType(con, z), character(1))
-    else cols <- dbDataType(con, spd)
+    cols <- .db_data_type(con, spd)
     if (blob) {
         .initialize_tables_blob(con, cols, partitionBy, partitionNumber)
         peak_table <- "msms_spectrum_peak_blob"
@@ -415,13 +411,7 @@ MsBackendSql <- function() {
                                            ":elapsed"),
                            total = length(chunks), clear = FALSE, force = TRUE)
     pb$tick(0)
-    if (.is_maria_db(con)) {
-        res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
-        res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
-        res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
-        res <- dbExecute(con,
-                         paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
-    }
+    if (.is_maria_db(con)) res <- .disable_mysql_keys(con, peak_table)
     for (i in seq_along(chunks)) {
         s <- Spectra(source = backend, x[chunks[[i]]], BPPARAM = bpparam())
         if (blob)
@@ -433,6 +423,24 @@ MsBackendSql <- function() {
         pb$tick(1)
     }
     .create_indices(con, peak_table)
+}
+
+#' @importFrom DBI dbDataType
+#'
+#' @noRd
+.db_data_type <- function(con, x) {
+    if (inherits(con, "MySQLConnection"))
+        vapply(x, function(z) dbDataType(con, z), NA_character_)
+    else dbDataType(con, x)
+}
+
+.disable_mysql_keys <- function(con, peak_table = "msms_spectrum_peak") {
+    res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
+    res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
+    res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
+    res <- dbExecute(con,
+                     paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
+    res
 }
 
 #' Similar to the .insert_data but takes data from the provided `Spectra`
@@ -451,9 +459,7 @@ MsBackendSql <- function() {
     sv <- spectraVariables(object)
     sv <- sv[!sv %in% c("mz", "intensity", "spectrum_id_")]
     spd <- as.data.frame(spectraData(object[1], columns = sv))
-    if (inherits(con, "MySQLConnection"))
-        cols <- vapply(spd, function(z) dbDataType(con, z), character(1))
-    else cols <- dbDataType(con, spd)
+    cols = .db_data_type(con, spd)
     if (blob) {
         .initialize_tables_blob(con, cols, partitionBy = "none", 10)
         peak_table <- "msms_spectrum_peak_blob"
@@ -461,13 +467,7 @@ MsBackendSql <- function() {
         .initialize_tables(con, cols, partitionBy = "none", 10)
         peak_table <- "msms_spectrum_peak"
     }
-    if (.is_maria_db(con)) {
-        res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
-        res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
-        res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
-        res <- dbExecute(con,
-                         paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
-    }
+    if (.is_maria_db(con)) .disable_mysql_keys(con, peak_table)
     index <- 0
     message("Importing data ... ")
     pb <- progress_bar$new(format = paste0("[:bar] :current/:",
@@ -515,6 +515,7 @@ MsBackendSql <- function() {
     res <- dbExecute(con, paste0("CREATE INDEX spectrum_ms_level on ",
                                   "msms_spectrum (msLevel)"))
     message(" Done")
+    TRUE
 }
 
 #' @rdname MsBackendSql
@@ -662,9 +663,7 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
     data <- as.data.frame(data)
     if (nrow(data))
         data$dataStorage <- "<database>"
-    if (inherits(dbcon, "MySQLConnection"))
-        cols <- vapply(data, function(z) dbDataType(dbcon, z), character(1))
-    else cols <- dbDataType(dbcon, data)
+    cols <- .db_data_type(dbcon, data)
     if (blob) {
         peak_table <- "msms_spectrum_peak_blob"
         .initialize_tables_blob(dbcon, cols)
@@ -673,13 +672,7 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
         .initialize_tables(dbcon, cols)
     }
     if (nrow(data)) {
-        if (.is_maria_db(dbcon)) {
-            res <- dbExecute(dbcon, "SET FOREIGN_KEY_CHECKS = 0;")
-            res <- dbExecute(dbcon, "SET UNIQUE_CHECKS = 0;")
-            res <- dbExecute(dbcon, "ALTER TABLE msms_spectrum DISABLE KEYS;")
-            res <- dbExecute(
-                dbcon, paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
-        }
+        if (.is_maria_db(dbcon)) .disable_mysql_keys(dbcon, peak_table)
         sid <- seq_len(nrow(data))
         data$spectrum_id_ <- sid
         message("Done")

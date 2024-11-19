@@ -551,7 +551,7 @@ setMethod(
         pks <- object@peak_fun(object, columns)
         if (is.list(pks$mz) | is.list(pks$intensity)) {
             res <- do.call(
-                mapply, args = c(pks[columns],
+                base::mapply, args = c(pks[columns],
                                  list(FUN = base::cbind, SIMPLIFY = FALSE,
                                       USE.NAMES = FALSE)))
             res[match(object@spectraIds, pks$spectrum_id_)]

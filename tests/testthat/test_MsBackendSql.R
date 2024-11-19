@@ -76,6 +76,14 @@ test_that("[,MsBackendSql works", {
     expect_true(length(res) == 1L)
     expect_true(is.matrix(res[[1L]]))
     expect_equal(res[[1L]], peaksData(mm8_sps[1L])[[1L]])
+
+    tmp <- mm8_be
+    tmp@spectraIds <- c(tmp@spectraIds, 300L)
+    res <- peaksData(tmp)
+    res <- res[[length(res)]]
+    expect_true(is.matrix(res))
+    expect_true(nrow(res) == 0)
+
 })
 
 test_that("peaksData,MsBackendSql works", {
@@ -191,6 +199,9 @@ test_that("filterMsLevel,MsBackendSql works", {
     res <- filterMsLevel(mm8_be)
     expect_equal(res, mm8_be)
 
+    res <- filterMsLevel(mm8_be, msLevel = integer())
+    expect_equal(res, mm8_be)
+
     res <- filterMsLevel(mm8_be, msLevel = 1:2)
     expect_equal(res, mm8_be)
 
@@ -246,6 +257,9 @@ test_that("filterRt,MsBackendSql works", {
 })
 
 test_that("filterDataOrigin works", {
+    res <- filterDataOrigin(mm_be, character())
+    expect_equal(res, mm_be)
+
     res <- filterDataOrigin(mm_be, normalizePath(mm8_file))
     expect_true(all(res$dataOrigin == normalizePath(mm8_file)))
 
@@ -254,6 +268,14 @@ test_that("filterDataOrigin works", {
 
     res <- filterDataOrigin(mm_be, normalizePath(c(mm14_file, mm8_file)))
     expect_equal(unique(dataOrigin(res)), normalizePath(c(mm14_file, mm8_file)))
+
+    tmp <- mm_be
+    tmp@localData$dataOrigin <- "here"
+    tmp@localData$dataOrigin[1:20] <- "there"
+    res <- filterDataOrigin(tmp, "here")
+    expect_true(all(res$dataOrigin == "here"))
+    expect_equal(res@spectraIds, mm_be@spectraIds[21:310])
+    expect_equal(rtime(res), rtime(mm_be[21:310]))
 })
 
 test_that("filterPrecursorMzRange works", {
@@ -268,6 +290,9 @@ test_that("filterPrecursorMzRange works", {
 })
 
 test_that("filterPrecursorMzValues works", {
+    res <- filterPrecursorMzValues(tmt_be, mz = numeric())
+    expect_equal(res, tmt_be)
+
     tmt_be2 <- tmt_be
     tmt_be2$precursorMz <- tmt_be$precursorMz
     pmz <- c(620.1, 404.25, 417.7, 506.6)
