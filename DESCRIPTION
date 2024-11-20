@@ -32,6 +32,7 @@ Imports:
     IRanges,
     data.table,
     progress,
+    stringi,
     BiocGenerics
 Suggests:
     testthat,
