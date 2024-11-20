@@ -4,6 +4,13 @@ library(Spectra)
 library(RSQLite)
 library(msdata)
 
+setClass("DummySQL",
+         contains = "SQLiteConnection")
+
+setMethod("dbExecute", c("DummySQL", "character"), function(conn, statement) {
+    TRUE
+})
+
 mm8_file <- system.file("microtofq", "MM8.mzML", package = "msdata")
 mm8_sps <- Spectra(mm8_file)
 mm8_db <- dbConnect(SQLite(), tempfile())

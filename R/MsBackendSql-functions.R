@@ -78,10 +78,6 @@ MsBackendSql <- function() {
             res$intensity <- NumericList(ints, compress = FALSE)
         }
     }
-    if (!all(columns %in% colnames(res)))
-        stop("Column(s) ", paste0(columns[!columns %in% names(res)],
-                                  collapse = ", "), " not available.",
-             call. = FALSE)
     if (any(columns == "centroided") && !is.logical(res$centroided))
         res$centroided <- as.logical(res$centroided)
     if (any(columns == "smoothed") && !is.logical(res$smoothed))
@@ -91,14 +87,16 @@ MsBackendSql <- function() {
 
 #' @importFrom DBI dbGetQuery
 #'
+#' @importFrom stringi stri_c
+#'
 #' @noRd
 .fetch_peaks_sql <- function(x, columns = c("mz", "intensity")) {
     if (length(x@dbcon)) {
         dbGetQuery(
             x@dbcon,
-            paste0("select spectrum_id_,", paste(columns, collapse = ","),
+            stri_c("select spectrum_id_,", stri_c(columns, collapse = ","),
                    " from msms_spectrum_peak where spectrum_id_ in (",
-                   paste0("'", unique(x@spectraIds), "'", collapse = ","),")"))
+                   stri_c(unique(x@spectraIds), collapse = ","), ")"))
     } else {
         data.frame(spectrum_id_ = integer(), mz = numeric(),
                    intensity = numeric())[, c("spectrum_id_", columns)]
@@ -109,9 +107,9 @@ MsBackendSql <- function() {
     if (length(x@dbcon)) {
         res <- dbGetQuery(
             x@dbcon,
-            paste0("select spectrum_id_,", paste(columns, collapse = ","),
+            stri_c("select spectrum_id_,", stri_c(columns, collapse = ","),
                    " from msms_spectrum_peak_blob where spectrum_id_ in (",
-                   paste0("'", unique(x@spectraIds), "'", collapse = ","),")"))
+                   stri_c(unique(x@spectraIds), collapse = ","), ")"))
         if (any(colnames(res) == "mz"))
              res$mz <- lapply(res$mz, unserialize)
         if (any(colnames(res) == "intensity"))
@@ -132,9 +130,9 @@ MsBackendSql <- function() {
     ## database that is unique (such as spectrum_id).
     res <- dbGetQuery(
         x@dbcon,
-        paste0("select ", paste(sql_columns, collapse = ","), " from ",
+        stri_c("select ", stri_c(sql_columns, collapse = ","), " from ",
                "msms_spectrum where spectrum_id_ in (",
-               paste0("'", unique(x@spectraIds), "'", collapse = ", ") ,")"))
+               stri_c(unique(x@spectraIds), collapse = ", ") , ")"))
     idx <- match(x@spectraIds, res$spectrum_id_)
     res <- res[idx[!is.na(idx)], , drop = FALSE]
     rownames(res) <- NULL
@@ -152,7 +150,7 @@ MsBackendSql <- function() {
         if (any(dbListTables(.dbcon(x)) == "msms_spectrum_peak_blob"))
             tbl <- "msms_spectrum_peak_blob"
         res <- dbGetQuery(
-            .dbcon(x), paste0("select * from ", tbl, " limit 1"))
+            .dbcon(x), stri_c("select * from ", tbl, " limit 1"))
         colnames(res)[!colnames(res) %in% c("spectrum_id_", "peak_id")]
     } else character()
 }
@@ -166,27 +164,27 @@ MsBackendSql <- function() {
 ##
 .initialize_tables_sql <- function(con, cols, partitionBy = "none",
                                    partitionNumber = 10) {
-    sql_a <- paste0("CREATE TABLE msms_spectrum (",
-                    paste(names(cols), cols, collapse = ", "),
+    sql_a <- stri_c("CREATE TABLE msms_spectrum (",
+                    stri_c(names(cols), cols, sep = " ", collapse = ", "),
                     ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
-    sql_b <- paste0("CREATE TABLE msms_spectrum_peak (mz DOUBLE, intensity ",
+    sql_b <- stri_c("CREATE TABLE msms_spectrum_peak (mz DOUBLE, intensity ",
                     "REAL, spectrum_id_ INTEGER")
     ## MySQL/MariaDB supports partitioning
     if (.is_maria_db(con)) {
-        sql_a <- paste0(sql_a, " ENGINE=ARIA;")
+        sql_a <- stri_c(sql_a, " ENGINE=ARIA;")
         if (partitionBy == "none")
-            sql_b <- paste0(sql_b, ", INDEX (spectrum_id_)) ENGINE=ARIA;")
+            sql_b <- stri_c(sql_b, ", INDEX (spectrum_id_)) ENGINE=ARIA;")
         if (partitionBy == "spectrum")
-            sql_b <- paste0(sql_b, ", INDEX (spectrum_id_)) ENGINE=ARIA ",
+            sql_b <- stri_c(sql_b, ", INDEX (spectrum_id_)) ENGINE=ARIA ",
                             "PARTITION BY HASH (spectrum_id_) PARTITIONS ",
                             partitionNumber, ";")
         if (partitionBy == "chunk")
-            sql_b <- paste0(sql_b, ", partition_ SMALLINT, ",
+            sql_b <- stri_c(sql_b, ", partition_ SMALLINT, ",
                             "INDEX (spectrum_id_)) ENGINE=ARIA ",
                             "PARTITION BY HASH (partition_) PARTITIONS ",
                             partitionNumber, ";")
     } else
-        sql_b <- paste0(sql_b, ");")
+        sql_b <- stri_c(sql_b, ");")
     list(sql_a, sql_b)
 }
 
@@ -199,27 +197,27 @@ MsBackendSql <- function() {
 
 .initialize_tables_blob_sql <- function(con, cols, partitionBy = "none",
                                         partitionNumber = 10) {
-    sql_a <- paste0("CREATE TABLE msms_spectrum (",
-                    paste(names(cols), cols, collapse = ", "),
+    sql_a <- stri_c("CREATE TABLE msms_spectrum (",
+                    stri_c(names(cols), cols, sep = " ", collapse = ", "),
                     ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
-    sql_b <- paste0("CREATE TABLE msms_spectrum_peak_blob (mz MEDIUMBLOB, ",
+    sql_b <- stri_c("CREATE TABLE msms_spectrum_peak_blob (mz MEDIUMBLOB, ",
                     "intensity MEDIUMBLOB, spectrum_id_ INTEGER")
     ## MySQL/MariaDB supports partitioning
     if (.is_maria_db(con)) {
-        sql_a <- paste0(sql_a, " ENGINE=ARIA;")
+        sql_a <- stri_c(sql_a, " ENGINE=ARIA;")
         if (partitionBy == "none")
-            sql_b <- paste0(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
+            sql_b <- stri_c(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
         if (partitionBy == "spectrum")
-            sql_b <- paste0(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
+            sql_b <- stri_c(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
                             "PARTITION BY HASH (spectrum_id_) PARTITIONS ",
                             partitionNumber, ";")
         if (partitionBy == "chunk")
-            sql_b <- paste0(sql_b, ", partition_ SMALLINT, ",
+            sql_b <- stri_c(sql_b, ", partition_ SMALLINT, ",
                             "PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
                             "PARTITION BY HASH (partition_) PARTITIONS ",
                             partitionNumber, ";")
     } else
-        sql_b <- paste0(sql_b, ");")
+        sql_b <- stri_c(sql_b, ");")
     list(sql_a, sql_b)
 }
 
@@ -270,7 +268,7 @@ MsBackendSql <- function() {
     fwrite(data, file = f, row.names = FALSE, col.names = FALSE, sep = "\t",
            na = "\\N", eol = "\n", quote = FALSE, showProgress = FALSE)
     res <- dbExecute(
-        con, paste0("LOAD DATA LOCAL INFILE '", f, "' INTO TABLE ", name,
+        con, stri_c("LOAD DATA LOCAL INFILE '", f, "' INTO TABLE ", name,
                     " FIELDS TERMINATED BY 0x09;"))
     file.remove(f)
 }
@@ -289,8 +287,6 @@ MsBackendSql <- function() {
 #' @param chunk `integer(1)` with the number of the current chunk.
 #'
 #' @return `integer(1)` last used spectrum_id
-#'
-#' @importFrom DBI dbDataType
 #'
 #' @noRd
 .insert_backend <- function(con, x, index = 0L,
@@ -395,9 +391,7 @@ MsBackendSql <- function() {
     sv <- spectraVariables(be)
     sv <- sv[!sv %in% c("mz", "intensity")]
     spd <- as.data.frame(spectraData(be, columns = sv))
-    if (inherits(con, "MySQLConnection"))
-        cols <- vapply(spd, function(z) dbDataType(con, z), character(1))
-    else cols <- dbDataType(con, spd)
+    cols <- .db_data_type(con, spd)
     if (blob) {
         .initialize_tables_blob(con, cols, partitionBy, partitionNumber)
         peak_table <- "msms_spectrum_peak_blob"
@@ -410,18 +404,12 @@ MsBackendSql <- function() {
     message("Importing data ... ")
     idxs <- seq_along(x)
     chunks <- split(idxs, ceiling(idxs / chunksize))
-    pb <- progress_bar$new(format = paste0("[:bar] :current/:",
+    pb <- progress_bar$new(format = stri_c("[:bar] :current/:",
                                            "total (:percent) in ",
                                            ":elapsed"),
                            total = length(chunks), clear = FALSE, force = TRUE)
     pb$tick(0)
-    if (.is_maria_db(con)) {
-        res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
-        res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
-        res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
-        res <- dbExecute(con,
-                         paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
-    }
+    if (.is_maria_db(con)) res <- .disable_mysql_keys(con, peak_table)
     for (i in seq_along(chunks)) {
         s <- Spectra(source = backend, x[chunks[[i]]], BPPARAM = bpparam())
         if (blob)
@@ -433,6 +421,24 @@ MsBackendSql <- function() {
         pb$tick(1)
     }
     .create_indices(con, peak_table)
+}
+
+#' @importFrom DBI dbDataType
+#'
+#' @noRd
+.db_data_type <- function(con, x) {
+    if (inherits(con, "MySQLConnection"))
+        vapply(x, function(z) dbDataType(con, z), NA_character_)
+    else dbDataType(con, x)
+}
+
+.disable_mysql_keys <- function(con, peak_table = "msms_spectrum_peak") {
+    res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
+    res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
+    res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
+    res <- dbExecute(con,
+                     stri_c("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
+    res
 }
 
 #' Similar to the .insert_data but takes data from the provided `Spectra`
@@ -451,9 +457,7 @@ MsBackendSql <- function() {
     sv <- spectraVariables(object)
     sv <- sv[!sv %in% c("mz", "intensity", "spectrum_id_")]
     spd <- as.data.frame(spectraData(object[1], columns = sv))
-    if (inherits(con, "MySQLConnection"))
-        cols <- vapply(spd, function(z) dbDataType(con, z), character(1))
-    else cols <- dbDataType(con, spd)
+    cols = .db_data_type(con, spd)
     if (blob) {
         .initialize_tables_blob(con, cols, partitionBy = "none", 10)
         peak_table <- "msms_spectrum_peak_blob"
@@ -461,16 +465,10 @@ MsBackendSql <- function() {
         .initialize_tables(con, cols, partitionBy = "none", 10)
         peak_table <- "msms_spectrum_peak"
     }
-    if (.is_maria_db(con)) {
-        res <- dbExecute(con, "SET FOREIGN_KEY_CHECKS = 0;")
-        res <- dbExecute(con, "SET UNIQUE_CHECKS = 0;")
-        res <- dbExecute(con, "ALTER TABLE msms_spectrum DISABLE KEYS;")
-        res <- dbExecute(con,
-                         paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
-    }
+    if (.is_maria_db(con)) .disable_mysql_keys(con, peak_table)
     index <- 0
     message("Importing data ... ")
-    pb <- progress_bar$new(format = paste0("[:bar] :current/:",
+    pb <- progress_bar$new(format = stri_c("[:bar] :current/:",
                                            "total (:percent) in ",
                                            ":elapsed"),
                            total = length(levels(f)), clear = FALSE,
@@ -495,26 +493,27 @@ MsBackendSql <- function() {
         message(".", appendLF = FALSE)
         res <- dbExecute(con, "ALTER TABLE msms_spectrum ENABLE KEYS;")
         message(".", appendLF = FALSE)
-        res <- dbExecute(con, paste0("ALTER TABLE ",peak_table," ENABLE KEYS;"))
+        res <- dbExecute(con, stri_c("ALTER TABLE ",peak_table," ENABLE KEYS;"))
         message(".", appendLF = FALSE)
     } else {
-        res <- dbExecute(con, paste0("CREATE INDEX peak_spectrum_id on ",
+        res <- dbExecute(con, stri_c("CREATE INDEX peak_spectrum_id on ",
                                      peak_table, " (spectrum_id_)"))
         message(".", appendLF = FALSE)
-        res <- dbExecute(con, paste0("CREATE INDEX spectrum_spectrum_id on ",
+        res <- dbExecute(con, stri_c("CREATE INDEX spectrum_spectrum_id on ",
                                      "msms_spectrum (spectrum_id_)"))
         message(".", appendLF = FALSE)
     }
     ## create remaining indices
-    res <- dbExecute(con, paste0("CREATE INDEX spectrum_rtime on ",
+    res <- dbExecute(con, stri_c("CREATE INDEX spectrum_rtime on ",
                                   "msms_spectrum (rtime)"))
     message(".", appendLF = FALSE)
-    res <- dbExecute(con, paste0("CREATE INDEX spectrum_precursor_mz on ",
+    res <- dbExecute(con, stri_c("CREATE INDEX spectrum_precursor_mz on ",
                                   "msms_spectrum (precursorMz)"))
     message(".", appendLF = FALSE)
-    res <- dbExecute(con, paste0("CREATE INDEX spectrum_ms_level on ",
+    res <- dbExecute(con, stri_c("CREATE INDEX spectrum_ms_level on ",
                                   "msms_spectrum (msLevel)"))
     message(" Done")
+    TRUE
 }
 
 #' @rdname MsBackendSql
@@ -556,7 +555,7 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
         tolerance <- rep(tolerance[1L], lmz)
     mzdiff <- ppm(mz, ppm) + tolerance
     mzr <- rep(mz, each = 2) + c(-1, 1) * rep(mzdiff, each = 2)
-    qry <- paste0("precursorMz", c(" >= ", " <= "), mzr, c(" and ", " or "),
+    qry <- stri_c("precursorMz", c(" >= ", " <= "), mzr, c(" and ", " or "),
                   collapse = "")
     substring(qry, 1, nchar(qry) - 4)
 }
@@ -565,10 +564,10 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
 #'
 #' @noRd
 .id_query <- function(x) {
-    qry <- paste0("select spectrum_id_ from msms_spectrum where ")
+    qry <- stri_c("select spectrum_id_ from msms_spectrum where ")
     if (length(x) < 2000000)
-        qry <- paste0(qry, "spectrum_id_ in (",
-                      paste0(x@spectraIds, collapse = ","), ") and ")
+        qry <- stri_c(qry, "spectrum_id_ in (",
+                      stri_c(x@spectraIds, collapse = ","), ") and ")
     qry
 }
 
@@ -662,9 +661,7 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
     data <- as.data.frame(data)
     if (nrow(data))
         data$dataStorage <- "<database>"
-    if (inherits(dbcon, "MySQLConnection"))
-        cols <- vapply(data, function(z) dbDataType(dbcon, z), character(1))
-    else cols <- dbDataType(dbcon, data)
+    cols <- .db_data_type(dbcon, data)
     if (blob) {
         peak_table <- "msms_spectrum_peak_blob"
         .initialize_tables_blob(dbcon, cols)
@@ -673,13 +670,7 @@ createMsBackendSqlDatabase <- function(dbcon, x = character(),
         .initialize_tables(dbcon, cols)
     }
     if (nrow(data)) {
-        if (.is_maria_db(dbcon)) {
-            res <- dbExecute(dbcon, "SET FOREIGN_KEY_CHECKS = 0;")
-            res <- dbExecute(dbcon, "SET UNIQUE_CHECKS = 0;")
-            res <- dbExecute(dbcon, "ALTER TABLE msms_spectrum DISABLE KEYS;")
-            res <- dbExecute(
-                dbcon, paste0("ALTER TABLE ", peak_table, " DISABLE KEYS;"))
-        }
+        if (.is_maria_db(dbcon)) .disable_mysql_keys(dbcon, peak_table)
         sid <- seq_len(nrow(data))
         data$spectrum_id_ <- sid
         message("Done")

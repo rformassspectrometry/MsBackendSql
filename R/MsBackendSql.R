@@ -445,7 +445,7 @@ setClass(
 setValidity("MsBackendSql", function(object) {
     msg <- NULL
     if (length(object@spectraIds) != object@nspectra)
-        msg <- paste0("Number of spectra IDs does not match the number ",
+        msg <- stri_c("Number of spectra IDs does not match the number ",
                       "of spectra")
     ## Can not validate the connection because of the MsBackendOfflineSql
     ## msg <- .valid_dbcon(object@dbcon)
@@ -484,7 +484,7 @@ setMethod("backendInitialize", "MsBackendSql",
     if (length(msg)) stop(msg)
     object@dbcon <- dbcon
     object@spectraIds <- dbGetQuery(
-        dbcon, paste0("select spectrum_id_ from msms_spectrum ",
+        dbcon, stri_c("select spectrum_id_ from msms_spectrum ",
                       "order by spectrum_id_"))[, 1L]
     object@.tables <- list(
         msms_spectrum = colnames(
@@ -551,7 +551,7 @@ setMethod(
         pks <- object@peak_fun(object, columns)
         if (is.list(pks$mz) | is.list(pks$intensity)) {
             res <- do.call(
-                mapply, args = c(pks[columns],
+                base::mapply, args = c(pks[columns],
                                  list(FUN = base::cbind, SIMPLIFY = FALSE,
                                       USE.NAMES = FALSE)))
             res[match(object@spectraIds, pks$spectrum_id_)]
@@ -659,8 +659,8 @@ setMethod(
         if(.has_local_variable(object, "msLevel"))
             callNextMethod()
         else {
-            qry <- paste0(.id_query(object),
-                          "msLevel in (", paste0(msLevel, collapse = ","),")")
+            qry <- stri_c(.id_query(object),
+                          "msLevel in (", stri_c(msLevel, collapse = ","),")")
             .subset_query(object, qry)
         }
     })
@@ -684,13 +684,13 @@ setMethod("filterRt", "MsBackendSql", function(object, rt = numeric(),
         if (rt[2L] == Inf)
             rt[2L] <- 1e12
         if (length(msLevel.)) {
-            msl <- paste0(msLevel., collapse = ",")
-            qry <- paste0(.id_query(object),
+            msl <- stri_c(msLevel., collapse = ",")
+            qry <- stri_c(.id_query(object),
                           "(rtime >= ", rt[1L], " and rtime <= ", rt[2L],
                           " and msLevel in (", msl, ")) or msLevel not in (",
                           msl, ")")
         } else {
-            qry <- paste0(.id_query(object),
+            qry <- stri_c(.id_query(object),
                           "rtime >= ", rt[1L], " and rtime <= ", rt[2L], "")
         }
         .subset_query(object, qry)
@@ -710,8 +710,8 @@ setMethod(
         if (.has_local_variable(object, "dataOrigin"))
             callNextMethod()
         else {
-            qry <- paste0(.id_query(object), "dataOrigin in (",
-                          paste0("'", dataOrigin, "'", collapse = ","),")")
+            qry <- stri_c(.id_query(object), "dataOrigin in (",
+                          stri_c("'", dataOrigin, "'", collapse = ","),")")
             object <- .subset_query(object, qry)
             ## Need to ensure the order is correct.
             if (length(dataOrigin) > 1L)
@@ -734,7 +734,7 @@ setMethod(
                 callNextMethod()
             else {
                 mz <- range(mz)
-                qry <- paste0(.id_query(object), "precursorMz >= ", mz[1L],
+                qry <- stri_c(.id_query(object), "precursorMz >= ", mz[1L],
                               " and precursorMz <= ", mz[2L])
                 .subset_query(object, qry)
             }
@@ -753,7 +753,7 @@ setMethod(
             if (.has_local_variable(object, "precursorMz"))
                 callNextMethod()
             else {
-                qry <- paste0(.id_query(object),
+                qry <- stri_c(.id_query(object),
                               .precursor_mz_query(mz, ppm, tolerance))
                 object <- .subset_query(object, qry)
                 object

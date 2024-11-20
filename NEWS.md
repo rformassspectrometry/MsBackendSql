@@ -1,3 +1,9 @@
+# MsBackendSql 1.7
+
+## Changes in 1.7.1
+
+- Complete unit tests to cover all code lines.
+
 # MsBackendSql 1.5
 
 ## Changes in 1.5.1
