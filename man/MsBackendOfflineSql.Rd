@@ -25,23 +25,23 @@ MsBackendOfflineSql()
 
 \item{drv}{A \emph{DBI} database driver object (such as \code{SQLite()} from the
 \code{RSQLite} package or \code{MariaDB()} from the \code{RMariaDB} package). See
-\code{\link[=dbConnect]{dbConnect()}} for more information.}
+\code{\link[DBI:dbConnect]{DBI::dbConnect()}} for more information.}
 
 \item{dbname}{\code{character(1)} with the name of the database. Passed directly
-to \code{\link[=dbConnect]{dbConnect()}}.}
+to \code{\link[DBI:dbConnect]{DBI::dbConnect()}}.}
 
 \item{user}{\code{character(1)} with the user name for the database. Passed
-directly to \code{\link[=dbConnect]{dbConnect()}}.}
+directly to \code{\link[DBI:dbConnect]{DBI::dbConnect()}}.}
 
 \item{password}{\code{character(1)} with the password for the database. Note
 that this password is stored (unencrypted) within the object. Passed
-directly to \code{\link[=dbConnect]{dbConnect()}}.}
+directly to \code{\link[DBI:dbConnect]{DBI::dbConnect()}}.}
 
 \item{host}{\code{character(1)} with the host running the database. Passed
-directly to \code{\link[=dbConnect]{dbConnect()}}.}
+directly to \code{\link[DBI:dbConnect]{DBI::dbConnect()}}.}
 
 \item{port}{\code{integer(1)} with the port number (optional). Passed directly to
-\code{\link[=dbConnect]{dbConnect()}}.}
+\code{\link[DBI:dbConnect]{DBI::dbConnect()}}.}
 
 \item{data}{For \code{backendInitialize()}: optional \code{DataFrame} with the full
 spectra data that should be inserted into a (new) \code{MsBackendSql}

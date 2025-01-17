@@ -222,29 +222,30 @@ should be returned (\code{initial = TRUE}, the default) or whether it
 should be calculated on the spectras' intensities (\code{initial = FALSE}).}
 
 \item{BPPARAM}{for \code{backendBpparam()}: \code{BiocParallel} parallel processing
-setup. See \code{\link[=bpparam]{bpparam()}} for more information.}
+setup. See \code{\link[BiocParallel:register]{BiocParallel::bpparam()}} for more information.}
 }
 \value{
 See documentation of respective function.
 }
 \description{
-The \code{MsBackendSql} is an implementation for the \code{\link[=MsBackend]{MsBackend()}} class for
-\code{\link[=Spectra]{Spectra()}} objects which stores and retrieves MS data from a SQL database.
-New databases can be created from raw MS data files using
+The \code{MsBackendSql} is an implementation for the \code{\link[Spectra:MsBackend]{Spectra::MsBackend()}} class
+for \code{\link[Spectra:Spectra]{Spectra::Spectra()}} objects which stores and retrieves MS data from a
+SQL database. New databases can be created from raw MS data files using
 \code{createMsBackendSqlDatabase()}.
 }
 \details{
 The \code{MsBackendSql} class is principally a \emph{read-only} backend but by
-extending the \code{\link[=MsBackendCached]{MsBackendCached()}} backend from the \code{Spectra} package it
-allows changing and adding (\strong{temporarily}) spectra variables \strong{without}
-changing the original data in the SQL database.
+extending the \code{\link[Spectra:MsBackendCached]{Spectra::MsBackendCached()}} backend from the \code{Spectra}
+package it allows changing and adding (\strong{temporarily}) spectra variables
+\strong{without} changing the original data in the SQL database.
 }
 \note{
 The \code{MsBackendSql} backend keeps an (open) connection to the SQL database
 with the data and hence does not support saving/loading of a backend to
 disk (e.g. using \code{save} or \code{saveRDS}). Also, for the same reason, the
 \code{MsBackendSql} does not support parallel processing. The \code{backendBpparam()}
-method for \code{MsBackendSql} will thus always return a \code{\link[=SerialParam]{SerialParam()}} object.
+method for \code{MsBackendSql} will thus always return a
+\code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}} object.
 
 The \code{\link[=MsBackendOfflineSql]{MsBackendOfflineSql()}} could be used as an alternative as it supports
 saving/loading the data to/from disk and supports also parallel processing.
@@ -258,7 +259,7 @@ using the \code{createMsBackendSqlDatabase()} function or using
 \code{backendInitialize()} and providing all data with parameter \code{data}. In
 addition it is possible to create a database from a \code{Spectra} object
 changing its backend to a \code{MsBackendSql} or \code{MsBackendOfflineSql} using
-the \code{\link[=setBackend]{setBackend()}} function.
+the \code{\link[Spectra:Spectra]{Spectra::setBackend()}} function.
 Existing SQL databases (created previously with
 \code{createMsBackendSqlDatabase()} or \code{backendInitialize()} with the \code{data}
 parameter) can be loaded using the \emph{conventional} way to create/initialize
@@ -330,8 +331,9 @@ connection to an \strong{empty} database would store the full spectra
 data from the \code{Spectra} object \code{sps} into the specified database and
 would return a \code{Spectra} object that uses a \code{MsBackendSql}).
 \item \code{backendBpparam()}: whether a \code{MsBackendSql} supports parallel processing.
-Takes a \code{MsBackendSql} and a parallel processing setup (see \code{\link[=bpparam]{bpparam()}}
-for details) as input and always returns a \code{\link[=SerialParam]{SerialParam()}} since
+Takes a \code{MsBackendSql} and a parallel processing setup (see
+\code{\link[BiocParallel:register]{BiocParallel::bpparam()}} for details) as input and always returns a
+\code{\link[BiocParallel:SerialParam-class]{BiocParallel::SerialParam()}} since
 \code{MsBackendSql} does \strong{not} support parallel processing.
 \item \code{dbconn()}: returns the connection to the database.
 }
@@ -354,8 +356,8 @@ mostly used for combining \code{MsBackendSql} objects that were previously
 splitted using e.g. \code{split()}.
 
 In addition, \code{MsBackendSql} supports all other filtering methods available
-through \code{\link[=MsBackendCached]{MsBackendCached()}}. Implementation of filter functions optimized
-for \code{MsBackendSql} objects are:
+through \code{\link[Spectra:MsBackendCached]{Spectra::MsBackendCached()}}. Implementation of filter functions
+optimized for \code{MsBackendSql} objects are:
 \itemize{
 \item \code{filterDataOrigin()}: filter the object retaining spectra with \code{dataOrigin}
 spectra variable values matching the provided ones with parameter
@@ -384,7 +386,7 @@ on the provided MS level(s) returning all spectra from other MS levels.
 The functions listed here are specifically implemented for \code{MsBackendSql}.
 In addition, \code{MsBackendSql} inherits and supports all data accessor,
 filtering functions and data manipulation functions from
-\code{\link[=MsBackendCached]{MsBackendCached()}}.
+\code{\link[Spectra:MsBackendCached]{Spectra::MsBackendCached()}}.
 \itemize{
 \item \code{$}, \verb{$<-}: access or set (add) spectra variables in \code{object}. Spectra
 variables added or modified using the \verb{$<-} are \emph{cached} locally within
@@ -429,11 +431,11 @@ spectra stored in the SQL database. Keeping only these \code{integer} in memory
 guarantees a minimal memory footpring of the object. Still, depending of
 the number of spectra in the database, this \code{integer} vector might become
 very large. Any data access will involve SQL calls to retrieve the data
-from the database. By extending the \code{\link[=MsBackendCached]{MsBackendCached()}} object from the
-\code{Spectra} package, the \code{MsBackendSql} supports to (temporarily, i.e. for
-the duration of the R session) add or modify spectra variables. These are
-however stored in a \code{data.frame} within the object thus increasing the
-memory demand of the object.
+from the database. By extending the \code{\link[Spectra:MsBackendCached]{Spectra::MsBackendCached()}} object
+from the \code{Spectra} package, the \code{MsBackendSql} supports to (temporarily,
+i.e. for the duration of the R session) add or modify spectra variables.
+These are however stored in a \code{data.frame} within the object thus
+increasing the memory demand of the object.
 }
 
 \examples{
