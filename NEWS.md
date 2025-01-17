@@ -1,5 +1,10 @@
 # MsBackendSql 1.7
 
+## Changes in 1.7.2
+
+- Import `extractByIndex` from *ProtGenerics*.
+- Add missing links in documentation.
+
 ## Changes in 1.7.1
 
 - Complete unit tests to cover all code lines.

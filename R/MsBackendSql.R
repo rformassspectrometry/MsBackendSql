@@ -22,17 +22,17 @@
 #'
 #' @description
 #'
-#' The `MsBackendSql` is an implementation for the [MsBackend()] class for
-#' [Spectra()] objects which stores and retrieves MS data from a SQL database.
-#' New databases can be created from raw MS data files using
+#' The `MsBackendSql` is an implementation for the [Spectra::MsBackend()] class
+#' for [Spectra::Spectra()] objects which stores and retrieves MS data from a
+#' SQL database. New databases can be created from raw MS data files using
 #' `createMsBackendSqlDatabase()`.
 #'
 #' @details
 #'
 #' The `MsBackendSql` class is principally a *read-only* backend but by
-#' extending the [MsBackendCached()] backend from the `Spectra` package it
-#' allows changing and adding (**temporarily**) spectra variables **without**
-#' changing the original data in the SQL database.
+#' extending the [Spectra::MsBackendCached()] backend from the `Spectra`
+#' package it allows changing and adding (**temporarily**) spectra variables
+#' **without** changing the original data in the SQL database.
 #'
 #' @note
 #'
@@ -40,7 +40,8 @@
 #' with the data and hence does not support saving/loading of a backend to
 #' disk (e.g. using `save` or `saveRDS`). Also, for the same reason, the
 #' `MsBackendSql` does not support parallel processing. The `backendBpparam()`
-#' method for `MsBackendSql` will thus always return a [SerialParam()] object.
+#' method for `MsBackendSql` will thus always return a
+#' [BiocParallel::SerialParam()] object.
 #'
 #' The [MsBackendOfflineSql()] could be used as an alternative as it supports
 #' saving/loading the data to/from disk and supports also parallel processing.
@@ -53,7 +54,7 @@
 #' `backendInitialize()` and providing all data with parameter `data`. In
 #' addition it is possible to create a database from a `Spectra` object
 #' changing its backend to a `MsBackendSql` or `MsBackendOfflineSql` using
-#' the [setBackend()] function.
+#' the [Spectra::setBackend()] function.
 #' Existing SQL databases (created previously with
 #' `createMsBackendSqlDatabase()` or `backendInitialize()` with the `data`
 #' parameter) can be loaded using the *conventional* way to create/initialize
@@ -128,8 +129,9 @@
 #'   would return a `Spectra` object that uses a `MsBackendSql`).
 #'
 #' - `backendBpparam()`: whether a `MsBackendSql` supports parallel processing.
-#'   Takes a `MsBackendSql` and a parallel processing setup (see [bpparam()]
-#'   for details) as input and always returns a [SerialParam()] since
+#'   Takes a `MsBackendSql` and a parallel processing setup (see
+#'   [BiocParallel::bpparam()] for details) as input and always returns a
+#'   [BiocParallel::SerialParam()] since
 #'   `MsBackendSql` does **not** support parallel processing.
 #'
 #' - `dbconn()`: returns the connection to the database.
@@ -150,8 +152,8 @@
 #' splitted using e.g. `split()`.
 #'
 #' In addition, `MsBackendSql` supports all other filtering methods available
-#' through [MsBackendCached()]. Implementation of filter functions optimized
-#' for `MsBackendSql` objects are:
+#' through [Spectra::MsBackendCached()]. Implementation of filter functions
+#' optimized for `MsBackendSql` objects are:
 #'
 #' - `filterDataOrigin()`: filter the object retaining spectra with `dataOrigin`
 #'   spectra variable values matching the provided ones with parameter
@@ -185,7 +187,7 @@
 #' The functions listed here are specifically implemented for `MsBackendSql`.
 #' In addition, `MsBackendSql` inherits and supports all data accessor,
 #' filtering functions and data manipulation functions from
-#' [MsBackendCached()].
+#' [Spectra::MsBackendCached()].
 #'
 #' - `$`, `$<-`: access or set (add) spectra variables in `object`. Spectra
 #'   variables added or modified using the `$<-` are *cached* locally within
@@ -237,11 +239,11 @@
 #' guarantees a minimal memory footpring of the object. Still, depending of
 #' the number of spectra in the database, this `integer` vector might become
 #' very large. Any data access will involve SQL calls to retrieve the data
-#' from the database. By extending the [MsBackendCached()] object from the
-#' `Spectra` package, the `MsBackendSql` supports to (temporarily, i.e. for
-#' the duration of the R session) add or modify spectra variables. These are
-#' however stored in a `data.frame` within the object thus increasing the
-#' memory demand of the object.
+#' from the database. By extending the [Spectra::MsBackendCached()] object
+#' from the `Spectra` package, the `MsBackendSql` supports to (temporarily,
+#' i.e. for the duration of the R session) add or modify spectra variables.
+#' These are however stored in a `data.frame` within the object thus
+#' increasing the memory demand of the object.
 #'
 #' @param backend For `createMsBackendSqlDatabase()`: MS backend that can be
 #'     used to import MS data from the raw files specified with
@@ -254,7 +256,7 @@
 #'     the default).
 #'
 #' @param BPPARAM for `backendBpparam()`: `BiocParallel` parallel processing
-#'     setup. See [bpparam()] for more information.
+#'     setup. See [BiocParallel::bpparam()] for more information.
 #'
 #' @param chunksize For `createMsBackendSqlDatabase()`: `integer(1)` defining
 #'     the number of input that should be processed per iteration. With
@@ -532,7 +534,7 @@ setMethod("[", "MsBackendSql", function(x, i, j, ..., drop = FALSE) {
 
 #' @rdname MsBackendSql
 #'
-#' @importMethodsFrom Spectra extractByIndex
+#' @importMethodsFrom ProtGenerics extractByIndex
 #'
 #' @export
 setMethod("extractByIndex", c("MsBackendSql", "ANY"), function(object, i) {

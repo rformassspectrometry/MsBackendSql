@@ -36,23 +36,23 @@
 #'
 #' @param drv A *DBI* database driver object (such as `SQLite()` from the
 #'     `RSQLite` package or `MariaDB()` from the `RMariaDB` package). See
-#'     [dbConnect()] for more information.
+#'     [DBI::dbConnect()] for more information.
 #'
 #' @param dbname `character(1)` with the name of the database. Passed directly
-#'     to [dbConnect()].
+#'     to [DBI::dbConnect()].
 #'
 #' @param user `character(1)` with the user name for the database. Passed
-#'     directly to [dbConnect()].
+#'     directly to [DBI::dbConnect()].
 #'
 #' @param password `character(1)` with the password for the database. Note
 #'     that this password is stored (unencrypted) within the object. Passed
-#'     directly to [dbConnect()].
+#'     directly to [DBI::dbConnect()].
 #'
 #' @param host `character(1)` with the host running the database. Passed
-#'     directly to [dbConnect()].
+#'     directly to [DBI::dbConnect()].
 #'
 #' @param port `integer(1)` with the port number (optional). Passed directly to
-#'     [dbConnect()].
+#'     [DBI::dbConnect()].
 #'
 #' @param ... ignored.
 #'

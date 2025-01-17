@@ -331,3 +331,12 @@ test_that("setBackend,Spectra,MsBackendOfflineSql works", {
     expect_equal(msLevel(ref), msLevel(res))
     unlink(dbf)
 })
+
+test_that("filterRt,MsBackendOfflineSql works properly", {
+    ref <- Spectra(c(mm14_file, mm8_file))
+    dbname_test <- tempfile()
+    res <- setBackend(ref, MsBackendOfflineSql(), drv = SQLite(),
+                      dbname = dbname_test)
+    expect_output(show(ref), "MsBackendMzR")
+    expect_output(show(res), "MsBackendOfflineSql")
+})
