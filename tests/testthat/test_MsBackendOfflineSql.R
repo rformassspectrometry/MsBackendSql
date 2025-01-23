@@ -23,22 +23,23 @@ test_that("backendInitialize,MsBackendOfflineSql works", {
     expect_error(backendInitialize(MsBackendOfflineSql(), SQLite()),
                  "At least the database name")
 
-    dbn <- dbGetInfo(mm8_db)$dbname
+    dbn <- dbGetInfo(mm8_db_long)$dbname
 
     res <- backendInitialize(MsBackendOfflineSql(), SQLite(), dbname = dbn)
     expect_s4_class(res, "MsBackendOfflineSql")
     expect_false(dbIsValid(res@dbcon))
     expect_s4_class(res@driver, "SQLiteDriver")
-    expect_equal(res@.tables, mm8_be@.tables)
+    expect_equal(res@.tables, mm8_be_long@.tables)
     expect_equal(res@dbname, dbn)
     expect_true(validObject(res))
 
     expect_output(show(res), "MsBackendOfflineSql")
 
-    ## with data.
-    data <- spectraData(mm8_be)
+    ## with data. LLLLLL
+    data <- spectraData(mm8_be_long)
     tf <- tempfile()
-    res <- backendInitialize(MsBackendOfflineSql(), SQLite(), dbname = tf,
+    res <- backendInitialize(MsBackendOfflineSql(),
+                             drv = SQLite(), dbname = tf,
                              data = data)
     expect_s4_class(res, "MsBackendOfflineSql")
     expect_equal(rtime(res), data$rtime)
@@ -119,11 +120,11 @@ test_that("peaksVariables,MsBackendOfflineSql works", {
 })
 
 test_that("intensity<-,MsBackendOfflineSql works", {
-    expect_error(intensity(mm8_be) <- 1:5, "replace")
+    expect_error(intensity(mm8_be_long) <- 1:5, "replace")
 })
 
 test_that("mz<-,MsBackendOfflineSql works", {
-    expect_error(mz(mm8_be) <- 1:5, "replace")
+    expect_error(mz(mm8_be_long) <- 1:5, "replace")
 })
 
 test_that("spectraData,MsBackendOfflineSql works", {

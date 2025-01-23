@@ -11,7 +11,7 @@ test_that(".valid_dbcon works", {
 test_that(".insert_data et al work", {
     db_file <- tempfile()
     db <- dbConnect(SQLite(), db_file)
-    .insert_data(db, mm8_file)
+    MsBackendSql:::.insert_data(db, mm8_file, storage = "long")
     res <- dbListTables(db)
     expect_equal(res, c("msms_spectrum", "msms_spectrum_peak"))
     spd <- dbGetQuery(db, "select * from msms_spectrum")
@@ -33,6 +33,23 @@ test_that(".insert_data et al work", {
     names(pks) <- NULL
     expect_equal(as.list(peaksData(mm8_sps)), pks)
     dbDisconnect(db)
+    file.remove(db_file)
+
+    db_file <- tempfile()
+    db <- dbConnect(SQLite(), db_file)
+    MsBackendSql:::.insert_data(db, mm8_file, storage = "blob")
+    res <- dbListTables(db)
+    expect_equal(res, c("msms_spectrum", "msms_spectrum_peak_blob"))
+    dbDisconnect(db)
+    file.remove(db_file)
+
+    db_file <- tempfile()
+    db <- dbConnect(SQLite(), db_file)
+    MsBackendSql:::.insert_data(db, mm8_file, storage = "blob2")
+    res <- dbListTables(db)
+    expect_equal(res, c("msms_spectrum", "msms_spectrum_peak_blob2"))
+    dbDisconnect(db)
+    file.remove(db_file)
 
     ## Mocking a MySQL connection
     db_file <- tempfile()
@@ -43,31 +60,41 @@ test_that(".insert_data et al work", {
         code = .insert_data(db, mm8_file)
     )
     dbDisconnect(db)
+    file.remove(db_file)
 })
 
 test_that(".set_backend_insert_data works", {
     s <- Spectra(c(mm8_file, mm14_file))
     expect_error(.set_backend_insert_data(s, f = c(1, 2, 3)), "match length")
 
+    ## blob2
     con_ref <- dbConnect(SQLite(), tempfile())
-    createMsBackendSqlDatabase(con_ref, c(mm8_file, mm14_file))
+    createMsBackendSqlDatabase(con_ref, c(mm8_file, mm14_file), blob = TRUE,
+                               peaksStorageMode = "blob2")
     be_ref <- backendInitialize(MsBackendSql(), dbcon = con_ref)
 
     con_test <- dbConnect(SQLite(), tempfile())
-    .set_backend_insert_data(s, con = con_test)
+    MsBackendSql:::.set_backend_insert_data(s, con = con_test, blob = TRUE,
+                                            peaksStorageMode = "blob2")
     be_test <- backendInitialize(MsBackendSql(), dbcon = con_test)
     expect_equal(length(be_ref), length(be_test))
     expect_equal(spectraData(be_ref, c("rtime", "dataOrigin")),
                  spectraData(be_test, c("rtime", "dataOrigin")))
     expect_equal(peaksData(be_ref), peaksData(be_test))
     expect_equal(be_ref$spectrum_id_, be_test$spectrum_id_)
-    expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak_blob"),
-                 dbGetQuery(con_test, "select * from msms_spectrum_peak_blob"))
-
-    ## No chunk-wise processing
+    expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak_blob2"),
+                 dbGetQuery(con_test, "select * from msms_spectrum_peak_blob2"))
     dbDisconnect(con_test)
+    dbDisconnect(con_ref)
+
+    ## blob; No chunk-wise processing
+    con_ref <- dbConnect(SQLite(), tempfile())
+    createMsBackendSqlDatabase(con_ref, c(mm8_file, mm14_file), blob = TRUE,
+                               peaksStorageMode = "blob")
+    be_ref <- backendInitialize(MsBackendSql(), dbcon = con_ref)
     con_test <- dbConnect(SQLite(), tempfile())
-    .set_backend_insert_data(s, f = factor(), con = con_test)
+    .set_backend_insert_data(s, f = factor(), con = con_test,
+                             peaksStorageMode = "blob")
     be_test <- backendInitialize(MsBackendSql(), dbcon = con_test)
     expect_equal(length(be_ref), length(be_test))
     expect_equal(spectraData(be_ref, c("rtime", "dataOrigin")),
@@ -76,27 +103,31 @@ test_that(".set_backend_insert_data works", {
     expect_equal(be_ref$spectrum_id_, be_test$spectrum_id_)
     expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak_blob"),
                  dbGetQuery(con_test, "select * from msms_spectrum_peak_blob"))
-
-    ## Arbitrary chunks.
     dbDisconnect(con_test)
+    dbDisconnect(con_ref)
+
+    ## long; Arbitrary chunks.
+    con_ref <- dbConnect(SQLite(), tempfile())
+    createMsBackendSqlDatabase(con_ref, c(mm8_file, mm14_file), blob = FALSE)
+    be_ref <- backendInitialize(MsBackendSql(), dbcon = con_ref)
     con_test <- dbConnect(SQLite(), tempfile())
     f <- sort(rep(1:10, length.out = length(s)))
-    .set_backend_insert_data(s, f = f, con = con_test)
+    .set_backend_insert_data(s, f = f, con = con_test, blob = FALSE)
     be_test <- backendInitialize(MsBackendSql(), dbcon = con_test)
     expect_equal(length(be_ref), length(be_test))
     expect_equal(spectraData(be_ref, c("rtime", "dataOrigin")),
                  spectraData(be_test, c("rtime", "dataOrigin")))
     expect_equal(peaksData(be_ref), peaksData(be_test))
     expect_equal(be_ref$spectrum_id_, be_test$spectrum_id_)
-    expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak_blob"),
-                 dbGetQuery(con_test, "select * from msms_spectrum_peak_blob"))
+    expect_equal(dbGetQuery(con_ref, "select * from msms_spectrum_peak"),
+                 dbGetQuery(con_test, "select * from msms_spectrum_peak"))
 
     ## mock a MySQL connection
     dbDisconnect(con_test)
     con_test <- dbConnect(SQLite(), tempfile())
     con_test <- as(con_test, "DummySQL")
     with_mocked_bindings(
-        ".insert_backend_blob" = function(...) TRUE,
+        ".insert_backend_blob2" = function(...) TRUE,
         ".is_maria_db" = function(x) TRUE,
         code = expect_true(.set_backend_insert_data(s, f = factor(),
                                                     con = con_test))
@@ -127,34 +158,141 @@ test_that("MsBackendSql works", {
     expect_s4_class(res, "MsBackendSql")
 })
 
-test_that(".fetch_peaks_sql works", {
-    res <- .fetch_peaks_sql(MsBackendSql(), columns = "intensity")
-    expect_true(is.data.frame(res))
-    expect_true(nrow(res) == 0)
-    expect_identical(colnames(res), c("spectrum_id_", "intensity"))
+test_that(".fetch_peaks_data_long works", {
+    expect_equal(MsBackendSql:::.fetch_peaks_data_long(MsBackendSql()), list())
+    expect_equal(
+        MsBackendSql:::.fetch_peaks_data_long(MsBackendSql(), columns = "intensity"), list())
+    expect_equal(MsBackendSql:::.fetch_peaks_data_long(MsBackendSql(), columns = "intensity",
+                                        drop = TRUE), list())
 
-    res <- .fetch_peaks_sql(mm8_be, columns = c("mz"))
-    expect_true(is.data.frame(res))
-    expect_identical(colnames(res), c("spectrum_id_", "mz"))
+    res <- MsBackendSql:::.fetch_peaks_data_long(mm8_be_long)
+    expect_true(is.list(res))
+    ref <- peaksData(mm8_sps@backend)
+    expect_equal(res, ref)
+    res <- MsBackendSql:::.fetch_peaks_data_long(mm8_be_long, columns = "intensity")
+    expect_true(is.list(res))
+    expect_true(is.matrix(res[[1]]))
+    expect_equal(unlist(res), unlist(mm8_sps$intensity))
+    res <- MsBackendSql:::.fetch_peaks_data_long(mm8_be_long, columns = "intensity",
+                                  drop = TRUE)
+    expect_true(is.list(res))
+    expect_equal(res, as.list(mm8_sps$intensity))
+
+    ## subsets.
+    a <- mm8_be_long[c(4, 1, 4, 5, 1, 3)]
+    b <- mm8_sps@backend[c(4, 1, 4, 5, 1, 3)]
+    expect_equal(MsBackendSql:::.fetch_peaks_data_long(a), peaksData(b))
+    expect_equal(MsBackendSql:::.fetch_peaks_data_long(a, "mz", TRUE), as.list(b$mz))
 })
 
-test_that(".fetch_peaks_sql_blob works", {
-    res <- .fetch_peaks_sql_blob(MsBackendSql(), columns = "intensity")
-    expect_true(is.data.frame(res))
-    expect_true(nrow(res) == 0)
-    expect_identical(colnames(res), c("spectrum_id_", "intensity"))
+test_that(".fetch_peaks_data_blob works", {
+    expect_equal(MsBackendSql:::.fetch_peaks_data_blob(MsBackendSql()), list())
+    expect_equal(
+        MsBackendSql:::.fetch_peaks_data_blob(MsBackendSql(), columns = "intensity"), list())
+    expect_equal(MsBackendSql:::.fetch_peaks_data_blob(MsBackendSql(), columns = "intensity",
+                                        drop = TRUE), list())
 
-    res <- .fetch_peaks_sql_blob(mm8_be_blob, columns = "mz")
-    expect_true(is.data.frame(res))
-    expect_identical(colnames(res), c("spectrum_id_", "mz"))
-    expect_true(is.list(res$mz))
+    res <- MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob)
+    expect_true(is.list(res))
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(colnames(res[[1L]]), c("mz", "intensity"))
+    ref <- peaksData(mm8_sps@backend)
+    expect_equal(res, ref)
+    res <- MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob,
+                                                 columns = c("intensity", "mz"))
+    expect_true(is.list(res))
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(colnames(res[[1L]]), c("intensity", "mz"))
+
+    res <- MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob, columns = "intensity")
+    expect_true(is.list(res))
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(colnames(res[[1L]]), "intensity")
+    expect_equal(unlist(res), unlist(mm8_sps$intensity))
+    res <- MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob, columns = "intensity",
+                                  drop = TRUE)
+    expect_true(is.list(res))
+    expect_equal(res, as.list(mm8_sps$intensity))
+
+    ## subsets.
+    a <- mm8_be_blob[c(4, 1, 4, 5, 1, 3)]
+    b <- mm8_sps@backend[c(4, 1, 4, 5, 1, 3)]
+    expect_equal(MsBackendSql:::.fetch_peaks_data_blob(a), peaksData(b))
+    expect_equal(MsBackendSql:::.fetch_peaks_data_blob(a, "mz", TRUE), as.list(b$mz))
 })
+
+test_that(".fetch_peaks_data_blob2 works", {
+    expect_equal(MsBackendSql:::.fetch_peaks_data_blob2(MsBackendSql()), list())
+    expect_equal(
+        MsBackendSql:::.fetch_peaks_data_blob2(MsBackendSql(), columns = "intensity"), list())
+    expect_equal(MsBackendSql:::.fetch_peaks_data_blob2(MsBackendSql(), columns = "intensity",
+                                        drop = TRUE), list())
+
+    res <- MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2)
+    expect_true(is.list(res))
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(colnames(res[[1L]]), c("mz", "intensity"))
+    ref <- peaksData(mm8_sps@backend)
+    expect_equal(res, ref)
+    res <- MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2,
+                                                 columns = c("intensity", "mz"))
+    expect_true(is.list(res))
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(colnames(res[[1L]]), c("intensity", "mz"))
+
+    res <- MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2, columns = "intensity")
+    expect_true(is.list(res))
+    expect_true(is.matrix(res[[1L]]))
+    expect_equal(colnames(res[[1L]]), "intensity")
+    expect_equal(unlist(res), unlist(mm8_sps$intensity))
+    res <- MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2, columns = "intensity",
+                                  drop = TRUE)
+    expect_true(is.list(res))
+    expect_equal(res, as.list(mm8_sps$intensity))
+
+    ## subsets.
+    a <- mm8_be_blob2[c(4, 1, 4, 5, 1, 3)]
+    b <- mm8_sps@backend[c(4, 1, 4, 5, 1, 3)]
+    expect_equal(MsBackendSql:::.fetch_peaks_data_blob2(a), peaksData(b))
+    expect_equal(MsBackendSql:::.fetch_peaks_data_blob2(a, "mz", TRUE), as.list(b$mz))
+})
+
+library(microbenchmark)
+microbenchmark(
+    MsBackendSql:::.fetch_peaks_data_long(mm8_be_long),
+    MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob),
+    MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2)
+)
+
+
+## test_that(".fetch_peaks_sql works", {
+##     res <- .fetch_peaks_sql(MsBackendSql(), columns = "intensity")
+##     expect_true(is.data.frame(res))
+##     expect_true(nrow(res) == 0)
+##     expect_identical(colnames(res), c("spectrum_id_", "intensity"))
+
+##     res <- .fetch_peaks_sql(mm8_be, columns = c("mz"))
+##     expect_true(is.data.frame(res))
+##     expect_identical(colnames(res), c("spectrum_id_", "mz"))
+## })
+
+## test_that(".fetch_peaks_sql_blob works", {
+##     res <- .fetch_peaks_sql_blob(MsBackendSql(), columns = "intensity")
+##     expect_true(is.data.frame(res))
+##     expect_true(nrow(res) == 0)
+##     expect_identical(colnames(res), c("spectrum_id_", "intensity"))
+
+##     res <- .fetch_peaks_sql_blob(mm8_be_blob, columns = "mz")
+##     expect_true(is.data.frame(res))
+##     expect_identical(colnames(res), c("spectrum_id_", "mz"))
+##     expect_true(is.list(res$mz))
+## })
 
 test_that(".fetch_spectra_data_sql works", {
-    res <- .fetch_spectra_data_sql(mm8_be, columns = c("rtime", "msLevel"))
+    res <- .fetch_spectra_data_sql(mm8_be_long, columns = c("rtime", "msLevel"))
     expect_true(is.data.frame(res))
     expect_identical(colnames(res), c("rtime", "msLevel"))
-    expect_identical(length(mm8_be), nrow(res))
+    expect_identical(length(mm8_be_long), nrow(res))
 })
 
 test_that(".disable_mysql_keys works", {
@@ -164,19 +302,19 @@ test_that(".disable_mysql_keys works", {
 })
 
 test_that(".spectra_data_sql works", {
-    expect_error(.spectra_data_sql(mm8_be, c("rtime", "other_col")),
+    expect_error(.spectra_data_sql(mm8_be_long, c("rtime", "other_col")),
                  "other_col not available.")
-    res <- .spectra_data_sql(mm8_be, c("rtime", "msLevel", "mz"))
+    res <- .spectra_data_sql(mm8_be_long, c("rtime", "msLevel", "mz"))
     expect_s4_class(res, "DataFrame")
     expect_identical(colnames(res), c("rtime", "msLevel", "mz"))
-    expect_identical(length(mm8_be), nrow(res))
+    expect_identical(length(mm8_be_long), nrow(res))
     expect_s4_class(res$mz, "NumericList")
 
     expect_error(
-        .spectra_data_sql(mm8_be, columns = c("rtime", "other_column")),
+        .spectra_data_sql(mm8_be_long, columns = c("rtime", "other_column")),
         " not available.")
 
-    tmp <- mm8_be[c(3, 2, 2, 3, 1, 10, 1)]
+    tmp <- mm8_be_long[c(3, 2, 2, 3, 1, 10, 1)]
     res <- .spectra_data_sql(tmp, c("rtime", "msLevel", "mz"))
     expect_identical(colnames(res), c("rtime", "msLevel", "mz"))
     expect_identical(length(tmp), nrow(res))
@@ -213,7 +351,7 @@ test_that(".db_data_type works", {
 })
 
 test_that(".available_peaks_variables works", {
-    res <- .available_peaks_variables(mm8_be)
+    res <- .available_peaks_variables(mm8_be_long)
     expect_equal(res, c("mz", "intensity"))
 
     res <- .available_peaks_variables(mm8_be_blob)
@@ -224,9 +362,9 @@ test_that(".available_peaks_variables works", {
 })
 
 test_that(".has_local_variable works", {
-    res <- .has_local_variable(mm8_be, c("other_id"))
+    res <- .has_local_variable(mm8_be_long, c("other_id"))
     expect_false(res)
-    tmp <- mm8_be
+    tmp <- mm8_be_long
     tmp$other_id <- "a"
     res <- .has_local_variable(tmp, c("other_id"))
     expect_true(res)
@@ -256,26 +394,26 @@ test_that(".precursor_mz_query works", {
 })
 
 test_that(".db_info_string works", {
-    res <-.db_info_string(mm8_be)
+    res <-.db_info_string(mm8_be_long)
     expect_true(is.character(res))
     expect_true(length(res) == 1L)
 })
 
 test_that(".combine works", {
-    tmp <- split(mm8_be[1:10], 1:10)
+    tmp <- split(mm8_be_long[1:10], 1:10)
     res <- .combine(tmp)
     expect_s4_class(res, "MsBackendSql")
-    expect_equal(mm8_be[1:10], res)
+    expect_equal(mm8_be_long[1:10], res)
 
-    tmp <- .combine(list(mm8_be))
-    expect_equal(length(tmp), length(mm8_be))
-    expect_equal(rtime(tmp), rtime(mm8_be))
+    tmp <- .combine(list(mm8_be_long))
+    expect_equal(length(tmp), length(mm8_be_long))
+    expect_equal(rtime(tmp), rtime(mm8_be_long))
 
-    a <- mm8_be[1:10]
+    a <- mm8_be_long[1:10]
     b <- setBackend(Spectra(a), MsBackendMemory())@backend
     expect_error(.combine(list(a, b)), "Can only merge backends of the same")
 
-    expect_error(.combine(list(mm8_be, mm_be)), "connected to the same")
+    expect_error(.combine(list(mm8_be_long, mm_be)), "connected to the same")
 })
 
 test_that(".initialize_tables works", {
@@ -397,18 +535,17 @@ test_that(".create_from_spectra_data works", {
     ## blob
     dta <- spectraData(
         mm8_sps, columns = c(spectraVariables(mm8_sps), "mz", "intensity"))
-    .create_from_spectra_data(tmpcon, dta)
+    .create_from_spectra_data(tmpcon, dta, peaksStorageMode = "blob")
     res <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
     expect_true(all(mm8_sps$dataStorage != res$dataStorage))
-    expect_equal(rtime(mm8_be), rtime(res))
-    expect_equal(mz(mm8_be), mz(res))
-    expect_equal(intensity(mm8_be), intensity(res))
+    expect_equal(rtime(mm8_be_long), rtime(res))
+    expect_equal(mz(mm8_be_long), mz(res))
+    expect_equal(intensity(mm8_be_long), intensity(res))
     tbls <- dbListTables(tmpcon)
     expect_equal(tbls, c("msms_spectrum", "msms_spectrum_peak_blob"))
 
     expect_error(.create_from_spectra_data(tmpcon, dta),
                  "contains already tables of a")
-
     dbDisconnect(tmpcon)
 
     tmpf <- tempfile()
@@ -427,10 +564,10 @@ test_that(".create_from_spectra_data works", {
     tbls <- dbListTables(tmpcon)
     expect_equal(tbls, c("msms_spectrum", "msms_spectrum_peak"))
     res2 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
-    expect_true(all(res2$dataStorage != mm8_be$dataStorage))
-    expect_equal(rtime(res2), rtime(mm8_be))
-    expect_equal(mz(res2), mz(mm8_be))
-    expect_equal(intensity(res2), intensity(mm8_be))
+    expect_true(all(res2$dataStorage != mm8_be_long$dataStorage))
+    expect_equal(rtime(res2), rtime(mm8_be_long))
+    expect_equal(mz(res2), mz(mm8_be_long))
+    expect_equal(intensity(res2), intensity(mm8_be_long))
     dbDisconnect(tmpcon)
 
     ## empty data frame
@@ -439,11 +576,12 @@ test_that(".create_from_spectra_data works", {
     dta <- spectraData(
         mm8_sps[integer()],
         columns = c(spectraVariables(mm8_sps), "mz", "intensity"))
-    .create_from_spectra_data(tmpcon, dta)
+    MsBackendSql:::.create_from_spectra_data(tmpcon, dta)
     res3 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
     expect_true(validObject(res3))
-    expect_equal(spectraVariables(mm8_be), spectraVariables(res3))
-    expect_equal(colnames(spectraData(mm8_be)), colnames(spectraData(res3)))
+    expect_equal(spectraVariables(mm8_be_long), spectraVariables(res3))
+    expect_equal(colnames(spectraData(mm8_be_long)),
+                 colnames(spectraData(res3)))
     expect_true(length(res3) == 0L)
     dbDisconnect(tmpcon)
 

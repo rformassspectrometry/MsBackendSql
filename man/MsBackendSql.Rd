@@ -20,6 +20,8 @@
 \alias{supportsSetBackend,MsBackendOfflineSql-method}
 \alias{tic,MsBackendOfflineSql-method}
 \alias{uniqueMsLevels,MsBackendOfflineSql-method}
+\alias{intensity,MsBackendOfflineSql-method}
+\alias{mz,MsBackendOfflineSql-method}
 \alias{show,MsBackendSql-method}
 \alias{backendInitialize,MsBackendSql-method}
 \alias{dataStorage,MsBackendSql-method}
@@ -27,7 +29,9 @@
 \alias{extractByIndex,MsBackendSql,ANY-method}
 \alias{peaksData,MsBackendSql-method}
 \alias{peaksVariables,MsBackendSql-method}
+\alias{intensity,MsBackendSql-method}
 \alias{intensity<-,MsBackendSql-method}
+\alias{mz,MsBackendSql-method}
 \alias{mz<-,MsBackendSql-method}
 \alias{$<-,MsBackendSql-method}
 \alias{spectraData,MsBackendSql-method}
@@ -58,6 +62,7 @@ createMsBackendSqlDatabase(
   backend = MsBackendMzR(),
   chunksize = 10L,
   blob = TRUE,
+  peaksStorageMode = c("blob2", "long", "blob"),
   partitionBy = c("none", "spectrum", "chunk"),
   partitionNumber = 10L
 )
@@ -76,7 +81,11 @@ createMsBackendSqlDatabase(
 
 \S4method{peaksVariables}{MsBackendSql}(object)
 
+\S4method{intensity}{MsBackendSql}(object)
+
 \S4method{intensity}{MsBackendSql}(object) <- value
+
+\S4method{mz}{MsBackendSql}(object)
 
 \S4method{mz}{MsBackendSql}(object) <- value
 
@@ -137,11 +146,21 @@ will be imported (in parallel) and inserted to the database. Thus,
 higher values might result in faster database creation, but require
 also more memory.}
 
-\item{blob}{For \code{createMsBackendSqlDatabase()}: \code{logical(1)} whether
-individual m/z and intensity values should be stored separately
-(\code{blob = FALSE}) or if the m/z and intensity values for each spectrum
-should be stored as a single \emph{BLOB} SQL data type (\code{blob = TRUE},
-the default).}
+\item{blob}{For \code{createMsBackendSqlDatabase()}, \code{setBackend()}:
+\code{logical(1)} whether individual m/z and intensity values should be
+stored separately (\code{blob = FALSE}) or if the peaks data should be
+stored as data type \emph{BLOB} into the database (\code{blob = TRUE}, the
+default). See also parameter \code{peaksStorageMode} for different data
+storage options.}
+
+\item{peaksStorageMode}{\code{character(1)} defining how peaks variables are
+stored in the database. The default \code{peaksStorageMode = "blob2"} stores
+the full peaks matrix of each spectrum as data type \emph{BLOB} as one entry
+into a single database table column. \code{peaksStorageMode = "blob"} stores
+in contrast the m/z and intensity vectors as separate BLOB types into
+two database tables. \code{peaksStorageMode = "long"} allows to store the
+data in \emph{long mode}, i.e. each intensity and m/z value is stored
+individually in the database.}
 
 \item{partitionBy}{For \code{createMsBackendSqlDatabase()}: \code{character(1)}
 defining if and how the peak data table should be partitioned. \code{"none"}
@@ -169,9 +188,11 @@ database. If provided, it is assumed that \code{dbcon} is a (writeable)
 connection to an empty database into which \code{data} should be inserted.
 \code{data} could be the output of \code{spectraData} from another backend.}
 
-\item{...}{For \code{[}: ignored. For \code{backendInitialize}, if parameter \code{data}
+\item{...}{For \code{[}: ignored. For \code{backendInitialize()}, if parameter \code{data}
 is used: additional parameters to be passed to the function creating the
-database such as \code{blob}.}
+database such as \code{blob} or \code{peaksStorageMode}. For \code{setBackend()}: any
+parameters supported by \code{backendInitialize()} or
+\code{createMsBackendSqlDatabase()}.}
 
 \item{i}{For \code{[}: \code{integer} or \code{logical} to subset the object.}
 
@@ -283,7 +304,15 @@ default) or if individual m/z and intensity values for each peak should
 be stored separately (\code{blob = FALSE}). The latter case results in a much
 larger database and slower performance of the \code{peaksData} function, but
 would allow to define custom (manual) SQL queries on individual peak
-values.
+values. For \code{blob = TRUE}, the peaks data can be stored in two different
+ways which can be selected with the additional parameter
+\code{peaksStorageMode}. The default \code{peaksStorageMode = "blob2"} stores the
+full peaks matrix of a spectrum as a single entry to the database (into a
+single database table column) while \code{peaksStorageMode = "blob"} (which
+was the default until version 1.7.2) stores the m/z and intensity
+vectors as BLOB data type into two separate database table columns.
+Performance for \code{peaksData()} is thus about twice as fast for
+\code{peaksStorageMode = "blob2"}.
 While data can be stored in any SQL database, at present it is suggested
 to use MySQL/MariaDB databases. For \code{dbcon} being a connection to a
 MySQL/MariaDB database, the tables will use the \emph{ARIA} engine providing
@@ -306,18 +335,24 @@ long (even longer than data insertion for \code{blob = FALSE}).
 Parameter \code{object} is supposed to be a \code{MsBackendSql} instance, created
 e.g. with \code{MsBackendSql()}. Parameter \code{dbcon} is expected to be a
 connection to an existing \emph{MsBackendSql} SQL database (created e.g. with
-\code{createMsBackendSqlDatabase()}). \code{backendInitialize()} can alternatively
-also be used to create a \strong{new} \code{MsBackendSql} database using the optional
+\code{createMsBackendSqlDatabase()}). To initialize a \code{MsBackendOfflineSql()}
+all information required for a \code{\link[DBI:dbConnect]{DBI::dbConnect()}} call to connect to a
+database need to be provided.
+\code{backendInitialize()} can alternatively also be used to create a \strong{new}
+\code{MsBackendSql} database using the optional
 \code{data} parameter. In this case, \code{dbcon} is expected to be a writeable
 connection to an empty database and \code{data} a \code{DataFrame} with the \strong{full}
-spectra data to be inserted into this database. The format of \code{data}
-should match the format of the \code{DataFrame} returned by the \code{spectraData()}
-function and requires columns \code{"mz"} and \code{"intensity"} with the m/z and
-intensity values of each spectrum. The \code{backendInitialize()} call will
-then create all necessary tables in the database, will fill these tables
-with the provided data and will return an \code{MsBackendSql} for this
-database. Thus, the \code{MsBackendSql} supports the \code{setBackend} method
-from \code{Spectra} to change from (any) backend to a \code{MsBackendSql}. Note
+spectra and peaks data to be inserted into this database. The format of
+\code{data} should match the format of the \code{DataFrame} returned by the
+\code{spectraData()} function and requires columns \code{"mz"} and \code{"intensity"}
+with the m/z and intensity values of each spectrum.
+The \code{backendInitialize()} call will then create all necessary tables in
+the database, will fill these tables with the provided data and will
+return an \code{MsBackendSql} for this database.
+The \code{MsBackendSql} and \code{MsBackendOfflineSql} objects
+support the \code{\link[Spectra:Spectra]{Spectra::setBackend()}} method from \code{Spectra} to change
+from (any) backend to a \code{MsBackendSql}. Any parameters to the
+\code{backendInitialize()} function can be passed to \code{setBackend()}. Note
 however that chunk-wise (or parallel) processing needs to be disabled
 in this case by passing eventually \code{f = factor()} to the \code{setBackend()}
 call.

@@ -19,6 +19,8 @@
 #' @aliases supportsSetBackend,MsBackendOfflineSql-method
 #' @aliases tic,MsBackendOfflineSql-method
 #' @aliases uniqueMsLevels,MsBackendOfflineSql-method
+#' @aliases intensity,MsBackendOfflineSql-method
+#' @aliases mz,MsBackendOfflineSql-method
 #'
 #' @description
 #'
@@ -78,7 +80,15 @@
 #'   be stored separately (`blob = FALSE`). The latter case results in a much
 #'   larger database and slower performance of the `peaksData` function, but
 #'   would allow to define custom (manual) SQL queries on individual peak
-#'   values.
+#'   values. For `blob = TRUE`, the peaks data can be stored in two different
+#'   ways which can be selected with the additional parameter
+#'   `peaksStorageMode`. The default `peaksStorageMode = "blob2"` stores the
+#'   full peaks matrix of a spectrum as a single entry to the database (into a
+#'   single database table column) while `peaksStorageMode = "blob"` (which
+#'   was the default until version 1.7.2) stores the m/z and intensity
+#'   vectors as BLOB data type into two separate database table columns.
+#'   Performance for `peaksData()` is thus about twice as fast for
+#'   `peaksStorageMode = "blob2"`.
 #'   While data can be stored in any SQL database, at present it is suggested
 #'   to use MySQL/MariaDB databases. For `dbcon` being a connection to a
 #'   MySQL/MariaDB database, the tables will use the *ARIA* engine providing
@@ -102,18 +112,24 @@
 #'   Parameter `object` is supposed to be a `MsBackendSql` instance, created
 #'   e.g. with `MsBackendSql()`. Parameter `dbcon` is expected to be a
 #'   connection to an existing *MsBackendSql* SQL database (created e.g. with
-#'   `createMsBackendSqlDatabase()`). `backendInitialize()` can alternatively
-#'   also be used to create a **new** `MsBackendSql` database using the optional
+#'   `createMsBackendSqlDatabase()`). To initialize a `MsBackendOfflineSql()`
+#'   all information required for a [DBI::dbConnect()] call to connect to a
+#'   database need to be provided.
+#'   `backendInitialize()` can alternatively also be used to create a **new**
+#'   `MsBackendSql` database using the optional
 #'   `data` parameter. In this case, `dbcon` is expected to be a writeable
 #'   connection to an empty database and `data` a `DataFrame` with the **full**
-#'   spectra data to be inserted into this database. The format of `data`
-#'   should match the format of the `DataFrame` returned by the `spectraData()`
-#'   function and requires columns `"mz"` and `"intensity"` with the m/z and
-#'   intensity values of each spectrum. The `backendInitialize()` call will
-#'   then create all necessary tables in the database, will fill these tables
-#'   with the provided data and will return an `MsBackendSql` for this
-#'   database. Thus, the `MsBackendSql` supports the `setBackend` method
-#'   from `Spectra` to change from (any) backend to a `MsBackendSql`. Note
+#'   spectra and peaks data to be inserted into this database. The format of
+#'   `data` should match the format of the `DataFrame` returned by the
+#'   `spectraData()` function and requires columns `"mz"` and `"intensity"`
+#'   with the m/z and intensity values of each spectrum.
+#'   The `backendInitialize()` call will then create all necessary tables in
+#'   the database, will fill these tables with the provided data and will
+#'   return an `MsBackendSql` for this database.
+#'   The `MsBackendSql` and `MsBackendOfflineSql` objects
+#'   support the [Spectra::setBackend()] method from `Spectra` to change
+#'   from (any) backend to a `MsBackendSql`. Any parameters to the
+#'   `backendInitialize()` function can be passed to `setBackend()`. Note
 #'   however that chunk-wise (or parallel) processing needs to be disabled
 #'   in this case by passing eventually `f = factor()` to the `setBackend()`
 #'   call.
@@ -249,11 +265,12 @@
 #'     used to import MS data from the raw files specified with
 #'     parameter `x`.
 #'
-#' @param blob For `createMsBackendSqlDatabase()`: `logical(1)` whether
-#'     individual m/z and intensity values should be stored separately
-#'     (`blob = FALSE`) or if the m/z and intensity values for each spectrum
-#'     should be stored as a single *BLOB* SQL data type (`blob = TRUE`,
-#'     the default).
+#' @param blob For `createMsBackendSqlDatabase()`, `setBackend()`:
+#'     `logical(1)` whether individual m/z and intensity values should be
+#'     stored separately (`blob = FALSE`) or if the peaks data should be
+#'     stored as data type *BLOB* into the database (`blob = TRUE`, the
+#'     default). See also parameter `peaksStorageMode` for different data
+#'     storage options.
 #'
 #' @param BPPARAM for `backendBpparam()`: `BiocParallel` parallel processing
 #'     setup. See [BiocParallel::bpparam()] for more information.
@@ -332,6 +349,15 @@
 #'     defining the number of partitions the database table will be
 #'     partitioned into (only supported for MySQL/MariaDB databases).
 #'
+#' @param peaksStorageMode `character(1)` defining how peaks variables are
+#'     stored in the database. The default `peaksStorageMode = "blob2"` stores
+#'     the full peaks matrix of each spectrum as data type *BLOB* as one entry
+#'     into a single database table column. `peaksStorageMode = "blob"` stores
+#'     in contrast the m/z and intensity vectors as separate BLOB types into
+#'     two database tables. `peaksStorageMode = "long"` allows to store the
+#'     data in *long mode*, i.e. each intensity and m/z value is stored
+#'     individually in the database.
+#'
 #' @param ppm For `filterPrecursorMzValues()`: `numeric` with the m/z-relative
 #'     maximal acceptable difference for a m/z value to be considered
 #'     matching. Can be of length 1 or equal to `length(mz)`.
@@ -350,9 +376,11 @@
 #'     the raw data files from which the data should be imported. For other
 #'     methods an `MsqlBackend` instance.
 #'
-#' @param ... For `[`: ignored. For `backendInitialize`, if parameter `data`
+#' @param ... For `[`: ignored. For `backendInitialize()`, if parameter `data`
 #'     is used: additional parameters to be passed to the function creating the
-#'     database such as `blob`.
+#'     database such as `blob` or `peaksStorageMode`. For `setBackend()`: any
+#'     parameters supported by `backendInitialize()` or
+#'     `createMsBackendSqlDatabase()`.
 #'
 #' @name MsBackendSql
 #'
@@ -438,7 +466,7 @@ setClass(
         dbcon = NULL,
         spectraIds = integer(),
         .tables = list(),
-        peak_fun = .fetch_peaks_sql,
+        peak_fun = .fetch_peaks_data_long,
         readonly = TRUE, version = "0.2"))
 
 #' @importFrom methods .valueClassTest is new validObject
@@ -493,7 +521,9 @@ setMethod("backendInitialize", "MsBackendSql",
             dbGetQuery(dbcon, "select * from msms_spectrum limit 0")))
     ## Whether  m/z and intensity values are stored as BLOBs
     if (any(dbListTables(dbcon) == "msms_spectrum_peak_blob"))
-        object@peak_fun <- .fetch_peaks_sql_blob
+        object@peak_fun <- .fetch_peaks_data_blob
+    if (any(dbListTables(dbcon) == "msms_spectrum_peak_blob2"))
+        object@peak_fun <- .fetch_peaks_data_blob2
     ## Initialize cached backend
     object <- callNextMethod(
         object, nspectra = length(object@spectraIds),
@@ -550,26 +580,7 @@ setMethod("extractByIndex", c("MsBackendSql", "ANY"), function(object, i) {
 setMethod(
     "peaksData", "MsBackendSql",
     function(object, columns = c("mz", "intensity")) {
-        pks <- object@peak_fun(object, columns)
-        if (is.list(pks$mz) | is.list(pks$intensity)) {
-            res <- do.call(
-                base::mapply, args = c(pks[columns],
-                                 list(FUN = base::cbind, SIMPLIFY = FALSE,
-                                      USE.NAMES = FALSE)))
-            res[match(object@spectraIds, pks$spectrum_id_)]
-        } else {
-            f <- as.factor(pks$spectrum_id_)
-            ## using levels does not work because we can have duplicates
-            pks <- unname(
-                split.data.frame(pks, f)[as.character(object@spectraIds)])
-            idx <- seq_along(columns) + 1
-            lapply(pks, function(z) {
-                if (length(z) && nrow(z))
-                    as.matrix(z[, idx, drop = FALSE], rownames.force = FALSE)
-                else matrix(NA_real_, ncol = length(columns), nrow = 0,
-                            dimnames = list(character(), columns))
-            })
-        }
+        object@peak_fun(object, columns)
     })
 
 #' @importMethodsFrom ProtGenerics peaksVariables
@@ -580,6 +591,15 @@ setMethod(
 setMethod("peaksVariables", "MsBackendSql",
           function(object) .available_peaks_variables(object))
 
+#' @exportMethod intensity
+#'
+#' @importMethodsFrom ProtGenerics intensity
+#'
+#' @rdname MsBackendSql
+setMethod("intensity", "MsBackendSql", function(object) {
+    NumericList(object@peak_fun(object, "intensity", TRUE), compress = FALSE)
+})
+
 #' @exportMethod intensity<-
 #'
 #' @importMethodsFrom ProtGenerics intensity<-
@@ -587,6 +607,15 @@ setMethod("peaksVariables", "MsBackendSql",
 #' @rdname MsBackendSql
 setReplaceMethod("intensity", "MsBackendSql", function(object, value) {
     stop("Can not replace original intensity values in the database.")
+})
+
+#' @exportMethod mz
+#'
+#' @importMethodsFrom ProtGenerics mz
+#'
+#' @rdname MsBackendSql
+setMethod("mz", "MsBackendSql", function(object) {
+    NumericList(object@peak_fun(object, "mz", TRUE), compress = FALSE)
 })
 
 #' @exportMethod mz<-
@@ -718,7 +747,7 @@ setMethod(
             ## Need to ensure the order is correct.
             if (length(dataOrigin) > 1L)
                 object <- extractByIndex(
-                    object, order(match(dataOrigin(object), dataOrigin)))
+                    object, order(fmatch(dataOrigin(object), dataOrigin)))
             object
         }
     })

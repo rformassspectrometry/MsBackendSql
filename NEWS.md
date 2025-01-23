@@ -1,5 +1,18 @@
 # MsBackendSql 1.7
 
+## Changes in 1.7.3
+
+- Add new peaks data storage mode *blob2* which stores the full peaks matrix
+  as a single entity to the database table.
+- Change default peaks data storage mode to *blob2*.
+- Add parameter `peaksStorageMode` to database creation function allowing to
+  select the new peaks data storage mode.
+- Add `mz()` and `intensity()` methods.
+- Small performance improvements for `peaksData()` using `fmatch()` from the
+  *fastmatch* package and avoiding to re-order the results if not needed.
+- Performance improvement for *blob* and *blob2* storage modes
+  by using `xda = FALSE` in `serialize()`.
+
 ## Changes in 1.7.2
 
 - Import `extractByIndex` from *ProtGenerics*.
