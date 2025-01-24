@@ -133,7 +133,6 @@ test_that("peaksData,MsBackendSql works", {
     expect_true(is.matrix(res[[1L]]))
     expect_equal(colnames(res[[1L]]), c("mz", "intensity"))
 
-    ## empty object LLLLL
     ## long
     tmp <- mm8_be_long[integer()]
     expect_equal(peaksData(tmp), list())

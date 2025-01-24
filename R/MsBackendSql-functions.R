@@ -211,7 +211,11 @@ MsBackendSql <- function() {
         tbls <- dbListTables(.dbcon(x))
         tbl <- grep("msms_spectrum_peak", tbls, value = TRUE)
         if (tbl == "msms_spectrum_peak_blob2") {
-            res <- peaksData(x[1L])
+            if (length(x))
+                res <- peaksData(x[1L])[[1L]]
+            else res <- matrix(
+                     NA_real_, ncol = 2, nrow = 0,
+                     dimnames = list(character(), c("mz", "intensity")))
         } else
             res <- dbGetQuery(
                 .dbcon(x), stri_c("select * from ", tbl, " limit 1"))
@@ -259,61 +263,42 @@ MsBackendSql <- function() {
     res <- dbExecute(con, sql[[2L]])
 }
 
-.initialize_tables_blob_sql <- function(con, cols, partitionBy = "none",
-                                        partitionNumber = 10) {
-    sql_a <- stri_c("CREATE TABLE msms_spectrum (",
-                    stri_c(names(cols), cols, sep = " ", collapse = ", "),
-                    ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
-    sql_b <- stri_c("CREATE TABLE msms_spectrum_peak_blob (mz MEDIUMBLOB, ",
-                    "intensity MEDIUMBLOB, spectrum_id_ INTEGER")
-    ## MySQL/MariaDB supports partitioning
-    if (.is_maria_db(con)) {
-        sql_a <- stri_c(sql_a, " ENGINE=ARIA;")
-        if (partitionBy == "none")
-            sql_b <- stri_c(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
-        if (partitionBy == "spectrum")
-            sql_b <- stri_c(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
-                            "PARTITION BY HASH (spectrum_id_) PARTITIONS ",
-                            partitionNumber, ";")
-        if (partitionBy == "chunk")
-            sql_b <- stri_c(sql_b, ", partition_ SMALLINT, ",
-                            "PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
-                            "PARTITION BY HASH (partition_) PARTITIONS ",
-                            partitionNumber, ";")
-    } else
-        sql_b <- stri_c(sql_b, ");")
-    list(sql_a, sql_b)
-}
-
-.initialize_tables_blob2_sql <- function(con, cols, partitionBy = "none",
-                                         partitionNumber = 10) {
-    sql_a <- stri_c("CREATE TABLE msms_spectrum (",
-                    stri_c(names(cols), cols, sep = " ", collapse = ", "),
-                    ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
-    sql_b <- stri_c("CREATE TABLE msms_spectrum_peak_blob2 ",
-                    "(peaks MEDIUMBLOB, spectrum_id_ INTEGER")
-    ## MySQL/MariaDB supports partitioning
-    if (.is_maria_db(con)) {
-        sql_a <- stri_c(sql_a, " ENGINE=ARIA;")
-        if (partitionBy == "none")
-            sql_b <- stri_c(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
-        if (partitionBy == "spectrum")
-            sql_b <- stri_c(sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
-                            "PARTITION BY HASH (spectrum_id_) PARTITIONS ",
-                            partitionNumber, ";")
-        if (partitionBy == "chunk")
-            sql_b <- stri_c(sql_b, ", partition_ SMALLINT, ",
-                            "PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
-                            "PARTITION BY HASH (partition_) PARTITIONS ",
-                            partitionNumber, ";")
-    } else
-        sql_b <- stri_c(sql_b, ");")
-    list(sql_a, sql_b)
-}
+.initialize_tables_blob_sql <-
+    function(con, cols, partitionBy = "none", partitionNumber = 10,
+             peaks_sql = "mz MEDIUMBLOB, intensity MEDIUMBLOB",
+             peaks_table = "msms_spectrum_peak_blob") {
+        sql_a <- stri_c("CREATE TABLE msms_spectrum (",
+                        stri_c(names(cols), cols, sep = " ", collapse = ", "),
+                        ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
+        sql_b <- stri_c("CREATE TABLE ", peaks_table, " (", peaks_sql,
+                        ", spectrum_id_ INTEGER")
+        ## MySQL/MariaDB supports partitioning
+        if (.is_maria_db(con)) {
+            sql_a <- stri_c(sql_a, " ENGINE=ARIA;")
+            if (partitionBy == "none")
+                sql_b <- stri_c(
+                    sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA;")
+            if (partitionBy == "spectrum")
+                sql_b <- stri_c(
+                    sql_b, ", PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
+                    "PARTITION BY HASH (spectrum_id_) PARTITIONS ",
+                    partitionNumber, ";")
+            if (partitionBy == "chunk")
+                sql_b <- stri_c(
+                    sql_b, ", partition_ SMALLINT, ",
+                    "PRIMARY KEY (spectrum_id_)) ENGINE=ARIA ",
+                    "PARTITION BY HASH (partition_) PARTITIONS ",
+                    partitionNumber, ";")
+        } else
+            sql_b <- stri_c(sql_b, ");")
+        list(sql_a, sql_b)
+    }
 
 .initialize_tables_blob2 <- function(con, cols, partitionBy = "none",
                                      partitionNumber = 10) {
-    sql <- .initialize_tables_blob2_sql(con, cols, partitionBy, partitionNumber)
+    sql <- .initialize_tables_blob_sql(con, cols, partitionBy, partitionNumber,
+                                       peaks_sql = "peaks MEDIUMBLOB",
+                                       peaks_table = "msms_spectrum_peak_blob2")
     res <- dbExecute(con, sql[[1L]])
     res <- dbExecute(con, sql[[2L]])
 }

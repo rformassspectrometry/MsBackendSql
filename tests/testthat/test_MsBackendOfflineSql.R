@@ -35,7 +35,7 @@ test_that("backendInitialize,MsBackendOfflineSql works", {
 
     expect_output(show(res), "MsBackendOfflineSql")
 
-    ## with data. LLLLLL
+    ## with data.
     data <- spectraData(mm8_be_long)
     tf <- tempfile()
     res <- backendInitialize(MsBackendOfflineSql(),

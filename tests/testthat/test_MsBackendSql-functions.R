@@ -11,7 +11,7 @@ test_that(".valid_dbcon works", {
 test_that(".insert_data et al work", {
     db_file <- tempfile()
     db <- dbConnect(SQLite(), db_file)
-    MsBackendSql:::.insert_data(db, mm8_file, storage = "long")
+    .insert_data(db, mm8_file, storage = "long")
     res <- dbListTables(db)
     expect_equal(res, c("msms_spectrum", "msms_spectrum_peak"))
     spd <- dbGetQuery(db, "select * from msms_spectrum")
@@ -37,7 +37,7 @@ test_that(".insert_data et al work", {
 
     db_file <- tempfile()
     db <- dbConnect(SQLite(), db_file)
-    MsBackendSql:::.insert_data(db, mm8_file, storage = "blob")
+    .insert_data(db, mm8_file, storage = "blob")
     res <- dbListTables(db)
     expect_equal(res, c("msms_spectrum", "msms_spectrum_peak_blob"))
     dbDisconnect(db)
@@ -45,7 +45,7 @@ test_that(".insert_data et al work", {
 
     db_file <- tempfile()
     db <- dbConnect(SQLite(), db_file)
-    MsBackendSql:::.insert_data(db, mm8_file, storage = "blob2")
+    .insert_data(db, mm8_file, storage = "blob2")
     res <- dbListTables(db)
     expect_equal(res, c("msms_spectrum", "msms_spectrum_peak_blob2"))
     dbDisconnect(db)
@@ -74,8 +74,8 @@ test_that(".set_backend_insert_data works", {
     be_ref <- backendInitialize(MsBackendSql(), dbcon = con_ref)
 
     con_test <- dbConnect(SQLite(), tempfile())
-    MsBackendSql:::.set_backend_insert_data(s, con = con_test, blob = TRUE,
-                                            peaksStorageMode = "blob2")
+    .set_backend_insert_data(s, con = con_test, blob = TRUE,
+                             peaksStorageMode = "blob2")
     be_test <- backendInitialize(MsBackendSql(), dbcon = con_test)
     expect_equal(length(be_ref), length(be_test))
     expect_equal(spectraData(be_ref, c("rtime", "dataOrigin")),
@@ -159,21 +159,21 @@ test_that("MsBackendSql works", {
 })
 
 test_that(".fetch_peaks_data_long works", {
-    expect_equal(MsBackendSql:::.fetch_peaks_data_long(MsBackendSql()), list())
+    expect_equal(.fetch_peaks_data_long(MsBackendSql()), list())
     expect_equal(
-        MsBackendSql:::.fetch_peaks_data_long(MsBackendSql(), columns = "intensity"), list())
-    expect_equal(MsBackendSql:::.fetch_peaks_data_long(MsBackendSql(), columns = "intensity",
+        .fetch_peaks_data_long(MsBackendSql(), columns = "intensity"), list())
+    expect_equal(.fetch_peaks_data_long(MsBackendSql(), columns = "intensity",
                                         drop = TRUE), list())
 
-    res <- MsBackendSql:::.fetch_peaks_data_long(mm8_be_long)
+    res <- .fetch_peaks_data_long(mm8_be_long)
     expect_true(is.list(res))
     ref <- peaksData(mm8_sps@backend)
     expect_equal(res, ref)
-    res <- MsBackendSql:::.fetch_peaks_data_long(mm8_be_long, columns = "intensity")
+    res <- .fetch_peaks_data_long(mm8_be_long, columns = "intensity")
     expect_true(is.list(res))
     expect_true(is.matrix(res[[1]]))
     expect_equal(unlist(res), unlist(mm8_sps$intensity))
-    res <- MsBackendSql:::.fetch_peaks_data_long(mm8_be_long, columns = "intensity",
+    res <- .fetch_peaks_data_long(mm8_be_long, columns = "intensity",
                                   drop = TRUE)
     expect_true(is.list(res))
     expect_equal(res, as.list(mm8_sps$intensity))
@@ -181,35 +181,54 @@ test_that(".fetch_peaks_data_long works", {
     ## subsets.
     a <- mm8_be_long[c(4, 1, 4, 5, 1, 3)]
     b <- mm8_sps@backend[c(4, 1, 4, 5, 1, 3)]
-    expect_equal(MsBackendSql:::.fetch_peaks_data_long(a), peaksData(b))
-    expect_equal(MsBackendSql:::.fetch_peaks_data_long(a, "mz", TRUE), as.list(b$mz))
+    expect_equal(.fetch_peaks_data_long(a), peaksData(b))
+    expect_equal(.fetch_peaks_data_long(a, "mz", TRUE), as.list(b$mz))
+
+    ## spectra without peaks data.
+    a <- mm8_be_long[c(1:10)]
+    a@spectraIds <- c(a@spectraIds, 200L)
+    res <- .fetch_peaks_data_long(a)[[length(a) + 1L]]
+    expect_true(is.matrix(res))
+    expect_true(nrow(res) == 0L)
+    expect_equal(colnames(res), c("mz", "intensity"))
+
+    res <- .fetch_peaks_data_long(a, columns = "intensity")[[length(a) + 1L]]
+    expect_true(is.matrix(res))
+    expect_true(nrow(res) == 0L)
+    expect_equal(colnames(res), c("intensity"))
+
+    res <- .fetch_peaks_data_long(
+        a, columns = "intensity", drop = TRUE)[[length(a) + 1L]]
+    expect_true(is.numeric(res))
+    expect_false(is.matrix(res))
+    expect_equal(res, numeric())
 })
 
 test_that(".fetch_peaks_data_blob works", {
-    expect_equal(MsBackendSql:::.fetch_peaks_data_blob(MsBackendSql()), list())
+    expect_equal(.fetch_peaks_data_blob(MsBackendSql()), list())
     expect_equal(
-        MsBackendSql:::.fetch_peaks_data_blob(MsBackendSql(), columns = "intensity"), list())
-    expect_equal(MsBackendSql:::.fetch_peaks_data_blob(MsBackendSql(), columns = "intensity",
+        .fetch_peaks_data_blob(MsBackendSql(), columns = "intensity"), list())
+    expect_equal(.fetch_peaks_data_blob(MsBackendSql(), columns = "intensity",
                                         drop = TRUE), list())
 
-    res <- MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob)
+    res <- .fetch_peaks_data_blob(mm8_be_blob)
     expect_true(is.list(res))
     expect_true(is.matrix(res[[1L]]))
     expect_equal(colnames(res[[1L]]), c("mz", "intensity"))
     ref <- peaksData(mm8_sps@backend)
     expect_equal(res, ref)
-    res <- MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob,
-                                                 columns = c("intensity", "mz"))
+    res <- .fetch_peaks_data_blob(mm8_be_blob,
+                                  columns = c("intensity", "mz"))
     expect_true(is.list(res))
     expect_true(is.matrix(res[[1L]]))
     expect_equal(colnames(res[[1L]]), c("intensity", "mz"))
 
-    res <- MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob, columns = "intensity")
+    res <- .fetch_peaks_data_blob(mm8_be_blob, columns = "intensity")
     expect_true(is.list(res))
     expect_true(is.matrix(res[[1L]]))
     expect_equal(colnames(res[[1L]]), "intensity")
     expect_equal(unlist(res), unlist(mm8_sps$intensity))
-    res <- MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob, columns = "intensity",
+    res <- .fetch_peaks_data_blob(mm8_be_blob, columns = "intensity",
                                   drop = TRUE)
     expect_true(is.list(res))
     expect_equal(res, as.list(mm8_sps$intensity))
@@ -217,76 +236,45 @@ test_that(".fetch_peaks_data_blob works", {
     ## subsets.
     a <- mm8_be_blob[c(4, 1, 4, 5, 1, 3)]
     b <- mm8_sps@backend[c(4, 1, 4, 5, 1, 3)]
-    expect_equal(MsBackendSql:::.fetch_peaks_data_blob(a), peaksData(b))
-    expect_equal(MsBackendSql:::.fetch_peaks_data_blob(a, "mz", TRUE), as.list(b$mz))
+    expect_equal(.fetch_peaks_data_blob(a), peaksData(b))
+    expect_equal(.fetch_peaks_data_blob(a, "mz", TRUE), as.list(b$mz))
 })
 
 test_that(".fetch_peaks_data_blob2 works", {
-    expect_equal(MsBackendSql:::.fetch_peaks_data_blob2(MsBackendSql()), list())
+    expect_equal(.fetch_peaks_data_blob2(MsBackendSql()), list())
     expect_equal(
-        MsBackendSql:::.fetch_peaks_data_blob2(MsBackendSql(), columns = "intensity"), list())
-    expect_equal(MsBackendSql:::.fetch_peaks_data_blob2(MsBackendSql(), columns = "intensity",
+        .fetch_peaks_data_blob2(MsBackendSql(), columns = "intensity"), list())
+    expect_equal(.fetch_peaks_data_blob2(MsBackendSql(), columns = "intensity",
                                         drop = TRUE), list())
 
-    res <- MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2)
+    res <- .fetch_peaks_data_blob2(mm8_be_blob2)
     expect_true(is.list(res))
     expect_true(is.matrix(res[[1L]]))
     expect_equal(colnames(res[[1L]]), c("mz", "intensity"))
     ref <- peaksData(mm8_sps@backend)
     expect_equal(res, ref)
-    res <- MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2,
-                                                 columns = c("intensity", "mz"))
+    res <- .fetch_peaks_data_blob2(mm8_be_blob2,
+                                   columns = c("intensity", "mz"))
     expect_true(is.list(res))
     expect_true(is.matrix(res[[1L]]))
     expect_equal(colnames(res[[1L]]), c("intensity", "mz"))
 
-    res <- MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2, columns = "intensity")
+    res <- .fetch_peaks_data_blob2(mm8_be_blob2, columns = "intensity")
     expect_true(is.list(res))
     expect_true(is.matrix(res[[1L]]))
     expect_equal(colnames(res[[1L]]), "intensity")
     expect_equal(unlist(res), unlist(mm8_sps$intensity))
-    res <- MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2, columns = "intensity",
-                                  drop = TRUE)
+    res <- .fetch_peaks_data_blob2(mm8_be_blob2, columns = "intensity",
+                                   drop = TRUE)
     expect_true(is.list(res))
     expect_equal(res, as.list(mm8_sps$intensity))
 
     ## subsets.
     a <- mm8_be_blob2[c(4, 1, 4, 5, 1, 3)]
     b <- mm8_sps@backend[c(4, 1, 4, 5, 1, 3)]
-    expect_equal(MsBackendSql:::.fetch_peaks_data_blob2(a), peaksData(b))
-    expect_equal(MsBackendSql:::.fetch_peaks_data_blob2(a, "mz", TRUE), as.list(b$mz))
+    expect_equal(.fetch_peaks_data_blob2(a), peaksData(b))
+    expect_equal(.fetch_peaks_data_blob2(a, "mz", TRUE), as.list(b$mz))
 })
-
-library(microbenchmark)
-microbenchmark(
-    MsBackendSql:::.fetch_peaks_data_long(mm8_be_long),
-    MsBackendSql:::.fetch_peaks_data_blob(mm8_be_blob),
-    MsBackendSql:::.fetch_peaks_data_blob2(mm8_be_blob2)
-)
-
-
-## test_that(".fetch_peaks_sql works", {
-##     res <- .fetch_peaks_sql(MsBackendSql(), columns = "intensity")
-##     expect_true(is.data.frame(res))
-##     expect_true(nrow(res) == 0)
-##     expect_identical(colnames(res), c("spectrum_id_", "intensity"))
-
-##     res <- .fetch_peaks_sql(mm8_be, columns = c("mz"))
-##     expect_true(is.data.frame(res))
-##     expect_identical(colnames(res), c("spectrum_id_", "mz"))
-## })
-
-## test_that(".fetch_peaks_sql_blob works", {
-##     res <- .fetch_peaks_sql_blob(MsBackendSql(), columns = "intensity")
-##     expect_true(is.data.frame(res))
-##     expect_true(nrow(res) == 0)
-##     expect_identical(colnames(res), c("spectrum_id_", "intensity"))
-
-##     res <- .fetch_peaks_sql_blob(mm8_be_blob, columns = "mz")
-##     expect_true(is.data.frame(res))
-##     expect_identical(colnames(res), c("spectrum_id_", "mz"))
-##     expect_true(is.list(res$mz))
-## })
 
 test_that(".fetch_spectra_data_sql works", {
     res <- .fetch_spectra_data_sql(mm8_be_long, columns = c("rtime", "msLevel"))
@@ -357,6 +345,13 @@ test_that(".available_peaks_variables works", {
     res <- .available_peaks_variables(mm8_be_blob)
     expect_equal(res, c("mz", "intensity"))
 
+    res <- .available_peaks_variables(mm8_be_blob2)
+    expect_equal(res, c("mz", "intensity"))
+
+    a <- mm8_be_blob2[integer()]
+    res <- .available_peaks_variables(a)
+    expect_equal(res, c("mz", "intensity"))
+
     res <- .available_peaks_variables(MsBackendSql())
     expect_equal(res, character())
 })
@@ -418,7 +413,7 @@ test_that(".combine works", {
 
 test_that(".initialize_tables works", {
     a <- new("DummySQL")
-    MsBackendSql:::.initialize_tables(a, cols = c(a = "TEXT"))
+    .initialize_tables(a, cols = c(a = "TEXT"))
     with_mock(
         "MsBackendSql:::.is_maria_db" = function(x) TRUE,
         .initialize_tables(a, cols = c(a = "TEXT"))
@@ -576,7 +571,7 @@ test_that(".create_from_spectra_data works", {
     dta <- spectraData(
         mm8_sps[integer()],
         columns = c(spectraVariables(mm8_sps), "mz", "intensity"))
-    MsBackendSql:::.create_from_spectra_data(tmpcon, dta)
+    .create_from_spectra_data(tmpcon, dta)
     res3 <- backendInitialize(MsBackendSql(), dbcon = tmpcon)
     expect_true(validObject(res3))
     expect_equal(spectraVariables(mm8_be_long), spectraVariables(res3))

@@ -636,7 +636,7 @@ setReplaceMethod("$", "MsBackendSql", function(x, name, value) {
     callNextMethod()
 })
 
-#' @importMethodsFrom Spectra spectraData spectraVariables
+#' @importMethodsFrom ProtGenerics spectraData spectraVariables
 #'
 #' @exportMethod spectraData
 #'

@@ -12,6 +12,7 @@
   *fastmatch* package and avoiding to re-order the results if not needed.
 - Performance improvement for *blob* and *blob2* storage modes
   by using `xda = FALSE` in `serialize()`.
+- Complete unit test coverage.
 
 ## Changes in 1.7.2
 
