@@ -13,7 +13,7 @@ createMsBackendSqlDatabase()."><meta property="og:image" content="https://rforma
 
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,6 +56,7 @@ SQL database. New databases can be created from raw MS data files using
 <span>  backend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/Spectra/man/MsBackend.html" class="external-link">MsBackendMzR</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  chunksize <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  blob <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  peaksStorageMode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blob2"</span>, <span class="st">"long"</span>, <span class="st">"blob"</span><span class="op">)</span>,</span>
 <span>  partitionBy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"spectrum"</span>, <span class="st">"chunk"</span><span class="op">)</span>,</span>
 <span>  partitionNumber <span class="op">=</span> <span class="fl">10L</span></span>
 <span><span class="op">)</span></span>
@@ -82,7 +83,13 @@ SQL database. New databases can be created from raw MS data files using
 <span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/peaksData.html" class="external-link">peaksVariables</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'MsBackendSql'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">intensity</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'MsBackendSql'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">intensity</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">value</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'MsBackendSql'</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">mz</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'MsBackendSql'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">mz</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">value</span></span>
@@ -176,11 +183,23 @@ also more memory.</p></dd>
 
 
 <dt id="arg-blob">blob<a class="anchor" aria-label="anchor" href="#arg-blob"></a></dt>
-<dd><p>For <code>createMsBackendSqlDatabase()</code>: <code>logical(1)</code> whether
-individual m/z and intensity values should be stored separately
-(<code>blob = FALSE</code>) or if the m/z and intensity values for each spectrum
-should be stored as a single <em>BLOB</em> SQL data type (<code>blob = TRUE</code>,
-the default).</p></dd>
+<dd><p>For <code>createMsBackendSqlDatabase()</code>, <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">setBackend()</a></code>:
+<code>logical(1)</code> whether individual m/z and intensity values should be
+stored separately (<code>blob = FALSE</code>) or if the peaks data should be
+stored as data type <em>BLOB</em> into the database (<code>blob = TRUE</code>, the
+default). See also parameter <code>peaksStorageMode</code> for different data
+storage options.</p></dd>
+
+
+<dt id="arg-peaksstoragemode">peaksStorageMode<a class="anchor" aria-label="anchor" href="#arg-peaksstoragemode"></a></dt>
+<dd><p><code>character(1)</code> defining how peaks variables are
+stored in the database. The default <code>peaksStorageMode = "blob2"</code> stores
+the full peaks matrix of each spectrum as data type <em>BLOB</em> as one entry
+into a single database table column. <code>peaksStorageMode = "blob"</code> stores
+in contrast the m/z and intensity vectors as separate BLOB types into
+two database tables. <code>peaksStorageMode = "long"</code> allows to store the
+data in <em>long mode</em>, i.e. each intensity and m/z value is stored
+individually in the database.</p></dd>
 
 
 <dt id="arg-partitionby">partitionBy<a class="anchor" aria-label="anchor" href="#arg-partitionby"></a></dt>
@@ -218,9 +237,11 @@ connection to an empty database into which <code>data</code> should be inserted.
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>For <code>[</code>: ignored. For <code>backendInitialize</code>, if parameter <code>data</code>
+<dd><p>For <code>[</code>: ignored. For <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code>, if parameter <code>data</code>
 is used: additional parameters to be passed to the function creating the
-database such as <code>blob</code>.</p></dd>
+database such as <code>blob</code> or <code>peaksStorageMode</code>. For <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">setBackend()</a></code>: any
+parameters supported by <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code> or
+<code>createMsBackendSqlDatabase()</code>.</p></dd>
 
 
 <dt id="arg-i">i<a class="anchor" aria-label="anchor" href="#arg-i"></a></dt>
@@ -359,7 +380,15 @@ default) or if individual m/z and intensity values for each peak should
 be stored separately (<code>blob = FALSE</code>). The latter case results in a much
 larger database and slower performance of the <code>peaksData</code> function, but
 would allow to define custom (manual) SQL queries on individual peak
-values.
+values. For <code>blob = TRUE</code>, the peaks data can be stored in two different
+ways which can be selected with the additional parameter
+<code>peaksStorageMode</code>. The default <code>peaksStorageMode = "blob2"</code> stores the
+full peaks matrix of a spectrum as a single entry to the database (into a
+single database table column) while <code>peaksStorageMode = "blob"</code> (which
+was the default until version 1.7.2) stores the m/z and intensity
+vectors as BLOB data type into two separate database table columns.
+Performance for <code><a href="https://rdrr.io/pkg/ProtGenerics/man/peaksData.html" class="external-link">peaksData()</a></code> is thus about twice as fast for
+<code>peaksStorageMode = "blob2"</code>.
 While data can be stored in any SQL database, at present it is suggested
 to use MySQL/MariaDB databases. For <code>dbcon</code> being a connection to a
 MySQL/MariaDB database, the tables will use the <em>ARIA</em> engine providing
@@ -382,18 +411,24 @@ long (even longer than data insertion for <code>blob = FALSE</code>).</p></li>
 Parameter <code>object</code> is supposed to be a <code>MsBackendSql</code> instance, created
 e.g. with <code>MsBackendSql()</code>. Parameter <code>dbcon</code> is expected to be a
 connection to an existing <em>MsBackendSql</em> SQL database (created e.g. with
-<code>createMsBackendSqlDatabase()</code>). <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code> can alternatively
-also be used to create a <strong>new</strong> <code>MsBackendSql</code> database using the optional
+<code>createMsBackendSqlDatabase()</code>). To initialize a <code><a href="MsBackendOfflineSql.html">MsBackendOfflineSql()</a></code>
+all information required for a <code><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">DBI::dbConnect()</a></code> call to connect to a
+database need to be provided.
+<code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code> can alternatively also be used to create a <strong>new</strong>
+<code>MsBackendSql</code> database using the optional
 <code>data</code> parameter. In this case, <code>dbcon</code> is expected to be a writeable
 connection to an empty database and <code>data</code> a <code>DataFrame</code> with the <strong>full</strong>
-spectra data to be inserted into this database. The format of <code>data</code>
-should match the format of the <code>DataFrame</code> returned by the <code><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData()</a></code>
-function and requires columns <code>"mz"</code> and <code>"intensity"</code> with the m/z and
-intensity values of each spectrum. The <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code> call will
-then create all necessary tables in the database, will fill these tables
-with the provided data and will return an <code>MsBackendSql</code> for this
-database. Thus, the <code>MsBackendSql</code> supports the <code>setBackend</code> method
-from <code>Spectra</code> to change from (any) backend to a <code>MsBackendSql</code>. Note
+spectra and peaks data to be inserted into this database. The format of
+<code>data</code> should match the format of the <code>DataFrame</code> returned by the
+<code><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData()</a></code> function and requires columns <code>"mz"</code> and <code>"intensity"</code>
+with the m/z and intensity values of each spectrum.
+The <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code> call will then create all necessary tables in
+the database, will fill these tables with the provided data and will
+return an <code>MsBackendSql</code> for this database.
+The <code>MsBackendSql</code> and <code>MsBackendOfflineSql</code> objects
+support the <code><a href="https://rdrr.io/pkg/Spectra/man/Spectra.html" class="external-link">Spectra::setBackend()</a></code> method from <code>Spectra</code> to change
+from (any) backend to a <code>MsBackendSql</code>. Any parameters to the
+<code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize()</a></code> function can be passed to <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">setBackend()</a></code>. Note
 however that chunk-wise (or parallel) processing needs to be disabled
 in this case by passing eventually <code>f = factor()</code> to the <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">setBackend()</a></code>
 call.</p></li>
@@ -562,7 +597,7 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmprJyVHp/file794d3dde385a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/Rtmp2vDKOh/file17cb22124593</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Original data source</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span></span>
@@ -575,9 +610,9 @@ increasing the memory demand of the object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Data storage</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">dataStorage</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmprJyVHp/file794d3dde385a" "/tmp/RtmprJyVHp/file794d3dde385a"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmprJyVHp/file794d3dde385a" "/tmp/RtmprJyVHp/file794d3dde385a"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmprJyVHp/file794d3dde385a" "/tmp/RtmprJyVHp/file794d3dde385a"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp2vDKOh/file17cb22124593" "/tmp/Rtmp2vDKOh/file17cb22124593"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/Rtmp2vDKOh/file17cb22124593" "/tmp/Rtmp2vDKOh/file17cb22124593"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/Rtmp2vDKOh/file17cb22124593" "/tmp/Rtmp2vDKOh/file17cb22124593"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access all spectra data</span></span></span>
 <span class="r-in"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -598,17 +633,17 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1   66.7818            198       198    111.044,112.024,112.518,...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           intensity            dataStorage             dataOrigin centroided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NumericList&gt;            &lt;character&gt;            &lt;character&gt;  &lt;logical&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...             ...                    ...                    ...        ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/RtmprJyVHp/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/Rtmp2vDKOh/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      smoothed  polarity precScanNum precursorMz precursorIntensity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;logical&gt; &lt;integer&gt;   &lt;integer&gt;   &lt;numeric&gt;          &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          NA         1          NA          NA                 NA</span>
@@ -753,7 +788,7 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 34 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmprJyVHp/file794d3dde385a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/Rtmp2vDKOh/file17cb22124593</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span></span>
