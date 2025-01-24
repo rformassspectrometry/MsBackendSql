@@ -56,12 +56,12 @@ The package can be installed with the `BiocManager` package. To install
 from MS data files using the `createMsBackendSqlDatabase()` or using the
 `backendInitialize()` function by providing in addition to the database
 connection also the full MS data to import as a `DataFrame`. In the first
-example we use the `createMsBackendSqlDatabase()` function which takes a
-connection to an (empty) database and the names of the files from which the data
-should be imported as input parameters creates all necessary database tables and
-stores the full data into the database. Below we create an empty SQLite database
-(in a temporary file) and fill that with MS data from two mzML files (from the
-`r Biocpkg("msdata")` package).
+example we use the `createMsBackendSqlDatabase()` function to import the full MS
+data from the provided MS data files into an (empty) database. Below we first
+create an empty SQLite database (in a temporary file) and use the
+`createMsBackendSqlDatabase()` function to create all necessary tables in that
+database and import the MS data from two mzML files (from the `r
+Biocpkg("msdata")` package).
 
 ```{r, message = FALSE, results = "hide"}
 library(RSQLite)
@@ -69,53 +69,55 @@ library(RSQLite)
 dbfile <- tempfile()
 con <- dbConnect(SQLite(), dbfile)
 
+library(Spectra)
 library(MsBackendSql)
 fls <- dir(system.file("sciex", package = "msdata"), full.names = TRUE)
 createMsBackendSqlDatabase(con, fls)
+dbDisconnect(con)
 ```
 
-By default the m/z and intensity values are stored as *BLOB* data types in the
-database. This has advantages on the performance to extract peaks data from the
-database but would for example not allow to filter peaks by m/z values directly
-in the database. As an alternative it is also possible to the individual m/z and
-intensity values in separate rows of the database table. This *long table
-format* results however in considerably larger databases (with potentially
-poorer performance). Note also that the code and backend is optimized for
-MySQL/MariaDB databases by taking advantage of table partitioning and
-specialized table storage options. Any other SQL database server is however also
-supported (also portable, self-contained SQLite databases).
+By default (with parameters `blob = TRUE` and `peaksStorageMode = "blob2"`) the
+peaks data matrix of each spectrum is stored as a *BLOB* data type into the
+database (one entry per spectrum). This has advantages on the performance to
+extract the peaks data from the database, but does not allow to filter
+individual peaks by their *m/z* or intensity values directly in the database. As
+an alternative (using `blob = FALSE`) it is also possible to store the
+individual *m/z* and intensity values in separate columns of the database
+table. This *long table format* results however in considerably larger databases
+(with potentially poorer performance). Note also that the code and backend is
+optimized for MySQL/MariaDB databases by taking advantage of table partitioning
+and specialized table storage options. Any other SQL database server is however
+also supported (also portable, self-contained SQLite databases). In fact,
+performance for *MsBackendSql* databases with peaks data stored as *BLOB* data
+type is similar for SQLite and MySQL/MariaDB databases.
 
 The *MsBackendSql* package provides two backends to interact with such
-databases: the (default) `MsBackendSql` class and the `MsBackendOfflineSql`,
-that inherits all properties and functions from the former, but which does not
-store the connection to the database within the object but connects (and
-disconnects) to (and from) the database in each function call. This allows to
-use the latter also for parallel processing setups or to save/load the object
-(e.g. using `save` and `saveRDS`). Thus, for most applications the
-`MsBackendOfflineSql` might be used as the preferred backend to SQL databases.
+databases: the `MsBackendSql` class and the `MsBackendOfflineSql` class, that
+inherits all properties and functions from the former, but does not store the
+connection to the database within the object. The `MsBackendOfflineSql` object
+thus supports parallel processing and allows to save/load the object (e.g. using
+`save` and `saveRDS`). The `MsBackendOfflineSql` might therefore be used as the
+preferred backend to SQL databases for most applications.
 
 To access the data in the database we create below a `Spectra` object providing
-the connection to the database in the constructor call and specifying to use the
-`MsBackendSql` as *backend* using the `source` parameter.
+the database connection information in the constructor call and specifying to
+use the `MsBackendOfflineSql` as *backend* (parameter `source`). We stored the
+data to a SQLite database, thus we provide the database name (SQLite database
+file name) and the SQLite DBI driver with parameters `dbname` and `drv`. Which
+parameters are required to connect to the database depends on the SQL database
+and the used driver. For a MySQL/MariaDB database we would use the `MariaDB()`
+driver and would have to provide the database name, user name, password as well
+as the host name and port through which the database is accessible.
 
 ```{r}
-sps <- Spectra(con, source = MsBackendSql())
+sps <- Spectra(dbname = dbfile, source = MsBackendOfflineSql(), drv = SQLite())
 sps
 ```
 
-As an alternative, the `MsBackendOfflineSql` backend could also be used to
-interface with MS data in a SQL database. In contrast to the `MsBackendSql`, the
-`MsBackendOfflineSql` does not contain an active (open) connection to the
-database and hence supports serializing (saving) the object to disk using
-e.g. the `save()` function, or parallel processing (if supported by the database
-system). Thus, for most use cases the `MsBackendOfflineSql` should be used
-instead of the `MsBackendSql`. See further below for more information on the
-`MsBackendOfflineSql`.
-
 `Spectra` objects allow also to change the backend to any other backend
 (extending `MsBackend`) using the `setBackend()` function. Below we use this
-function to first load all data into memory by changing from the `MsBackendSql`
-to a `MsBackendMemory`.
+function to first load all data into memory by changing from the
+`MsBackendOfflineSql` to a `MsBackendMemory`.
 
 ```{r}
 sps_mem <- setBackend(sps, MsBackendMemory())
@@ -123,17 +125,19 @@ sps_mem
 ```
 
 With this function it is also possible to change from any backend to a
-`MsBackendSql` in which case a new database is created and all data from the
-originating backend is stored in this database. To change the backend to an
-`MsBackendOfflineSql` we need to provide the connection information to the SQL
-database as additional parameters. These parameters are the same that need to
-be passed to a `dbConnect()` call to establish the connection to the
-database. These parameters include the database driver (parameter `drv`), the
-database name and eventually the user name, host etc (see `?dbConnect` for more
-information). In the simple example below we store the data into a SQLite
-database and thus only need to provide the database name, which corresponds
-SQLite database file. In our example we store the data into a temporary
-file.
+`MsBackendOfflineSql` (or `MsBackendSql`) in which case a new database is
+created and all data from the originating backend is stored in this database. To
+change the backend to an `MsBackendOfflineSql` we need to provide the connection
+information to the SQL database as additional parameters. These parameters are
+the same that need to be passed to a `dbConnect()` call to establish the
+connection to the database. These parameters include the database driver
+(parameter `drv`), the database name and eventually the user name, host etc (see
+`?dbConnect` for more information). In the simple example below we store the
+data into a SQLite database and thus only need to provide the database name,
+which corresponds SQLite database file. In our example we store the data into a
+temporary file. Optionally, `setBackend()` supports also the parameters `blob`
+and `peaksDataStorage` described above for the `createMsBackendSqlDatabase()`
+function.
 
 ```{r, warnings = FALSE}
 sps2 <- setBackend(sps_mem, MsBackendOfflineSql(), drv = SQLite(),
@@ -144,7 +148,7 @@ sps2
 Similar to any other `Spectra` object we can retrieve the available *spectra
 variables* using the `spectraVariables()` function.
 
-```{r}
+```{r spectraVariables}
 spectraVariables(sps)
 ```
 
@@ -157,7 +161,7 @@ peaksData(sps)[[5]] |>
 head()
 ```
 
-All data (peaks data or spectra variables) are **always** retrieved on the fly
+All data (peaks data or spectra variables) are **always** retrieved on-the-fly
 from the database resulting thus in a minimal memory footprint for the `Spectra`
 object.
 
@@ -201,52 +205,17 @@ initialized with the original data in the database).
 sps <- reset(sps)
 ```
 
-To use the `MsBackendOfflineSql` backend we need to provide all information
-required to connect to the database along with the *database driver* to the
-`Spectra` function. Which parameters are required to connect to the database
-depends on the SQL database and the used driver. In our example the data is
-stored in a SQLite database, hence we use the `SQLite()` database driver and
-only need to provide the database name with the `dbname` parameter. For a
-MySQL/MariaDB database we would use the `MariaDB()` driver and would have to
-provide the database name, user name, password as well as the host name and port
-through which the database is accessible.
-
-```{r}
-sps_off <- Spectra(dbfile, drv = SQLite(),
-                   source = MsBackendOfflineSql())
-sps_off
-```
-
-This backend provides the exact same functionality than `MsBackendSql` with the
-difference that the connection to the database is opened and closed for each
-function call. While this leads to a slightly lower performance, it allows to to
-serialize the object (i.e. save/load the object to/from disk) and to use it (and
-hence the `Spectra` object) also in a parallel processing setup. In contrast,
-for the `MsBackendSql` parallel processing is disabled since it is not possible
-to share the active backend connection within the object across different
-parallel processes.
-
-Below we compare the performance of the two backends. The performance difference
-is the result from opening and closing the database connection for each
-call. Note that this will also depend on the SQL server that is being used. For
-SQLite databases there is almost no overhead.
-
-```{r}
-library(microbenchmark)
-microbenchmark(msLevel(sps), msLevel(sps_off))
-```
-
 
 # Performance comparison with other backends
 
-The need to retrieve any spectra data on-the-fly from the database will have an
-impact on the performance of data access function of `Spectra` objects using the
-`MsBackendSql` backends. To evaluate its impact we next compare the performance
-of the `MsBackendSql` to other `Spectra` backends, specifically, the
-`MsBackendMzR` which is the default backend to read and represent raw MS data,
-and the `MsBackendMemory` backend that keeps all MS data in memory (and is thus
-not suggested for larger MS experiments). Similar to the `MsBackendMzR`, also
-the `MsBackendSql` keeps only a limited amount of data in memory. These
+The need to retrieve any spectra data on-the-fly from the database has an impact
+on the performance of data access functions of `Spectra` objects using
+`MsBackendSql`/`MsBackendOfflineSql` backends. To evaluate this we compare below
+the performance of the `MsBackendSql` to other `Spectra` backends, specifically,
+the `MsBackendMzR` which is the default backend to read and represent raw MS
+data, and the `MsBackendMemory` backend that keeps all MS data in memory (and is
+thus not suggested for larger MS experiments). Similar to the `MsBackendMzR`,
+also the `MsBackendSql` keeps only a limited amount of data in memory. These
 *on-disk* backends need thus to retrieve spectra and MS peaks data on-the-fly
 from either the original raw data files (in the case of the `MsBackendMzR`) or
 from the SQL database (in the case of the `MsBackendSql`). The in-memory backend
@@ -257,6 +226,7 @@ Below we thus create `Spectra` objects from the same data but using the
 different backends.
 
 ```{r}
+con <- dbConnect(SQLite(), dbfile)
 sps <- Spectra(con, source = MsBackendSql())
 sps_mzr <- Spectra(fls, source = MsBackendMzR())
 sps_im <- setBackend(sps_mzr, backend = MsBackendMemory())
@@ -296,7 +266,8 @@ We next compare the performance to access the full peaks data from each
 ```{r}
 microbenchmark(peaksData(sps, BPPARAM = SerialParam()),
                peaksData(sps_mzr, BPPARAM = SerialParam()),
-               peaksData(sps_im, BPPARAM = SerialParam()), times = 10)
+               peaksData(sps_im, BPPARAM = SerialParam()),
+               times = 10)
 ```
 
 As expected, the `MsBackendMemory` has the fasted access to the full peaks
@@ -312,7 +283,8 @@ as `peaksData()`.
 m2 <- MulticoreParam(2)
 microbenchmark(peaksData(sps, BPPARAM = m2),
                peaksData(sps_mzr, BPPARAM = m2),
-               peaksData(sps_im, BPPARAM = m2), times = 10)
+               peaksData(sps_im, BPPARAM = m2),
+               times = 10)
 ```
 
 We next compare the performance of subsetting operations.

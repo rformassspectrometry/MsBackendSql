@@ -152,7 +152,7 @@ setMethod("backendInitialize", "MsBackendOfflineSql",
                   dbc <- dbConnect(drv, dbname = dbname, user = user,
                                    password = password, host = host,
                                    port = port)
-              object <- callNextMethod(object, dbcon = dbc, data = data)
+              object <- callNextMethod(object, dbcon = dbc, data = data, ...)
               .db_disconnect(object)
               object
 })
@@ -163,6 +163,18 @@ setMethod("dataStorage", "MsBackendOfflineSql",
               on.exit(.db_disconnect(object))
               callNextMethod()
           })
+
+setMethod("intensity", "MsBackendOfflineSql", function(object) {
+    object@dbcon <- .db_connect(object)
+    on.exit(.db_disconnect(object))
+    callNextMethod()
+})
+
+setMethod("mz", "MsBackendOfflineSql", function(object) {
+    object@dbcon <- .db_connect(object)
+    on.exit(.db_disconnect(object))
+    callNextMethod()
+})
 
 setMethod("peaksData", "MsBackendOfflineSql",
           function(object, columns = c("mz", "intensity")) {
