@@ -1,5 +1,9 @@
 # MsBackendSql 1.7
 
+## Changes in 1.7.4
+
+- Fix handling of parameter `msLevel.` in `filterRt()`.
+
 ## Changes in 1.7.3
 
 - Add new peaks data storage mode *blob2* which stores the full peaks matrix

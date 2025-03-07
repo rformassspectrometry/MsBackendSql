@@ -702,12 +702,18 @@ setMethod(
 #'
 #' @exportMethod filterRt
 setMethod("filterRt", "MsBackendSql", function(object, rt = numeric(),
-                                              msLevel. = integer()) {
+                                               msLevel. = integer()) {
     if (!length(rt) || all(is.infinite(rt)))
         return(object)
     rt <- range(rt)
-    if (.has_local_variable(object, c("msLevel", "rtime")) |
-        (.has_local_variable(object, "msLevel") & length(msLevel.))) {
+    if (.has_local_variable(object, "rtime") |
+        (length(msLevel.) && .has_local_variable(object, "msLevel"))) {
+        if (length(msLevel.)) {
+            if (!.has_local_variable(object, "msLevel"))
+                object$msLevel <- object$msLevel
+        }
+        if (!.has_local_variable(object, "rtime"))
+            object$rtime <- object$rtime
         callNextMethod()
     } else {
         if (rt[1L] == -Inf)
