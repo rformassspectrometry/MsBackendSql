@@ -702,30 +702,40 @@ setMethod(
 #'
 #' @exportMethod filterRt
 setMethod("filterRt", "MsBackendSql", function(object, rt = numeric(),
-                                              msLevel. = integer()) {
+                                               msLevel. = integer()) {
     if (!length(rt) || all(is.infinite(rt)))
         return(object)
     rt <- range(rt)
-    if (.has_local_variable(object, c("msLevel", "rtime")) |
-        (.has_local_variable(object, "msLevel") & length(msLevel.))) {
-        callNextMethod()
-    } else {
-        if (rt[1L] == -Inf)
-            rt[1L] <- -1e12
-        if (rt[2L] == Inf)
-            rt[2L] <- 1e12
-        if (length(msLevel.)) {
-            msl <- stri_c(msLevel., collapse = ",")
-            qry <- stri_c(.id_query(object),
-                          "(rtime >= ", rt[1L], " and rtime <= ", rt[2L],
-                          " and msLevel in (", msl, ")) or msLevel not in (",
-                          msl, ")")
-        } else {
-            qry <- stri_c(.id_query(object),
-                          "rtime >= ", rt[1L], " and rtime <= ", rt[2L], "")
-        }
-        .subset_query(object, qry)
+    ## If rtime and or MS level are locally cached we need to use these for
+    ## the filter instead of the SQL call
+    if (.has_local_variable(object, "rtime")) {
+        ## Ensure also MS level is loaded from SQL to cache.
+        if (length(msLevel.) && .has_local_variable(object, "msLevel"))
+            object$msLevel <- msLevel(object)
+        return(callNextMethod())
     }
+    if (length(msLevel.) && .has_local_variable(object, "msLevel")) {
+        ## If rtime is missing, load that also from SQL to the cache.
+        if (!.has_local_variable(object, "rtime"))
+            object$rtime <- rtime(object)
+        return(callNextMethod())
+    }
+    ## Continue with SQL call
+    if (rt[1L] == -Inf)
+        rt[1L] <- -1e12
+    if (rt[2L] == Inf)
+        rt[2L] <- 1e12
+    if (length(msLevel.)) {
+        msl <- stri_c(msLevel., collapse = ",")
+        qry <- stri_c(.id_query(object),
+                      "(rtime >= ", rt[1L], " and rtime <= ", rt[2L],
+                      " and msLevel in (", msl, ")) or msLevel not in (",
+                      msl, ")")
+    } else {
+        qry <- stri_c(.id_query(object),
+                      "rtime >= ", rt[1L], " and rtime <= ", rt[2L], "")
+    }
+    .subset_query(object, qry)
 })
 
 #' @importMethodsFrom ProtGenerics filterDataOrigin dataOrigin

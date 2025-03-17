@@ -251,7 +251,8 @@ test_that("filterRt,MsBackendSql works", {
     res <- filterRt(tmp, rt = c(10, 20), msLevel. = 3)
     res_3 <- filterMsLevel(res, 3)
     expect_true(all(rtime(res_3) >= 10 & rtime(res_3) <= 20))
-    expect_equal(filterMsLevel(res, c(1, 2)), filterMsLevel(tmp, c(1, 2)))
+    expect_equal(rtime(filterMsLevel(res, c(1, 2))),
+                 rtime(filterMsLevel(tmp, c(1, 2))))
 
     ## TMT
     res <- filterRt(tmt_be, rt = c(200, 210), msLevel. = 2)
@@ -264,6 +265,27 @@ test_that("filterRt,MsBackendSql works", {
     res2_1 <- filterMsLevel(res2, 1)
     expect_true(all(rtime(res2_1) >= 205 & rtime(res2_1) <= 210))
     expect_equal(filterMsLevel(res2, 2), filterMsLevel(res, 2))
+
+    ## With local cache.
+    tmp <- tmt_be
+    ref <- filterRt(tmp, rt = c(200, 210))
+    expect_true(all(rtime(ref) >= 200 & rtime(ref) <= 210))
+    res <- filterRt(tmp, rt = c(200, 210), msLevel. = 1:2)
+    expect_equal(rtime(ref), rtime(res))
+    res <- filterRt(tmp, rt = c(200, 210), msLevel. = integer())
+    expect_equal(rtime(ref), rtime(res))
+
+    tmp$rtime <- rtime(tmp)
+    res <- filterRt(tmp, rt = c(200, 210), msLevel. = integer())
+    expect_equal(rtime(ref), rtime(res))
+    res <- filterRt(tmp, rt = c(200, 210), msLevel. = 1:2)
+    expect_equal(rtime(ref), rtime(res))
+
+    tmp$msLevel <- msLevel(tmp)
+    res <- filterRt(tmp, rt = c(200, 210), msLevel. = integer())
+    expect_equal(rtime(ref), rtime(res))
+    res <- filterRt(tmp, rt = c(200, 210), msLevel. = 1:2)
+    expect_equal(rtime(ref), rtime(res))
 })
 
 test_that("filterDataOrigin works", {

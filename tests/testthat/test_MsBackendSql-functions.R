@@ -414,9 +414,9 @@ test_that(".combine works", {
 test_that(".initialize_tables works", {
     a <- new("DummySQL")
     .initialize_tables(a, cols = c(a = "TEXT"))
-    with_mock(
-        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
-        .initialize_tables(a, cols = c(a = "TEXT"))
+    with_mocked_bindings(
+        ".is_maria_db" = function(x) TRUE,
+        code = .initialize_tables(a, cols = c(a = "TEXT"))
     )
 })
 
@@ -426,21 +426,28 @@ test_that(".initialize_tables_sql works", {
     expect_equal(res[[2L]], paste0("CREATE TABLE msms_spectrum_peak (mz ",
                                    "DOUBLE, intensity REAL, spectrum_id_ ",
                                    "INTEGER);"))
-    with_mock(
-        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
-        res <- .initialize_tables_sql(3, c("a", "b"))
+    with_mocked_bindings(
+        ".is_maria_db" = function(x) TRUE,
+        code = {
+            res <- .initialize_tables_sql(3, c("a", "b"))
+        }
     )
     expect_match(res[[1L]], "ENGINE=ARIA;")
     expect_match(res[[2L]], "ENGINE=ARIA;")
-    with_mock(
-        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
-        res <- .initialize_tables_sql(3, c("a", "b"), partitionBy = "spectrum")
+    with_mocked_bindings(
+        ".is_maria_db" = function(x) TRUE,
+        code = {
+            res <- .initialize_tables_sql(
+                3, c("a", "b"), partitionBy = "spectrum")
+        }
     )
     expect_match(res[[2L]], "ENGINE=ARIA PARTITION BY HASH (spectrum_id_",
                  fixed = TRUE)
-    with_mock(
-        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
-        res <- .initialize_tables_sql(3, c("a", "b"), partitionBy = "chunk")
+    with_mocked_bindings(
+        ".is_maria_db" = function(x) TRUE,
+        code = {
+            res <- .initialize_tables_sql(3, c("a", "b"), partitionBy = "chunk")
+        }
     )
     expect_match(res[[2L]], "ENGINE=ARIA PARTITION BY HASH (partition_",
                  fixed = TRUE)
@@ -448,9 +455,9 @@ test_that(".initialize_tables_sql works", {
 
 test_that(".load_data_file works", {
     d <- data.frame(a = 1:4, b = TRUE, c = FALSE, d = 5)
-    with_mock(
+    with_mocked_bindings(
         "dbExecute" = function(...) TRUE,
-        expect_true(.load_data_file(3, d))
+        code = expect_true(.load_data_file(3, d))
     )
 })
 
@@ -498,23 +505,29 @@ test_that(".initialize_tables_blob_sql works", {
     expect_equal(res[[2L]], paste0("CREATE TABLE msms_spectrum_peak_blob (mz ",
                                    "MEDIUMBLOB, intensity MEDIUMBLOB, ",
                                    "spectrum_id_ INTEGER);"))
-    with_mock(
-        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
-        res <- .initialize_tables_blob_sql(3, c("a", "b"))
+    with_mocked_bindings(
+        ".is_maria_db" = function(x) TRUE,
+        code = {
+            res <- .initialize_tables_blob_sql(3, c("a", "b"))
+        }
     )
     expect_match(res[[1L]], "ENGINE=ARIA;")
     expect_match(res[[2L]], "ENGINE=ARIA;")
-    with_mock(
-        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
-        res <- .initialize_tables_blob_sql(3, c("a", "b"),
-                                           partitionBy = "spectrum")
+    with_mocked_bindings(
+        ".is_maria_db" = function(x) TRUE,
+        code = {
+            res <- .initialize_tables_blob_sql(3, c("a", "b"),
+                                               partitionBy = "spectrum")
+        }
     )
     expect_match(res[[2L]], "ENGINE=ARIA PARTITION BY HASH (spectrum_id_",
                  fixed = TRUE)
-    with_mock(
-        "MsBackendSql:::.is_maria_db" = function(x) TRUE,
-        res <- .initialize_tables_blob_sql(3, c("a", "b"),
-                                           partitionBy = "chunk")
+    with_mocked_bindings(
+        ".is_maria_db" = function(x) TRUE,
+        code = {
+            res <- .initialize_tables_blob_sql(3, c("a", "b"),
+                                               partitionBy = "chunk")
+        }
     )
     expect_match(res[[2L]], "ENGINE=ARIA PARTITION BY HASH (partition_",
                  fixed = TRUE)

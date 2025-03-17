@@ -209,7 +209,8 @@ test_that("filterRt,MsBackendOfflineSql works", {
     res <- filterRt(tmp, rt = c(10, 20), msLevel. = 3)
     res_3 <- filterMsLevel(res, 3)
     expect_true(all(rtime(res_3) >= 10 & rtime(res_3) <= 20))
-    expect_equal(filterMsLevel(res, c(1, 2)), filterMsLevel(tmp, c(1, 2)))
+    expect_equal(rtime(filterMsLevel(res, c(1, 2))),
+                 rtime(filterMsLevel(tmp, c(1, 2))))
     expect_false(dbIsValid(res@dbcon))
 })
 
