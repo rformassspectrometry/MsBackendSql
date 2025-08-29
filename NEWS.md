@@ -1,3 +1,9 @@
+# MsBackendSql 1.9
+
+## Changes in 1.9.1
+
+- Add support for *blob2* storage mode for *duckdb* databases.
+
 # MsBackendSql 1.7
 
 ## Changes in 1.7.4

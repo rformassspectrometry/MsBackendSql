@@ -206,7 +206,58 @@ sps <- reset(sps)
 ```
 
 
-# Performance comparison with other backends
+# Performance considerations
+
+## Database systems and data storage modes
+
+The performance of storing and retrieving MS data from an `MsBackendSql`
+respectively SQL database can also depend on the type of database used as well
+as storage modes and the database layout used by `MsBackendSql`.
+
+### Database systems
+
+Performance comparison have been made for small and large data sets using
+different SQL database systems and *MsBackendSql* has been optimized based on
+these results. For *MariaDB* database systems, for example, the
+[Aria](https://mariadb.com/docs/server/server-usage/storage-engines/aria)
+storage engine is used by default as it has considerable advantages over other
+MariaDB engines.
+
+Performance of *MariaDB* and *SQLite* is comparable, even for very large data
+sets/databases. See this [GitHub
+issue](https://github.com/rformassspectrometry/MsBackendSql/issues/15) for
+performance comparison between MariaDB and SQLite.
+
+Performance evaluation of *SQLite* and *duckdb* are provided in this [GitHub
+issue](https://github.com/rformassspectrometry/MsBackendSql/issues/26).
+*MsBackendSql* long format database layout (see next section for details on
+available database layouts) with *duckdb* is clearly faster than with
+*SQLite*. For the *blob2* database layout *SQLite* has advantages. Also,
+extracting individual spectra variables or filtering by e.g. retention time is
+slower for *duckdb*.
+
+
+### *MsBackendSql* database layouts/storage modes
+
+*MsBackendSql* defines different database table layouts and hence ways to store
+the MS data. The most intuitive way to store MS data would be the *long* format
+(`peaksStorageMode = "long"`) which saves the *m/z* and intensity values of each
+mass peak as a single row. While this would allow to filter e.g. the peaks data
+by *m/z* and/or intensity values already on the SQL level, it significantly
+increases the size of the database. This is in particular true for
+*SQLite*-based databases. The default storage mode (`peaksStorageMode
+= "blob2"`) stores the complete peaks matrix (i.e. the two-column numerical
+matrix of *m/z* and intensity values) of spectrum as one entity to the
+database. This entry is stored as a binary data type (BLOB) in the database
+table (one row per spectrum). This reduces the size of the database and  well
+as the time to extract (peaks) data. On the downside, such databases will only
+be readable and usable with *MsBackendSql*.
+
+For *MsBackendSql* in the *long* peaks storage mode it is suggested to use
+*duckdb* as database backend.
+
+
+## Performance comparison with other backends
 
 The need to retrieve any spectra data on-the-fly from the database has an impact
 on the performance of data access functions of `Spectra` objects using

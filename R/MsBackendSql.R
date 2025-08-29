@@ -698,6 +698,10 @@ setMethod(
 
 #' @importMethodsFrom ProtGenerics filterRt
 #'
+#' @importMethodsFrom ProtGenerics msLevel
+#'
+#' @importMethodsFrom ProtGenerics rtime
+#'
 #' @rdname MsBackendSql
 #'
 #' @exportMethod filterRt
