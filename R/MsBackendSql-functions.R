@@ -263,9 +263,22 @@ MsBackendSql <- function() {
     res <- dbExecute(con, sql[[2L]])
 }
 
+#' Define the type of BLOB we can use - depends on what the database supports.
+#'
+#' @noRd
+.blob_type <- function(con) {
+    if (.is_duckdb(con)) "BLOB"
+    else "MEDIUMBLOB"
+}
+
+.is_duckdb <- function(x) {
+    inherits(x, "duckdb_connection")
+}
+
 .initialize_tables_blob_sql <-
     function(con, cols, partitionBy = "none", partitionNumber = 10,
-             peaks_sql = "mz MEDIUMBLOB, intensity MEDIUMBLOB",
+             peaks_sql = paste0("mz ", .blob_type(con),
+                                ", intensity ", .blob_type(con)),
              peaks_table = "msms_spectrum_peak_blob") {
         sql_a <- stri_c("CREATE TABLE msms_spectrum (",
                         stri_c(names(cols), cols, sep = " ", collapse = ", "),
@@ -296,9 +309,10 @@ MsBackendSql <- function() {
 
 .initialize_tables_blob2 <- function(con, cols, partitionBy = "none",
                                      partitionNumber = 10) {
-    sql <- .initialize_tables_blob_sql(con, cols, partitionBy, partitionNumber,
-                                       peaks_sql = "peaks MEDIUMBLOB",
-                                       peaks_table = "msms_spectrum_peak_blob2")
+    sql <- .initialize_tables_blob_sql(
+        con, cols, partitionBy, partitionNumber,
+        peaks_sql = paste0("peaks ", .blob_type(con)),
+        peaks_table = "msms_spectrum_peak_blob2")
     res <- dbExecute(con, sql[[1L]])
     res <- dbExecute(con, sql[[2L]])
 }
@@ -628,14 +642,17 @@ MsBackendSql <- function() {
         message(".", appendLF = FALSE)
     }
     ## create remaining indices
-    res <- dbExecute(con, stri_c("CREATE INDEX spectrum_rtime on ",
-                                  "msms_spectrum (rtime)"))
-    message(".", appendLF = FALSE)
-    res <- dbExecute(con, stri_c("CREATE INDEX spectrum_precursor_mz on ",
-                                  "msms_spectrum (precursorMz)"))
-    message(".", appendLF = FALSE)
-    res <- dbExecute(con, stri_c("CREATE INDEX spectrum_ms_level on ",
-                                  "msms_spectrum (msLevel)"))
+    ## No need to explicitely create indices for numeric columns for duckdb
+    if (!.is_duckdb(con)) {
+        res <- dbExecute(con, stri_c("CREATE INDEX spectrum_rtime on ",
+                                     "msms_spectrum (rtime)"))
+        message(".", appendLF = FALSE)
+        res <- dbExecute(con, stri_c("CREATE INDEX spectrum_precursor_mz on ",
+                                     "msms_spectrum (precursorMz)"))
+        message(".", appendLF = FALSE)
+        res <- dbExecute(con, stri_c("CREATE INDEX spectrum_ms_level on ",
+                                     "msms_spectrum (msLevel)"))
+    }
     message(" Done")
     TRUE
 }
@@ -652,7 +669,7 @@ createMsBackendSqlDatabase <-
              partitionBy = c("none", "spectrum", "chunk"),
              partitionNumber = 10L) {
         if (!blob) peaksStorageMode <- "long"
-        peaksStorageMode = match.arg(peaksStorageMode)
+        peaksStorageMode <- match.arg(peaksStorageMode)
         partitionBy <- match.arg(partitionBy)
         if (!length(x)) return(FALSE)
         if (!inherits(dbcon, "DBIConnection"))

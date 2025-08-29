@@ -369,6 +369,18 @@ test_that(".is_maria_db works", {
     expect_false(.is_maria_db(10))
 })
 
+test_that(".is_duckdb works", {
+    expect_false(.is_duckdb(10))
+})
+
+test_that(".blob_type works", {
+    expect_equal(.blob_type("a"), "MEDIUMBLOB")
+    with_mocked_bindings(
+        ".is_duckdb" = function(x) TRUE,
+        code = expect_equal(.blob_type("a"), "BLOB")
+    )
+})
+
 test_that(".precursor_mz_query works", {
     res <- .precursor_mz_query(10, ppm = 0, tolerance = 0.1)
     expect_equal(res, "precursorMz >= 9.9 and precursorMz <= 10.1")
@@ -653,4 +665,39 @@ test_that(".drop_na_columns works", {
     tmp$d <- 9
     res <- .drop_na_columns(tmp)
     expect_equal(res, tmp)
+})
+
+test_that("MsBackendSql works with duckdb", {
+    ## only execute if duckdb is available.
+    if (require("duckdb", quietly = TRUE)) {
+        ## long format
+        db_file <- tempfile()
+        db <- dbConnect(duckdb(), db_file)
+        MsBackendSql:::.insert_data(db, mm8_file, storage = "long")
+        res <- dbListTables(db)
+        expect_equal(res, c("msms_spectrum", "msms_spectrum_peak"))
+        tmp <- backendInitialize(MsBackendSql(), dbcon = db)
+        expect_equal(rtime(tmp), rtime(mm8_sps))
+        expect_equal(centroided(tmp), centroided(mm8_sps))
+        expect_equal(msLevel(tmp), msLevel(mm8_sps))
+        expect_equal(mz(tmp), mz(mm8_sps))
+        expect_equal(intensity(tmp), intensity(mm8_sps))
+        dbDisconnect(db)
+        file.remove(db_file)
+
+        ## blob2
+        db_file <- tempfile()
+        db <- dbConnect(duckdb(), db_file)
+        MsBackendSql:::.insert_data(db, mm8_file, storage = "blob2")
+        res <- dbListTables(db)
+        expect_equal(res, c("msms_spectrum", "msms_spectrum_peak_blob2"))
+        tmp <- backendInitialize(MsBackendSql(), dbcon = db)
+        expect_equal(rtime(tmp), rtime(mm8_sps))
+        expect_equal(centroided(tmp), centroided(mm8_sps))
+        expect_equal(msLevel(tmp), msLevel(mm8_sps))
+        expect_equal(mz(tmp), mz(mm8_sps))
+        expect_equal(intensity(tmp), intensity(mm8_sps))
+        dbDisconnect(db)
+        file.remove(db_file)
+    }
 })
