@@ -342,3 +342,17 @@ test_that("filterRt,MsBackendOfflineSql works properly", {
     expect_output(show(ref), "MsBackendMzR")
     expect_output(show(res), "MsBackendOfflineSql")
 })
+
+test_that("longForm,MsBackendOfflineSql works", {
+    tmp <- backendInitialize(MsBackendOfflineSql(), SQLite(),
+                             dbname = dbGetInfo(mm8_db_long)$dbname)
+    res <- longForm(tmp, c("msLevel", "scanIndex", "rtime"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("msLevel", "scanIndex", "rtime"))
+    expect_equal(res$scanIndex, tmp$scanIndex)
+
+    res <- longForm(tmp, c("intensity", "scanIndex", "rtime"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("intensity", "scanIndex", "rtime"))
+    expect_equal(res$intensity, unlist(tmp$intensity))
+})

@@ -4,6 +4,16 @@ test_that("backendInitialize works", {
                  "connection")
 
     be <- backendInitialize(MsBackendSql(), dbcon = mm8_db_long)
+    expect_true(length(be@.tables) == 2)
+    expect_equal(names(be@.tables), c("msms_spectrum", "msms_spectrum_peak"))
+    be <- backendInitialize(MsBackendSql(), dbcon = mm8_db_blob)
+    expect_true(length(be@.tables) == 2)
+    expect_equal(names(be@.tables),
+                 c("msms_spectrum", "msms_spectrum_peak_blob"))
+    be <- backendInitialize(MsBackendSql(), dbcon = mm8_db_blob2)
+    expect_true(length(be@.tables) == 2)
+    expect_equal(names(be@.tables),
+                 c("msms_spectrum", "msms_spectrum_peak_blob2"))
 
     ## backendInitialize creating a new database.
     expect_warning(
@@ -480,4 +490,175 @@ test_that("intensity,MsBackendSql works", {
 
     expect_equal(intensity(MsBackendSql()),
                  IRanges::NumericList(compress = FALSE))
+})
+
+test_that("longForm,MsBackendSql works", {
+    ref_longForm <- getMethod("longForm", "MsBackend")
+    tmp <- mm8_be_long
+    expect_error(longForm(tmp, columns = c("msLevel", "intensity", "other")),
+                 "Columns 'other' not available")
+    ## only peak variables
+    res <- longForm(tmp, columns = c("intensity", "mz"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("intensity", "mz"))
+    ref <- ref_longForm(tmp, columns = c("intensity", "mz"))
+    expect_equal(res, ref)
+
+    ## only spectra variables
+    res <- longForm(tmp, columns = c("msLevel", "rtime", "scanIndex"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("msLevel", "rtime", "scanIndex"))
+    ref <- ref_longForm(tmp, columns = c("msLevel", "rtime", "scanIndex"))
+    expect_equal(res, ref)
+
+    ## peaks and spectra variables
+    res <- longForm(tmp, columns = c("rtime", "intensity"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("rtime", "intensity"))
+    ref <- ref_longForm(tmp, columns = c("rtime", "intensity"))
+    expect_equal(res, ref)
+
+    ## arbitrary order
+    idx <- c(4, 1, 14, 19, 8)
+    tmp <- mm8_be_long[idx]
+    ## only peak variables
+    res <- longForm(tmp, columns = c("intensity", "mz"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("intensity", "mz"))
+    ref <- ref_longForm(tmp, columns = c("intensity", "mz"))
+    expect_equal(res, ref)
+
+    ## only spectra variables
+    res <- longForm(tmp, columns = c("msLevel", "rtime", "scanIndex"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("msLevel", "rtime", "scanIndex"))
+    ref <- ref_longForm(tmp, columns = c("msLevel", "rtime", "scanIndex"))
+    expect_equal(res, ref)
+
+    ## spectra and peak variables
+    res <- longForm(tmp, columns = c("rtime", "msLevel", "intensity"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("rtime", "msLevel", "intensity"))
+    ref <- ref_longForm(tmp, columns = c("rtime", "msLevel", "intensity"))
+    expect_equal(res, ref)
+
+    ## duplicates
+    idx <- c(4, 1, 4, 1, 8)
+    tmp <- mm8_be_long[idx]
+    ## only peak variables
+    res <- longForm(tmp, columns = c("intensity", "mz"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("intensity", "mz"))
+    ref <- ref_longForm(tmp, columns = c("intensity", "mz"))
+    expect_equal(res, ref)
+
+    ## only spectra variables
+    res <- longForm(tmp, columns = c("msLevel", "rtime", "scanIndex"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("msLevel", "rtime", "scanIndex"))
+    ref <- ref_longForm(tmp, columns = c("msLevel", "rtime", "scanIndex"))
+    expect_equal(res, ref)
+
+    ## spectra and peak variables
+    res <- longForm(tmp, columns = c("rtime", "msLevel", "intensity"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("rtime", "msLevel", "intensity"))
+    ref <- ref_longForm(tmp, columns = c("rtime", "msLevel", "intensity"))
+    expect_equal(res, ref)
+
+    ## With local data
+    tmp <- mm8_be_long
+    tmp$rtime <- tmp$rtime + 100
+    tmp$msLevel <- tmp$msLevel + 2L
+
+    ## only local data
+    res <- longForm(tmp, c("rtime"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), "rtime")
+    ref <- ref_longForm(tmp, c("rtime"))
+    expect_equal(res, ref)
+
+    ## local data with peaks variables
+    res <- longForm(tmp, c("msLevel", "intensity"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("msLevel", "intensity"))
+    ref <- ref_longForm(tmp, c("msLevel", "intensity"))
+    expect_equal(res, ref)
+    expect_true(all(res$msLevel == 3L))
+
+    ## local data with spectra variables
+    res <- longForm(tmp, c("msLevel", "rtime", "scanIndex"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("msLevel", "rtime", "scanIndex"))
+    ref <- ref_longForm(tmp, c("msLevel", "rtime", "scanIndex"))
+    expect_equal(res, ref)
+
+    ## Local data in arbitrary order with duplicates
+    idx <- c(8, 1, 13, 27, 1, 4, 8)
+    tmp <- tmp[idx]
+
+    ## only local data
+    res <- longForm(tmp, c("rtime"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), "rtime")
+    ref <- ref_longForm(tmp, c("rtime"))
+    rownames(ref) <- NULL
+    expect_equal(ref, res)
+    expect_equal(res$rtime, tmp$rtime)
+
+    ## local data with peaks variables
+    res <- longForm(tmp, c("rtime", "intensity", "mz"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("rtime", "intensity", "mz"))
+    ref <- ref_longForm(tmp, c("rtime", "intensity", "mz"))
+    rownames(ref) <- NULL
+    expect_equal(ref, res)
+
+    ## local data with spectra variables
+    res <- longForm(tmp, c("scanIndex", "rtime", "msLevel"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("scanIndex", "rtime", "msLevel"))
+    ref <- ref_longForm(tmp, c("scanIndex", "rtime", "msLevel"))
+    rownames(ref) <- NULL
+    expect_equal(ref, res)
+    expect_equal(res$scanIndex, tmp$scanIndex)
+
+    ## local data with spectra and peaks variables
+    res <- longForm(tmp, c("mz", "scanIndex", "rtime", "msLevel"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("mz", "scanIndex", "rtime", "msLevel"))
+    ref <- ref_longForm(tmp, c("mz", "scanIndex", "rtime", "msLevel"))
+    rownames(ref) <- NULL
+    expect_equal(ref, res)
+})
+
+test_that("longForm,MsBackendSql works with blob database", {
+    res <- longForm(mm8_be_blob, c("msLevel", "scanIndex"))
+    expect_equal(res$scanIndex, mm8_be_blob$scanIndex)
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("msLevel", "scanIndex"))
+
+    res_2 <- longForm(mm8_be_blob, c("scanIndex", "mz"))
+    expect_true(nrow(res_2) > nrow(res))
+    expect_true(is.data.frame(res_2))
+    expect_equal(colnames(res_2), c("scanIndex", "mz"))
+})
+
+test_that("longForm,MsBackendSql works with offline connection", {
+    tmp <- backendInitialize(MsBackendOfflineSql(), SQLite(),
+                             dbname = dbGetInfo(mm8_db_long)$dbname)
+    res <- longForm(tmp, c("msLevel", "scanIndex", "rtime"))
+
+    ## blob database -> call default implementation
+    tmp <- backendInitialize(MsBackendOfflineSql(), SQLite(),
+                             dbname = dbGetInfo(mm8_db_blob)$dbname)
+    res <- longForm(tmp, c("msLevel", "scanIndex", "rtime"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("msLevel", "scanIndex", "rtime"))
+    expect_equal(res$scanIndex, tmp$scanIndex)
+
+    res <- longForm(tmp, c("mz", "rtime"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("mz", "rtime"))
+    expect_equal(res$mz, unlist(tmp$mz))
 })

@@ -196,9 +196,50 @@ MsBackendSql <- function() {
                "msms_spectrum where spectrum_id_ in (",
                stri_c(unique(x@spectraIds), collapse = ", ") , ")"))
     idx <- fmatch(x@spectraIds, res$spectrum_id_)
-    res <- res[idx[!is.na(idx)], , drop = FALSE]
+    if (is.unsorted(idx, strictly = TRUE) || anyNA(idx))
+        res <- res[idx[!is.na(idx)], , drop = FALSE]
     rownames(res) <- NULL
     res[, orig_columns, drop = FALSE]
+}
+
+#' Gets the data in *long form* from the database using SQL. This works **ONLY**
+#' if the peaks data is stored in long format (not BLOB)!
+#'
+#' @param x `MsBackendSql` object.
+#'
+#' @param columns `character` with the columns to extract.
+#'
+#' @return `data.frame` with the result. Columns are in the order as `columns`.
+#'
+#' @importFrom S4Vectors findMatches from to
+#'
+#' @noRd
+.fetch_long_form_sql <- function(x, columns = c("spectrum_id_")) {
+    pv <- .available_peaks_variables(x)
+    sv <- setdiff(columns, pv)
+    if (length(sv)) {
+        qry <- stri_c("select ",
+                      stri_c(union("msms_spectrum.spectrum_id_",
+                                   unique(columns)), collapse = ","),
+                      " from msms_spectrum")
+        if (any(pv %in% columns))
+            qry <- stri_c(
+                qry, " join msms_spectrum_peak on ",
+                "(msms_spectrum.spectrum_id_=msms_spectrum_peak.spectrum_id_)")
+        what <- "msms_spectrum.spectrum_id_"
+    } else {
+        qry <- stri_c("select ", stri_c(union("spectrum_id_", unique(columns)),
+                                        collapse = ","),
+                      " from msms_spectrum_peak")
+        what <- "msms_spectrum_peak.spectrum_id_"
+    }
+    qry <- stri_c(qry, " where ", what, " in (",
+                  stri_c(unique(x@spectraIds), collapse = ", ") , ")")
+    res <- dbGetQuery(x@dbcon, qry)
+    m <- findMatches(x@spectraIds, res$spectrum_id_)
+    if (is.unsorted(to(m)))
+        res[to(m), columns, drop = FALSE]
+    else res[, columns, drop = FALSE]
 }
 
 #' Get columns from the msms_spectrum_peak database table (dropping spectrum_id)
@@ -876,4 +917,16 @@ createMsBackendSqlDatabase <-
     if (any(nas))
         x[, !nas, drop = FALSE]
     else x
+}
+
+#' Check the database table names to evaluata whether the database is in
+#' long form.
+#'
+#' @return logical(1)
+#'
+#' @noRd
+.db_is_long_form <- function(x) {
+    if (length(x@.tables)) {
+        any(names(x@.tables) == "msms_spectrum_peak")
+    } else NA
 }
