@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.9.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.9.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function() {
       links[i].target = '_blank';
 });
 </script><p><strong>Package</strong>: <em><a href="https://bioconductor.org/packages/3.22/MsBackendSql" class="external-link">MsBackendSql</a></em><br><strong>Authors</strong>: Johannes Rainer [aut, cre] (ORCID: <a href="https://orcid.org/0000-0002-6977-7147" class="external-link uri">https://orcid.org/0000-0002-6977-7147</a>), Chong Tang
-[ctb], Laurent Gatto [ctb] (ORCID: <a href="https://orcid.org/0000-0002-1520-2268" class="external-link uri">https://orcid.org/0000-0002-1520-2268</a>)<br><strong>Compiled</strong>: Fri Aug 29 12:06:44 2025</p>
+[ctb], Laurent Gatto [ctb] (ORCID: <a href="https://orcid.org/0000-0002-1520-2268" class="external-link uri">https://orcid.org/0000-0002-1520-2268</a>)<br><strong>Compiled</strong>: Tue Oct 7 06:05:04 2025</p>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -185,7 +185,7 @@ which the database is accessible.</p>
 <span><span class="co">## 1862         1          NA         1</span></span>
 <span><span class="co">##  ... 35 more variables/columns.</span></span>
 <span><span class="co">##  Use  'spectraVariables' to list all of them.</span></span>
-<span><span class="co">## Database: /tmp/RtmpfYbBqf/file17da29baa4a1</span></span></code></pre>
+<span><span class="co">## Database: /tmp/RtmpqRnJnZ/file18ec34ffad0d</span></span></code></pre>
 <p><code>Spectra</code> objects allow also to change the backend to any
 other backend (extending <code>MsBackend</code>) using the
 <code><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">setBackend()</a></code> function. Below we use this function to first
@@ -210,7 +210,7 @@ load all data into memory by changing from the
 <span><span class="co">## 1862         1   259.752       931</span></span>
 <span><span class="co">##  ... 35 more variables/columns.</span></span>
 <span><span class="co">## Processing:</span></span>
-<span><span class="co">##  Switch backend from MsBackendOfflineSql to MsBackendMemory [Fri Aug 29 12:06:51 2025]</span></span></code></pre>
+<span><span class="co">##  Switch backend from MsBackendOfflineSql to MsBackendMemory [Tue Oct  7 06:05:10 2025]</span></span></code></pre>
 <p>With this function it is also possible to change from any backend to
 a <code>MsBackendOfflineSql</code> (or <code>MsBackendSql</code>) in
 which case a new database is created and all data from the originating
@@ -248,10 +248,10 @@ the <code><a href="../reference/MsBackendSql.html">createMsBackendSqlDatabase()<
 <span><span class="co">## 1862         1          NA         1</span></span>
 <span><span class="co">##  ... 35 more variables/columns.</span></span>
 <span><span class="co">##  Use  'spectraVariables' to list all of them.</span></span>
-<span><span class="co">## Database: /tmp/RtmpfYbBqf/file17daca047d4</span></span>
+<span><span class="co">## Database: /tmp/RtmpqRnJnZ/file18ec5ce9735b</span></span>
 <span><span class="co">## Processing:</span></span>
-<span><span class="co">##  Switch backend from MsBackendOfflineSql to MsBackendMemory [Fri Aug 29 12:06:51 2025]</span></span>
-<span><span class="co">##  Switch backend from MsBackendMemory to MsBackendOfflineSql [Fri Aug 29 12:06:51 2025]</span></span></code></pre>
+<span><span class="co">##  Switch backend from MsBackendOfflineSql to MsBackendMemory [Tue Oct  7 06:05:10 2025]</span></span>
+<span><span class="co">##  Switch backend from MsBackendMemory to MsBackendOfflineSql [Tue Oct  7 06:05:11 2025]</span></span></code></pre>
 <p>Similar to any other <code>Spectra</code> object we can retrieve the
 available <em>spectra variables</em> using the
 <code><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraVariables()</a></code> function.</p>
@@ -267,14 +267,14 @@ available <em>spectra variables</em> using the
 <span><span class="co">## [15] "isolationWindowLowerMz"   "isolationWindowTargetMz" </span></span>
 <span><span class="co">## [17] "isolationWindowUpperMz"   "peaksCount"              </span></span>
 <span><span class="co">## [19] "totIonCurrent"            "basePeakMZ"              </span></span>
-<span><span class="co">## [21] "basePeakIntensity"        "ionisationEnergy"        </span></span>
-<span><span class="co">## [23] "lowMZ"                    "highMZ"                  </span></span>
-<span><span class="co">## [25] "mergedScan"               "mergedResultScanNum"     </span></span>
-<span><span class="co">## [27] "mergedResultStartScanNum" "mergedResultEndScanNum"  </span></span>
-<span><span class="co">## [29] "injectionTime"            "filterString"            </span></span>
-<span><span class="co">## [31] "spectrumId"               "ionMobilityDriftTime"    </span></span>
-<span><span class="co">## [33] "scanWindowLowerLimit"     "scanWindowUpperLimit"    </span></span>
-<span><span class="co">## [35] "electronBeamEnergy"       "spectrum_id_"</span></span></code></pre>
+<span><span class="co">## [21] "basePeakIntensity"        "electronBeamEnergy"      </span></span>
+<span><span class="co">## [23] "ionisationEnergy"         "lowMZ"                   </span></span>
+<span><span class="co">## [25] "highMZ"                   "mergedScan"              </span></span>
+<span><span class="co">## [27] "mergedResultScanNum"      "mergedResultStartScanNum"</span></span>
+<span><span class="co">## [29] "mergedResultEndScanNum"   "injectionTime"           </span></span>
+<span><span class="co">## [31] "filterString"             "spectrumId"              </span></span>
+<span><span class="co">## [33] "ionMobilityDriftTime"     "scanWindowLowerLimit"    </span></span>
+<span><span class="co">## [35] "scanWindowUpperLimit"     "spectrum_id_"</span></span></code></pre>
 <p>The MS peak data can be accessed using either the <code><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">mz()</a></code>,
 <code><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">intensity()</a></code> or <code><a href="https://rdrr.io/pkg/ProtGenerics/man/peaksData.html" class="external-link">peaksData()</a></code> functions. Below we
 extract the peaks matrix of the 5th spectrum and display the first 6
@@ -295,7 +295,7 @@ thus in a minimal memory footprint for the <code>Spectra</code>
 object.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/object.size.html" class="external-link">object.size</a></span><span class="op">(</span><span class="va">sps</span><span class="op">)</span>, units <span class="op">=</span> <span class="st">"KB"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 114.6 Kb</span></span></code></pre>
+<pre><code><span><span class="co">## 115 Kb</span></span></code></pre>
 <p>The backend supports also adding additional spectra variables or
 changing their values. Below we add 10 seconds to the retention time of
 each spectrum.</p>
@@ -307,7 +307,7 @@ locally within the backend object (in memory). The size in memory of the
 object is thus higher after changing that spectra variable.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/object.size.html" class="external-link">object.size</a></span><span class="op">(</span><span class="va">sps</span><span class="op">)</span>, units <span class="op">=</span> <span class="st">"KB"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 129.2 Kb</span></span></code></pre>
+<pre><code><span><span class="co">## 129.6 Kb</span></span></code></pre>
 <p>Such <code>$&lt;-</code> operations can also be used to
 <em>cache</em> spectra variables (temporarily) in memory which can
 eventually improve performance. Below we test the time it takes to
@@ -317,12 +317,12 @@ timing to extract these cached variable.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">msLevel</a></span><span class="op">(</span><span class="va">sps</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##    user  system elapsed </span></span>
-<span><span class="co">##   0.009   0.000   0.010</span></span></code></pre>
+<span><span class="co">##   0.009   0.001   0.010</span></span></code></pre>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sps</span><span class="op">$</span><span class="va">msLevel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">msLevel</a></span><span class="op">(</span><span class="va">sps</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">msLevel</a></span><span class="op">(</span><span class="va">sps</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##    user  system elapsed </span></span>
-<span><span class="co">##   0.004   0.000   0.004</span></span></code></pre>
+<span><span class="co">##   0.005   0.000   0.005</span></span></code></pre>
 <p>We can also use the <code><a href="https://rdrr.io/pkg/Spectra/man/addProcessing.html" class="external-link">reset()</a></code> function to <em>reset</em>
 the data to its original state (this will cause any local spectra
 variables to be deleted and the backend to be initialized with the
@@ -415,7 +415,7 @@ but using the different backends.</p>
 <p>At first we compare the memory footprint of the 3 backends.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/object.size.html" class="external-link">object.size</a></span><span class="op">(</span><span class="va">sps</span><span class="op">)</span>, units <span class="op">=</span> <span class="st">"KB"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 112.9 Kb</span></span></code></pre>
+<pre><code><span><span class="co">## 113.3 Kb</span></span></code></pre>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/object.size.html" class="external-link">object.size</a></span><span class="op">(</span><span class="va">sps_mzr</span><span class="op">)</span>, units <span class="op">=</span> <span class="st">"KB"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## 401.4 Kb</span></span></code></pre>
@@ -436,10 +436,10 @@ spectrum from the 4 different <code>Spectra</code> objects.</p>
 <span>               <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">msLevel</a></span><span class="op">(</span><span class="va">sps_mzr</span><span class="op">)</span>,</span>
 <span>               <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">msLevel</a></span><span class="op">(</span><span class="va">sps_im</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Unit: microseconds</span></span>
-<span><span class="co">##              expr      min        lq       mean   median       uq      max</span></span>
-<span><span class="co">##      msLevel(sps) 5203.304 5283.6040 5606.03729 5424.122 5836.945 8931.471</span></span>
-<span><span class="co">##  msLevel(sps_mzr)  390.237  410.5555  442.65661  428.559  477.765  645.854</span></span>
-<span><span class="co">##   msLevel(sps_im)   10.900   13.5150   19.65989   21.029   23.359   59.441</span></span>
+<span><span class="co">##              expr      min       lq       mean    median        uq      max</span></span>
+<span><span class="co">##      msLevel(sps) 5085.181 5174.158 5489.48682 5269.3350 5689.1425 9393.565</span></span>
+<span><span class="co">##  msLevel(sps_mzr)  378.496  410.275  444.51747  428.3935  479.8145  637.398</span></span>
+<span><span class="co">##   msLevel(sps_im)   10.580   13.546   19.41776   20.7085   23.0330   61.064</span></span>
 <span><span class="co">##  neval</span></span>
 <span><span class="co">##    100</span></span>
 <span><span class="co">##    100</span></span>
@@ -457,13 +457,13 @@ each <code>Spectra</code> object.</p>
 <span>               times <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Unit: microseconds</span></span>
 <span><span class="co">##                                         expr        min         lq       mean</span></span>
-<span><span class="co">##      peaksData(sps, BPPARAM = SerialParam())  35487.330  42709.336 109737.127</span></span>
-<span><span class="co">##  peaksData(sps_mzr, BPPARAM = SerialParam()) 488073.019 493407.558 538081.858</span></span>
-<span><span class="co">##   peaksData(sps_im, BPPARAM = SerialParam())    337.389    490.384   1876.773</span></span>
-<span><span class="co">##       median         uq       max neval</span></span>
-<span><span class="co">##   45638.6040 255683.941 267273.06    10</span></span>
-<span><span class="co">##  494450.6120 499065.219 714232.89    10</span></span>
-<span><span class="co">##     763.6775    891.361  12799.56    10</span></span></code></pre>
+<span><span class="co">##      peaksData(sps, BPPARAM = SerialParam())  41989.690  45507.800 110142.762</span></span>
+<span><span class="co">##  peaksData(sps_mzr, BPPARAM = SerialParam()) 481351.866 483702.840 534230.180</span></span>
+<span><span class="co">##   peaksData(sps_im, BPPARAM = SerialParam())    336.358    352.667   1748.201</span></span>
+<span><span class="co">##      median         uq       max neval</span></span>
+<span><span class="co">##   47315.024 254533.551 259133.47    10</span></span>
+<span><span class="co">##  490390.028 525455.589 700980.64    10</span></span>
+<span><span class="co">##     553.212    836.029  12525.43    10</span></span></code></pre>
 <p>As expected, the <code>MsBackendMemory</code> has the fasted access
 to the full peaks data. The <code>MsBackendSql</code> outperforms
 however the <code>MsBackendMzR</code> providing faster access to the m/z
@@ -480,28 +480,28 @@ processing is (silently) disabled in functions such as
 <span>               <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/peaksData.html" class="external-link">peaksData</a></span><span class="op">(</span><span class="va">sps_im</span>, BPPARAM <span class="op">=</span> <span class="va">m2</span><span class="op">)</span>,</span>
 <span>               times <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Unit: microseconds</span></span>
-<span><span class="co">##                              expr        min         lq        mean      median</span></span>
-<span><span class="co">##      peaksData(sps, BPPARAM = m2)  36508.944  46401.085  85850.5181  58578.3980</span></span>
-<span><span class="co">##  peaksData(sps_mzr, BPPARAM = m2) 415494.227 455317.960 722067.2484 805750.1230</span></span>
-<span><span class="co">##   peaksData(sps_im, BPPARAM = m2)    415.434    793.789    831.5846    895.4835</span></span>
+<span><span class="co">##                              expr        min        lq        mean      median</span></span>
+<span><span class="co">##      peaksData(sps, BPPARAM = m2)  38031.280  50560.89  59304.3596  60723.2395</span></span>
+<span><span class="co">##  peaksData(sps_mzr, BPPARAM = m2) 417350.245 446474.40 633056.9776 577904.3600</span></span>
+<span><span class="co">##   peaksData(sps_im, BPPARAM = m2)    548.713    799.22    820.2594    857.8295</span></span>
 <span><span class="co">##          uq         max neval</span></span>
-<span><span class="co">##   70944.976  352880.277    10</span></span>
-<span><span class="co">##  819631.259 1094283.621    10</span></span>
-<span><span class="co">##     939.461     989.083    10</span></span></code></pre>
+<span><span class="co">##   64594.938   79493.657    10</span></span>
+<span><span class="co">##  797642.372 1050488.378    10</span></span>
+<span><span class="co">##     913.273     984.126    10</span></span></code></pre>
 <p>We next compare the performance of subsetting operations.</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/microbenchmark/man/microbenchmark.html" class="external-link">microbenchmark</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">filterRt</a></span><span class="op">(</span><span class="va">sps</span>, rt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>               <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">filterRt</a></span><span class="op">(</span><span class="va">sps_mzr</span>, rt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>               <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">filterRt</a></span><span class="op">(</span><span class="va">sps_im</span>, rt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Unit: microseconds</span></span>
-<span><span class="co">##                                expr      min        lq      mean   median</span></span>
-<span><span class="co">##      filterRt(sps, rt = c(50, 100)) 1760.600 1809.5065 2002.3798 1848.118</span></span>
-<span><span class="co">##  filterRt(sps_mzr, rt = c(50, 100)) 1295.594 1351.0020 1499.0492 1404.928</span></span>
-<span><span class="co">##   filterRt(sps_im, rt = c(50, 100))  409.483  445.1995  473.7431  464.360</span></span>
-<span><span class="co">##        uq       max neval</span></span>
-<span><span class="co">##  1897.215 14328.978   100</span></span>
-<span><span class="co">##  1499.830  9122.187   100</span></span>
-<span><span class="co">##   482.489  1038.555   100</span></span></code></pre>
+<span><span class="co">##                                expr      min        lq      mean    median</span></span>
+<span><span class="co">##      filterRt(sps, rt = c(50, 100)) 1735.897 1805.4060 1981.5655 1824.3560</span></span>
+<span><span class="co">##  filterRt(sps_mzr, rt = c(50, 100)) 1266.791 1327.8105 1481.5445 1400.4205</span></span>
+<span><span class="co">##   filterRt(sps_im, rt = c(50, 100))  419.693  442.9005  470.7328  458.9155</span></span>
+<span><span class="co">##         uq       max neval</span></span>
+<span><span class="co">##  1880.1305 14493.453   100</span></span>
+<span><span class="co">##  1481.4725  9294.520   100</span></span>
+<span><span class="co">##   490.1395  1042.293   100</span></span></code></pre>
 <p>The two <em>on-disk</em> backends <code>MsBackendSql</code> and
 <code>MsBackendMzR</code> show a comparable performance for this
 operation. This filtering does involves access to a spectra variables
@@ -521,10 +521,10 @@ we first define the indices of 10 random spectra and subset the
 <span>               <span class="va">sps_mzr</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span>,</span>
 <span>               <span class="va">sps_im</span><span class="op">[</span><span class="va">idx</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Unit: microseconds</span></span>
-<span><span class="co">##          expr     min       lq     mean   median       uq      max neval</span></span>
-<span><span class="co">##      sps[idx] 135.733 142.5855 153.1329 153.5615 160.8700  197.939   100</span></span>
-<span><span class="co">##  sps_mzr[idx] 665.661 696.0970 720.9190 708.1845 726.3530 1577.699   100</span></span>
-<span><span class="co">##   sps_im[idx] 240.989 249.8205 259.9798 259.4090 267.2075  336.677   100</span></span></code></pre>
+<span><span class="co">##          expr     min       lq     mean   median      uq      max neval</span></span>
+<span><span class="co">##      sps[idx] 134.731 143.7480 153.1310 154.4580 159.167  197.448   100</span></span>
+<span><span class="co">##  sps_mzr[idx] 656.695 685.2575 705.7770 695.4415 707.424 1498.955   100</span></span>
+<span><span class="co">##   sps_im[idx] 236.381 245.3625 253.2893 253.4175 257.816  308.044   100</span></span></code></pre>
 <p>Here the <code>MsBackendSql</code> outperforms the other backends
 because it does not keep any data in memory and hence does not need to
 subset these. The two other backends need to subset the data they keep
@@ -542,14 +542,14 @@ such subset <code>Spectra</code> objects.</p>
 <span>               <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/peaksData.html" class="external-link">peaksData</a></span><span class="op">(</span><span class="va">sps_im_10</span><span class="op">)</span>,</span>
 <span>               times <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Unit: microseconds</span></span>
-<span><span class="co">##                   expr       min        lq       mean    median        uq</span></span>
-<span><span class="co">##      peaksData(sps_10)  1963.769  1993.364  2458.5247  2050.300  3050.223</span></span>
-<span><span class="co">##  peaksData(sps_mzr_10) 54253.746 55195.561 56195.0922 55924.511 57324.347</span></span>
-<span><span class="co">##   peaksData(sps_im_10)   378.455   420.704   539.0745   570.358   634.753</span></span>
+<span><span class="co">##                   expr       min        lq       mean     median        uq</span></span>
+<span><span class="co">##      peaksData(sps_10)  1856.561  2017.622  2515.3287  2219.8440  3170.822</span></span>
+<span><span class="co">##  peaksData(sps_mzr_10) 51285.353 53105.436 54287.8585 54593.3605 55645.441</span></span>
+<span><span class="co">##   peaksData(sps_im_10)   377.795   412.770   560.9521   579.4505   693.784</span></span>
 <span><span class="co">##        max neval</span></span>
-<span><span class="co">##   3249.133    10</span></span>
-<span><span class="co">##  58426.561    10</span></span>
-<span><span class="co">##    722.536    10</span></span></code></pre>
+<span><span class="co">##   3272.261    10</span></span>
+<span><span class="co">##  56704.616    10</span></span>
+<span><span class="co">##    731.715    10</span></span></code></pre>
 <p>The <code>MsBackendSql</code> outperforms the
 <code>MsBackendMzR</code> while, not unexpectedly, the
 <code>MsBackendMemory</code> provides fasted access.</p>
@@ -623,7 +623,7 @@ computer’s memory.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.1 (2025-06-13)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.2 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -645,29 +645,29 @@ computer’s memory.</p>
 <span><span class="co">## [8] base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] microbenchmark_1.5.0 RSQLite_2.4.3        MsBackendSql_1.9.1  </span></span>
-<span><span class="co">## [4] Spectra_1.19.6       BiocParallel_1.43.4  S4Vectors_0.47.0    </span></span>
+<span><span class="co">## [1] microbenchmark_1.5.0 RSQLite_2.4.3        MsBackendSql_1.9.2  </span></span>
+<span><span class="co">## [4] Spectra_1.19.8       BiocParallel_1.43.4  S4Vectors_0.47.4    </span></span>
 <span><span class="co">## [7] BiocGenerics_0.55.1  generics_0.1.4       BiocStyle_2.37.1    </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] sass_0.4.10            MsCoreUtils_1.21.0     stringi_1.8.7         </span></span>
 <span><span class="co">##  [4] hms_1.1.3              digest_0.6.37          evaluate_1.0.5        </span></span>
-<span><span class="co">##  [7] bookdown_0.44          blob_1.2.4             fastmap_1.2.0         </span></span>
+<span><span class="co">##  [7] bookdown_0.45          blob_1.2.4             fastmap_1.2.0         </span></span>
 <span><span class="co">## [10] jsonlite_2.0.0         ProtGenerics_1.41.0    progress_1.2.3        </span></span>
-<span><span class="co">## [13] mzR_2.43.1             DBI_1.2.3              BiocManager_1.30.26   </span></span>
-<span><span class="co">## [16] codetools_0.2-20       textshaping_1.0.1      jquerylib_0.1.4       </span></span>
+<span><span class="co">## [13] mzR_2.43.3             DBI_1.2.3              BiocManager_1.30.26   </span></span>
+<span><span class="co">## [16] codetools_0.2-20       textshaping_1.0.3      jquerylib_0.1.4       </span></span>
 <span><span class="co">## [19] cli_3.6.5              rlang_1.1.6            crayon_1.5.3          </span></span>
-<span><span class="co">## [22] Biobase_2.69.0         bit64_4.6.0-1          cachem_1.1.0          </span></span>
+<span><span class="co">## [22] Biobase_2.69.1         bit64_4.6.0-1          cachem_1.1.0          </span></span>
 <span><span class="co">## [25] yaml_2.3.10            tools_4.5.1            parallel_4.5.1        </span></span>
 <span><span class="co">## [28] memoise_2.0.1          ncdf4_1.24             fastmatch_1.1-6       </span></span>
 <span><span class="co">## [31] vctrs_0.6.5            R6_2.6.1               lifecycle_1.0.4       </span></span>
-<span><span class="co">## [34] fs_1.6.6               htmlwidgets_1.6.4      IRanges_2.43.0        </span></span>
+<span><span class="co">## [34] fs_1.6.6               htmlwidgets_1.6.4      IRanges_2.43.5        </span></span>
 <span><span class="co">## [37] bit_4.6.0              clue_0.3-66            MASS_7.3-65           </span></span>
-<span><span class="co">## [40] ragg_1.4.0             cluster_2.1.8.1        pkgconfig_2.0.3       </span></span>
+<span><span class="co">## [40] ragg_1.5.0             cluster_2.1.8.1        pkgconfig_2.0.3       </span></span>
 <span><span class="co">## [43] desc_1.4.3             pkgdown_2.1.3.9000     bslib_0.9.0           </span></span>
-<span><span class="co">## [46] Rcpp_1.1.0             data.table_1.17.8      systemfonts_1.2.3     </span></span>
+<span><span class="co">## [46] Rcpp_1.1.0             data.table_1.17.8      systemfonts_1.3.1     </span></span>
 <span><span class="co">## [49] xfun_0.53              knitr_1.50             htmltools_0.5.8.1     </span></span>
-<span><span class="co">## [52] rmarkdown_2.29         compiler_4.5.1         prettyunits_1.2.0     </span></span>
+<span><span class="co">## [52] rmarkdown_2.30         compiler_4.5.1         prettyunits_1.2.0     </span></span>
 <span><span class="co">## [55] MetaboCoreUtils_1.17.1</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

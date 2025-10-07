@@ -13,7 +13,7 @@ createMsBackendSqlDatabase()."><meta property="og:image" content="https://rforma
 
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.9.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.9.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -149,7 +149,10 @@ SQL database. New databases can be created from raw MS data files using
 <span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendBpparam</a></span><span class="op">(</span><span class="va">object</span>, BPPARAM <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocParallel/man/register.html" class="external-link">bpparam</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'MsBackendSql'</span></span>
-<span><span class="fu">dbconn</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">dbconn</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S4 method for class 'MsBackendSql'</span></span>
+<span><span class="fu">longForm</span><span class="op">(</span><span class="va">object</span>, columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraVariables</a></span><span class="op">(</span><span class="va">object</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -500,6 +503,18 @@ the object (data in the database is never changed). To restore an object
 <li><p><code><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">dataStorage()</a></code>: returns a <code>character</code> vector same length as there are
 spectra in <code>object</code> with the name of the database containing the data.</p></li>
 <li><p><code>intensity&lt;-</code>: not supported.</p></li>
+<li><p><code>longForm()</code>: extract the MS data in <em>long form</em> as a <code>data.frame</code>.
+Parameter <code>columns</code> allows to specify the columns (spectra and/or peaks
+variables) that should be included in the result. If MS peaks data are
+stored in long form in the database (i.e., <code>peaksStorageMode = "long"</code> is
+used), the data is extracted using a dedicated SQL query. Otherwise the
+default implementation of the <code>longForm()</code> method from the <em>Spectra</em>
+package that is based on the <code><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData()</a></code> function is used instead.
+Note that the performance of the SQL-based <code>longForm()</code> function is not
+necessarily higher than the default implementation, mostly because
+data extraction from the database layouts that store the MS peaks data as
+<em>BLOB</em> datatype (i.e., <code>peaksStorageMode = "blob"</code> or
+<code>peaksStorageMode = "blob2"</code>) is faster.</p></li>
 <li><p><code>mz&lt;-</code>: not supported.</p></li>
 <li><p><code><a href="https://rdrr.io/pkg/ProtGenerics/man/peaksData.html" class="external-link">peaksData()</a></code>: returns a <code>list</code> with the spectras' peak data. The length of
 the list is equal to the number of spectra in <code>object</code>. Each element of
@@ -597,7 +612,7 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 35 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpGGuNW1/file171a2acf4391</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpwFllxU/file182c5c747cd8</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Original data source</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span></span>
@@ -610,9 +625,9 @@ increasing the memory demand of the object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Data storage</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">dataStorage</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpGGuNW1/file171a2acf4391" "/tmp/RtmpGGuNW1/file171a2acf4391"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpGGuNW1/file171a2acf4391" "/tmp/RtmpGGuNW1/file171a2acf4391"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpGGuNW1/file171a2acf4391" "/tmp/RtmpGGuNW1/file171a2acf4391"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpwFllxU/file182c5c747cd8" "/tmp/RtmpwFllxU/file182c5c747cd8"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpwFllxU/file182c5c747cd8" "/tmp/RtmpwFllxU/file182c5c747cd8"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpwFllxU/file182c5c747cd8" "/tmp/RtmpwFllxU/file182c5c747cd8"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access all spectra data</span></span></span>
 <span class="r-in"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -633,17 +648,17 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198         1   66.7818            198       198    111.044,112.024,112.518,...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           intensity            dataStorage             dataOrigin centroided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NumericList&gt;            &lt;character&gt;            &lt;character&gt;  &lt;logical&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...             ...                    ...                    ...        ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/RtmpGGuNW1/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/RtmpwFllxU/file.. /__w/_temp/Library/m..       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      smoothed  polarity precScanNum precursorMz precursorIntensity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;logical&gt; &lt;integer&gt;   &lt;integer&gt;   &lt;numeric&gt;          &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          NA         1          NA          NA                 NA</span>
@@ -683,32 +698,32 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 196                      NA                     NA       2324        137565</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 197                      NA                     NA       2105        113086</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198                      NA                     NA       1996         97257</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     basePeakMZ basePeakIntensity ionisationEnergy     lowMZ    highMZ</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;numeric&gt;         &lt;numeric&gt;        &lt;numeric&gt; &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      144.050              7250                0   104.554  1004.470</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      144.050              7064                0   107.960  1002.799</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      144.050              7124                0   107.963   993.959</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      144.051              7067                0   105.971   986.756</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      144.051              6891                0   104.474  1003.469</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ...        ...               ...              ...       ...       ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194    144.051              4615                0  106.9921  1003.828</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195    144.051              3812                0   99.0797  1003.270</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196    144.050              3526                0  102.9272  1000.594</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197    144.050              3902                0  111.0582   984.228</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198    144.051              3587                0  111.0437  1000.851</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mergedScan mergedResultScanNum mergedResultStartScanNum</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;integer&gt;           &lt;integer&gt;                &lt;integer&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4           NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5           NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ...        ...                 ...                      ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     basePeakMZ basePeakIntensity electronBeamEnergy ionisationEnergy     lowMZ</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;numeric&gt;         &lt;numeric&gt;          &lt;numeric&gt;        &lt;numeric&gt; &lt;numeric&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      144.050              7250                 NA                0   104.554</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      144.050              7064                 NA                0   107.960</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      144.050              7124                 NA                0   107.963</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      144.051              7067                 NA                0   105.971</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      144.051              6891                 NA                0   104.474</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ...        ...               ...                ...              ...       ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194    144.051              4615                 NA                0  106.9921</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195    144.051              3812                 NA                0   99.0797</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196    144.050              3526                 NA                0  102.9272</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197    144.050              3902                 NA                0  111.0582</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198    144.051              3587                 NA                0  111.0437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        highMZ mergedScan mergedResultScanNum mergedResultStartScanNum</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;numeric&gt;  &lt;integer&gt;           &lt;integer&gt;                &lt;integer&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1004.470         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1002.799         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     993.959         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     986.756         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    1003.469         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ...       ...        ...                 ...                      ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194  1003.828         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195  1003.270         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196  1000.594         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197   984.228         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198  1000.851         NA                  NA                       NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     mergedResultEndScanNum injectionTime filterString  spectrumId</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;integer&gt;     &lt;numeric&gt;  &lt;character&gt; &lt;character&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                       NA             0           NA      scan=1</span>
@@ -722,32 +737,19 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 196                     NA             0           NA    scan=196</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 197                     NA             0           NA    scan=197</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 198                     NA             0           NA    scan=198</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ionMobilityDriftTime scanWindowLowerLimit scanWindowUpperLimit</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;numeric&gt;            &lt;numeric&gt;            &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                     NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                     NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                     NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                     NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                     NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ...                  ...                  ...                  ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194                   NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195                   NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196                   NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197                   NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198                   NA                   NA                   NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     electronBeamEnergy spectrum_id_</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              &lt;numeric&gt;    &lt;integer&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                   NA            1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                   NA            2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                   NA            3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                   NA            4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                   NA            5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ...                ...          ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194                 NA          194</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195                 NA          195</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196                 NA          196</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197                 NA          197</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198                 NA          198</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     ionMobilityDriftTime scanWindowLowerLimit scanWindowUpperLimit spectrum_id_</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;numeric&gt;            &lt;numeric&gt;            &lt;numeric&gt;    &lt;integer&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                     NA                   NA                   NA            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                     NA                   NA                   NA            2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                     NA                   NA                   NA            3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                     NA                   NA                   NA            4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                     NA                   NA                   NA            5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ...                  ...                  ...                  ...          ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 194                   NA                   NA                   NA          194</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 195                   NA                   NA                   NA          195</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 196                   NA                   NA                   NA          196</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 197                   NA                   NA                   NA          197</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 198                   NA                   NA                   NA          198</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Available variables</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraVariables</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -762,14 +764,14 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [17] "isolationWindowLowerMz"   "isolationWindowTargetMz" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [19] "isolationWindowUpperMz"   "peaksCount"              </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [21] "totIonCurrent"            "basePeakMZ"              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [23] "basePeakIntensity"        "ionisationEnergy"        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "lowMZ"                    "highMZ"                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [27] "mergedScan"               "mergedResultScanNum"     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [29] "mergedResultStartScanNum" "mergedResultEndScanNum"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [31] "injectionTime"            "filterString"            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [33] "spectrumId"               "ionMobilityDriftTime"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [35] "scanWindowLowerLimit"     "scanWindowUpperLimit"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [37] "electronBeamEnergy"       "spectrum_id_"            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [23] "basePeakIntensity"        "electronBeamEnergy"      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [25] "ionisationEnergy"         "lowMZ"                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [27] "highMZ"                   "mergedScan"              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [29] "mergedResultScanNum"      "mergedResultStartScanNum"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [31] "mergedResultEndScanNum"   "injectionTime"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [33] "filterString"             "spectrumId"              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [35] "ionMobilityDriftTime"     "scanWindowLowerLimit"    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [37] "scanWindowUpperLimit"     "spectrum_id_"            </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access mz values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">mz</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -801,7 +803,7 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 35 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpGGuNW1/file171a2acf4391</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpwFllxU/file182c5c747cd8</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span></span>
