@@ -1,6 +1,6 @@
 Package: MsBackendSql
 Title: SQL-based Mass Spectrometry Data Backend
-Version: 1.9.1
+Version: 1.9.2
 Authors@R:
     c(person(given = "Johannes", family = "Rainer",
              email = "Johannes.Rainer@eurac.edu",
@@ -21,7 +21,7 @@ Description: SQL-based mass spectrometry (MS) data backend supporting also
 	     representation for very large or remote MS data sets.
 Depends:
     R (>= 4.2.0),
-    Spectra (>= 1.17.9)
+    Spectra (>= 1.19.8)
 Imports:
     BiocParallel,
     S4Vectors,
@@ -52,7 +52,7 @@ BugReports: https://github.com/RforMassSpectrometry/MsBackendSql/issues
 URL: https://github.com/RforMassSpectrometry/MsBackendSql
 biocViews: Infrastructure, MassSpectrometry, Metabolomics, DataImport, Proteomics
 Roxygen: list(markdown=TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Collate:
     'MsBackendSql-functions.R'
     'MsBackendSql.R'

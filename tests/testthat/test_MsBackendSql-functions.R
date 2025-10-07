@@ -701,3 +701,88 @@ test_that("MsBackendSql works with duckdb", {
         file.remove(db_file)
     }
 })
+
+test_that(".db_is_long_form works", {
+    expect_equal(.db_is_long_form(MsBackendSql()), NA)
+    expect_true(.db_is_long_form(mm8_be_long))
+    expect_false(.db_is_long_form(mm8_be_blob))
+    expect_false(.db_is_long_form(mm8_be_blob2))
+})
+
+test_that(".fetch_long_form_sql works", {
+    tmp <- mm8_be_long
+    ## only spectra variables
+    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
+    expect_equal(res$rtime, tmp$rtime)
+    expect_equal(res$scanIndex, tmp$scanIndex)
+    ## arbitrary order
+    idx <- c(4, 1, 9, 20)
+    tmp <- mm8_be_long[idx]
+    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
+    expect_equal(res$rtime, tmp$rtime)
+    expect_equal(res$scanIndex, tmp$scanIndex)
+    ## duplicated order
+    idx <- c(4, 1, 4, 9, 20, 4)
+    tmp <- mm8_be_long[idx]
+    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
+    expect_equal(res$rtime, tmp$rtime)
+    expect_equal(res$scanIndex, tmp$scanIndex)
+
+    ## only peak variables
+    tmp <- mm8_be_long
+    res <- .fetch_long_form_sql(tmp, c("mz"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("mz"))
+    expect_equal(res$mz, unlist(tmp$mz))
+
+    ## arbitrary order
+    idx <- c(3, 9, 1, 30, 5)
+    tmp <- mm8_be_long[idx]
+    res <- .fetch_long_form_sql(tmp, c("mz"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("mz"))
+    expect_equal(res$mz, unlist(tmp$mz))
+
+    ## duplicated order
+    idx <- c(4, 1, 3, 1, 100, 1, 4)
+    tmp <- mm8_be_long[idx]
+    res <- .fetch_long_form_sql(tmp, c("mz"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("mz"))
+    expect_equal(res$mz, unlist(tmp$mz))
+
+    ## peak and spectra variables
+    tmp <- mm8_be_long
+    res <- .fetch_long_form_sql(tmp, c("scanIndex", "rtime", "intensity"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("scanIndex", "rtime", "intensity"))
+    expect_equal(res$intensity, unlist(tmp$intensity))
+    expect_equal(res$scanIndex, rep(tmp$scanIndex, lengths(tmp)))
+    expect_equal(res$rtime, rep(tmp$rtime, lengths(tmp)))
+
+    ## arbitrary order
+    idx <- c(4, 9, 1, 3, 13)
+    tmp <- mm8_be_long[idx]
+    res <- .fetch_long_form_sql(tmp, c("scanIndex", "rtime", "intensity"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("scanIndex", "rtime", "intensity"))
+    expect_equal(res$intensity, unlist(tmp$intensity))
+    expect_equal(res$scanIndex, rep(tmp$scanIndex, lengths(tmp)))
+    expect_equal(res$rtime, rep(tmp$rtime, lengths(tmp)))
+
+    ## duplicated order
+    idx <- c(4, 9, 1, 4, 13, 1, 9)
+    tmp <- mm8_be_long[idx]
+    res <- .fetch_long_form_sql(tmp, c("scanIndex", "rtime", "intensity"))
+    expect_true(is.data.frame(res))
+    expect_equal(colnames(res), c("scanIndex", "rtime", "intensity"))
+    expect_equal(res$intensity, unlist(tmp$intensity))
+    expect_equal(res$scanIndex, rep(tmp$scanIndex, lengths(tmp)))
+    expect_equal(res$rtime, rep(tmp$rtime, lengths(tmp)))
+})

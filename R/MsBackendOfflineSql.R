@@ -307,6 +307,14 @@ setMethod(
         object
 })
 
+setMethod("longForm", "MsBackendOfflineSql",
+          function(object, columns = spectraVariables(object)) {
+              object@dbcon <- .db_connect(object)
+              on.exit(.db_disconnect(object))
+              callNextMethod()
+          })
+
+
 ## setReplaceMethod("$", "MsBackendOfflineSql", function(x, name, value) {
 ##     object@dbcon <- .db_connect(object)
 ##     on.exit(.db_disconnect(object))

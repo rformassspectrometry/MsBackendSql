@@ -1,5 +1,10 @@
 # MsBackendSql 1.9
 
+## Changes in 1.9.2
+
+- Add a `longForm()` method for `MsBackendSql` to use an SQL query to extract
+  the data in long from the database.
+
 ## Changes in 1.9.1
 
 - Add support for *blob2* storage mode for *duckdb* databases.

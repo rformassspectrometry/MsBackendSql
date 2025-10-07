@@ -22,6 +22,7 @@
 \alias{uniqueMsLevels,MsBackendOfflineSql-method}
 \alias{intensity,MsBackendOfflineSql-method}
 \alias{mz,MsBackendOfflineSql-method}
+\alias{longForm,MsBackendOfflineSql-method}
 \alias{show,MsBackendSql-method}
 \alias{backendInitialize,MsBackendSql-method}
 \alias{dataStorage,MsBackendSql-method}
@@ -52,6 +53,7 @@
 \alias{supportsSetBackend,MsBackendSql-method}
 \alias{backendBpparam,MsBackendSql-method}
 \alias{dbconn,MsBackendSql-method}
+\alias{longForm,MsBackendSql-method}
 \title{\code{Spectra} MS backend storing data in a SQL database}
 \usage{
 MsBackendSql()
@@ -126,6 +128,8 @@ createMsBackendSqlDatabase(
 \S4method{backendBpparam}{MsBackendSql}(object, BPPARAM = bpparam())
 
 \S4method{dbconn}{MsBackendSql}(x)
+
+\S4method{longForm}{MsBackendSql}(object, columns = spectraVariables(object))
 }
 \arguments{
 \item{dbcon}{Connection to a database.}
@@ -430,6 +434,18 @@ the object (data in the database is never changed). To restore an object
 \item \code{dataStorage()}: returns a \code{character} vector same length as there are
 spectra in \code{object} with the name of the database containing the data.
 \item \verb{intensity<-}: not supported.
+\item \code{longForm()}: extract the MS data in \emph{long form} as a \code{data.frame}.
+Parameter \code{columns} allows to specify the columns (spectra and/or peaks
+variables) that should be included in the result. If MS peaks data are
+stored in long form in the database (i.e., \code{peaksStorageMode = "long"} is
+used), the data is extracted using a dedicated SQL query. Otherwise the
+default implementation of the \code{longForm()} method from the \emph{Spectra}
+package that is based on the \code{spectraData()} function is used instead.
+Note that the performance of the SQL-based \code{longForm()} function is not
+necessarily higher than the default implementation, mostly because
+data extraction from the database layouts that store the MS peaks data as
+\emph{BLOB} datatype (i.e., \code{peaksStorageMode = "blob"} or
+\code{peaksStorageMode = "blob2"}) is faster.
 \item \verb{mz<-}: not supported.
 \item \code{peaksData()}: returns a \code{list} with the spectras' peak data. The length of
 the list is equal to the number of spectra in \code{object}. Each element of

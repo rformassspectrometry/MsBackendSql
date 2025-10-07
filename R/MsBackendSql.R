@@ -21,6 +21,7 @@
 #' @aliases uniqueMsLevels,MsBackendOfflineSql-method
 #' @aliases intensity,MsBackendOfflineSql-method
 #' @aliases mz,MsBackendOfflineSql-method
+#' @aliases longForm,MsBackendOfflineSql-method
 #'
 #' @description
 #'
@@ -214,6 +215,19 @@
 #'   spectra in `object` with the name of the database containing the data.
 #'
 #' - `intensity<-`: not supported.
+#'
+#' - `longForm()`: extract the MS data in *long form* as a `data.frame`.
+#'   Parameter `columns` allows to specify the columns (spectra and/or peaks
+#'   variables) that should be included in the result. If MS peaks data are
+#'   stored in long form in the database (i.e., `peaksStorageMode = "long"` is
+#'   used), the data is extracted using a dedicated SQL query. Otherwise the
+#'   default implementation of the `longForm()` method from the *Spectra*
+#'   package that is based on the `spectraData()` function is used instead.
+#'   Note that the performance of the SQL-based `longForm()` function is not
+#'   necessarily higher than the default implementation, mostly because
+#'   data extraction from the database layouts that store the MS peaks data as
+#'   *BLOB* datatype (i.e., `peaksStorageMode = "blob"` or
+#'   `peaksStorageMode = "blob2"`) is faster.
 #'
 #' - `mz<-`: not supported.
 #'
@@ -520,14 +534,23 @@ setMethod("backendInitialize", "MsBackendSql",
         msms_spectrum = colnames(
             dbGetQuery(dbcon, "select * from msms_spectrum limit 0")))
     ## Whether  m/z and intensity values are stored as BLOBs
-    if (any(dbListTables(dbcon) == "msms_spectrum_peak_blob"))
+    if (any(dbListTables(dbcon) == "msms_spectrum_peak_blob")) {
         object@peak_fun <- .fetch_peaks_data_blob
-    if (any(dbListTables(dbcon) == "msms_spectrum_peak_blob2"))
+        object@.tables[["msms_spectrum_peak_blob"]] <- colnames(
+            dbGetQuery(dbcon, "select * from msms_spectrum_peak_blob limit 0"))
+    } else if (any(dbListTables(dbcon) == "msms_spectrum_peak_blob2")) {
         object@peak_fun <- .fetch_peaks_data_blob2
+        object@.tables[["msms_spectrum_peak_blob2"]] <- colnames(
+            dbGetQuery(dbcon, "select * from msms_spectrum_peak_blob2 limit 0"))
+    } else {
+        object@.tables[["msms_spectrum_peak"]] <- colnames(
+            dbGetQuery(dbcon, "select * from msms_spectrum_peak limit 0"))
+    }
     ## Initialize cached backend
     object <- callNextMethod(
         object, nspectra = length(object@spectraIds),
-        spectraVariables = c(unique(unlist(object@.tables))))
+        spectraVariables = union(object@.tables[["msms_spectrum"]],
+                                 .available_peaks_variables(object)))
     validObject(object)
     object
 })
@@ -921,4 +944,39 @@ setMethod(
                                                 backend_class, " to ",
                                                 class(object@backend))
         object
+    })
+
+#' @exportMethod longForm
+#'
+#' @rdname MsBackendSql
+#'
+#' @importFrom BiocGenerics longForm
+setMethod(
+    "longForm", "MsBackendSql",
+    function(object,
+             columns = spectraVariables(object)) {
+        miss <- setdiff(columns, spectraVariables(object))
+        if (length(miss))
+            stop("Columns ", paste0("'", miss, "'", collapse = ", "),
+                 " not available.", call. = FALSE)
+        if (.db_is_long_form(object)) {
+            local_var <- intersect(columns, colnames(object@localData))
+            db_var <- setdiff(columns, local_var)
+            if (length(db_var))
+                res <- .fetch_long_form_sql(object, db_var)
+            if (length(local_var)) {
+                if (any(columns %in% peaksVariables(object))) {
+                    ls <- lengths(object) # that's not very efficient
+                    loc <- lapply(object@localData[local_var], rep, ls)
+                } else loc <- object@localData[, local_var, drop = FALSE]
+                if (length(db_var))
+                    res <- cbind.data.frame(res, loc)
+                else res <- as.data.frame(loc)
+            }
+            if (any(colnames(res) != columns))
+                res <- res[, columns, drop = FALSE]
+            rownames(res) <- NULL
+            res
+        } else
+            callNextMethod()
     })
