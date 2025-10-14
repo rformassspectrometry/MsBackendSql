@@ -236,9 +236,13 @@ MsBackendSql <- function() {
     qry <- stri_c(qry, " where ", what, " in (",
                   stri_c(unique(x@spectraIds), collapse = ", ") , ")")
     res <- dbGetQuery(x@dbcon, qry)
-    m <- findMatches(x@spectraIds, res$spectrum_id_)
-    if (is.unsorted(to(m)))
-        res[to(m), columns, drop = FALSE]
+    if (anyDuplicated(x@spectraIds)) { # use findMatches() only when needed
+        m <- findMatches(x@spectraIds, res$spectrum_id_)
+        idx <- to(m)
+    } else
+        idx <- match(res$spectrum_id_, x@spectraIds)
+    if (is.unsorted(idx))
+        res[idx, columns, drop = FALSE]
     else res[, columns, drop = FALSE]
 }
 

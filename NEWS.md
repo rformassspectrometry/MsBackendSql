@@ -1,5 +1,9 @@
 # MsBackendSql 1.9
 
+## Changes in 1.9.3
+
+- Small performance improvement in `longForm()` implementation.
+
 ## Changes in 1.9.2
 
 - Add a `longForm()` method for `MsBackendSql` to use an SQL query to extract
