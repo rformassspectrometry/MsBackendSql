@@ -215,6 +215,8 @@ MsBackendSql <- function() {
 #'
 #' @noRd
 .fetch_long_form_sql <- function(x, columns = c("spectrum_id_")) {
+    columns_orig <- columns
+    columns <- setdiff(columns, "spectrum_id_")
     pv <- .available_peaks_variables(x)
     sv <- setdiff(columns, pv)
     if (length(sv)) {
@@ -236,10 +238,18 @@ MsBackendSql <- function() {
     qry <- stri_c(qry, " where ", what, " in (",
                   stri_c(unique(x@spectraIds), collapse = ", ") , ")")
     res <- dbGetQuery(x@dbcon, qry)
-    m <- findMatches(x@spectraIds, res$spectrum_id_)
-    if (is.unsorted(to(m)))
-        res[to(m), columns, drop = FALSE]
-    else res[, columns, drop = FALSE]
+    if (anyDuplicated(x@spectraIds)) { # use findMatches() only when needed
+        m <- findMatches(x@spectraIds, res$spectrum_id_)
+        idx <- to(m)
+    } else
+        idx <- order(match(res$spectrum_id_, x@spectraIds))
+    if (any(colnames(res) == "centroided") && !is.logical(res$centroided))
+        res$centroided <- as.logical(res$centroided)
+    if (any(colnames(res) == "smoothed") && !is.logical(res$smoothed))
+        res$smoothed <- as.logical(res$smoothed)
+    if (is.unsorted(idx))
+        res[idx, columns_orig, drop = FALSE]
+    else res[, columns_orig, drop = FALSE]
 }
 
 #' Get columns from the msms_spectrum_peak database table (dropping spectrum_id)

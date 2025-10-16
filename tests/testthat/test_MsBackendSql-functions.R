@@ -712,7 +712,7 @@ test_that(".db_is_long_form works", {
 test_that(".fetch_long_form_sql works", {
     tmp <- mm8_be_long
     ## only spectra variables
-    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
     expect_equal(res$rtime, tmp$rtime)
@@ -720,7 +720,7 @@ test_that(".fetch_long_form_sql works", {
     ## arbitrary order
     idx <- c(4, 1, 9, 20)
     tmp <- mm8_be_long[idx]
-    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
     expect_equal(res$rtime, tmp$rtime)
@@ -728,7 +728,7 @@ test_that(".fetch_long_form_sql works", {
     ## duplicated order
     idx <- c(4, 1, 4, 9, 20, 4)
     tmp <- mm8_be_long[idx]
-    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
     expect_equal(res$rtime, tmp$rtime)
@@ -736,7 +736,7 @@ test_that(".fetch_long_form_sql works", {
 
     ## only peak variables
     tmp <- mm8_be_long
-    res <- .fetch_long_form_sql(tmp, c("mz"))
+    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("mz"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("mz"))
     expect_equal(res$mz, unlist(tmp$mz))
@@ -744,10 +744,10 @@ test_that(".fetch_long_form_sql works", {
     ## arbitrary order
     idx <- c(3, 9, 1, 30, 5)
     tmp <- mm8_be_long[idx]
-    res <- .fetch_long_form_sql(tmp, c("mz"))
+    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("mz"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("mz"))
-    expect_equal(res$mz, unlist(tmp$mz))
+    expect_equal(res$mz, unlist(tmp$mz)) # Does not work
 
     ## duplicated order
     idx <- c(4, 1, 3, 1, 100, 1, 4)

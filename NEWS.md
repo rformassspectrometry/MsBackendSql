@@ -1,5 +1,11 @@
 # MsBackendSql 1.9
 
+## Changes in 1.9.3
+
+- Small performance improvement in `longForm()` implementation: avoid using
+  `findMatches()` to order the result if not needed (i.e., if duplicated spectra
+  are requested).
+
 ## Changes in 1.9.2
 
 - Add a `longForm()` method for `MsBackendSql` to use an SQL query to extract
