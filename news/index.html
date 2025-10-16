@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.9.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.9.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,11 +35,15 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.9" id="msbackendsql-19">MsBackendSql 1.9<a class="anchor" aria-label="anchor" href="#msbackendsql-19"></a></h2>
 <div class="section level3">
-<h3 id="changes-in-1-9">Changes in 1.9.2<a class="anchor" aria-label="anchor" href="#changes-in-1-9"></a></h3>
+<h3 id="changes-in-1-9">Changes in 1.9.3<a class="anchor" aria-label="anchor" href="#changes-in-1-9"></a></h3>
+<ul><li>Small performance improvement in <code>longForm()</code> implementation: avoid using <code><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-comparison.html" class="external-link">findMatches()</a></code> to order the result if not needed (i.e., if duplicated spectra are requested).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changes-in-1-9-1">Changes in 1.9.2<a class="anchor" aria-label="anchor" href="#changes-in-1-9-1"></a></h3>
 <ul><li>Add a <code>longForm()</code> method for <code>MsBackendSql</code> to use an SQL query to extract the data in long from the database.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="changes-in-1-9-1">Changes in 1.9.1<a class="anchor" aria-label="anchor" href="#changes-in-1-9-1"></a></h3>
+<h3 id="changes-in-1-9-2">Changes in 1.9.1<a class="anchor" aria-label="anchor" href="#changes-in-1-9-2"></a></h3>
 <ul><li>Add support for <em>blob2</em> storage mode for <em>duckdb</em> databases.</li>
 </ul></div>
 </div>
