@@ -1,5 +1,10 @@
 # MsBackendSql 1.9
 
+## Changes in 1.9.4
+
+- Add additional unit tests to check results are similar to the reference
+  implementation.
+
 ## Changes in 1.9.3
 
 - Small performance improvement in `longForm()` implementation: avoid using

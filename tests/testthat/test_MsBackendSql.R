@@ -662,3 +662,94 @@ test_that("longForm,MsBackendSql works with offline connection", {
     expect_equal(colnames(res), c("mz", "rtime"))
     expect_equal(res$mz, unlist(tmp$mz))
 })
+
+test_that("MsBackendSql extracted data matches reference implementation", {
+    ref_be <- setBackend(Spectra(mm8_file), MsBackendMemory())@backend
+
+    ## long form
+    res <- peaksData(mm8_be_long)
+    ref <- peaksData(ref_be)
+    expect_equal(res, ref)
+
+    res <- spectraData(mm8_be_long, c("rtime", "msLevel", "scanIndex"))
+    ref <- spectraData(ref_be, c("rtime", "msLevel", "scanIndex"))
+    expect_equal(res, ref)
+
+    res <- spectraData(mm8_be_long, c("rtime", "mz", "scanIndex"))
+    ref <- spectraData(ref_be, c("rtime", "mz", "scanIndex"))
+    expect_equal(res, ref)
+
+    res <- mm8_be_long$mz
+    ref <- ref_be$mz
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_long, c("rtime", "intensity", "mz"))
+    ref <- longForm(ref_be, c("rtime", "intensity", "mz"))
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_long, c("mz", "intensity"))
+    ref <- longForm(ref_be, c("mz", "intensity"))
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_long, c("rtime"))
+    ref <- longForm(ref_be, "rtime")
+    expect_equal(res, ref)
+
+    ## BLOB format
+    res <- peaksData(mm8_be_blob)
+    ref <- peaksData(ref_be)
+    expect_equal(res, ref)
+
+    res <- spectraData(mm8_be_blob, c("rtime", "msLevel", "scanIndex"))
+    ref <- spectraData(ref_be, c("rtime", "msLevel", "scanIndex"))
+    expect_equal(res, ref)
+
+    res <- spectraData(mm8_be_blob, c("rtime", "mz", "scanIndex"))
+    ref <- spectraData(ref_be, c("rtime", "mz", "scanIndex"))
+    expect_equal(res, ref)
+
+    res <- mm8_be_blob$mz
+    ref <- ref_be$mz
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_blob, c("rtime", "intensity", "mz"))
+    ref <- longForm(ref_be, c("rtime", "intensity", "mz"))
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_blob, c("mz", "intensity"))
+    ref <- longForm(ref_be, c("mz", "intensity"))
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_blob, c("rtime"))
+    ref <- longForm(ref_be, "rtime")
+    expect_equal(res, ref)
+
+    ## BLOB2 format
+    res <- peaksData(mm8_be_blob2)
+    ref <- peaksData(ref_be)
+    expect_equal(res, ref)
+
+    res <- spectraData(mm8_be_blob2, c("rtime", "msLevel", "scanIndex"))
+    ref <- spectraData(ref_be, c("rtime", "msLevel", "scanIndex"))
+    expect_equal(res, ref)
+
+    res <- spectraData(mm8_be_blob2, c("rtime", "mz", "scanIndex"))
+    ref <- spectraData(ref_be, c("rtime", "mz", "scanIndex"))
+    expect_equal(res, ref)
+
+    res <- mm8_be_blob2$mz
+    ref <- ref_be$mz
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_blob2, c("rtime", "intensity", "mz"))
+    ref <- longForm(ref_be, c("rtime", "intensity", "mz"))
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_blob2, c("mz", "intensity"))
+    ref <- longForm(ref_be, c("mz", "intensity"))
+    expect_equal(res, ref)
+
+    res <- longForm(mm8_be_blob2, c("rtime"))
+    ref <- longForm(ref_be, "rtime")
+    expect_equal(res, ref)
+})

@@ -29,6 +29,27 @@ createMsBackendSqlDatabase(mm8_db_blob2, mm8_file, blob = TRUE,
                            peaksStorageMode = "blob2")
 mm8_be_blob2 <- backendInitialize(MsBackendSql(), mm8_db_blob2)
 
+################################################################################
+##
+##  OPTIONAL TESTS WITH duckdb
+## library(duckdb)
+## mm8_db_long <- dbConnect(duckdb(), tempfile())
+## createMsBackendSqlDatabase(mm8_db_long, mm8_file, blob = FALSE,
+##                            peaksStorageMode = "long")
+## mm8_be_long <- backendInitialize(MsBackendSql(), mm8_db_long)
+
+## mm8_db_blob <- dbConnect(duckdb(), tempfile())
+## createMsBackendSqlDatabase(mm8_db_blob, mm8_file, blob = TRUE,
+##                            peaksStorageMode = "blob")
+## mm8_be_blob <- backendInitialize(MsBackendSql(), mm8_db_blob)
+
+## mm8_db_blob2 <- dbConnect(duckdb(), tempfile())
+## createMsBackendSqlDatabase(mm8_db_blob2, mm8_file, blob = TRUE,
+##                            peaksStorageMode = "blob2")
+## mm8_be_blob2 <- backendInitialize(MsBackendSql(), mm8_db_blob2)
+##
+################################################################################
+
 mm14_file <- system.file("microtofq", "MM14.mzML", package = "msdata")
 mm_db <- dbConnect(SQLite(), tempfile())
 createMsBackendSqlDatabase(mm_db, c(mm8_file, mm14_file), blob = FALSE)
