@@ -32,6 +32,15 @@ test_that("backendInitialize works", {
       , "Replacing")
     expect_true(length(be2) == 0L)
     expect_equal(spectraVariables(be2), spectraVariables(be))
+
+    with_mocked_bindings(
+        ".has_peak_id" = function(x) FALSE,
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = expect_error(backendInitialize(
+            MsBackendSql(), dbcon = dbConnect(SQLite(), tempfile()),
+            data = spectraData(be), peaksStorageMode = "long", blob = FALSE),
+            "The type of SQL database")
+    )
 })
 
 test_that("dataStorage works", {
@@ -752,4 +761,13 @@ test_that("MsBackendSql extracted data matches reference implementation", {
     res <- longForm(mm8_be_blob2, c("rtime"))
     ref <- longForm(ref_be, "rtime")
     expect_equal(res, ref)
+})
+
+test_that("long-form database is created with peak_id_ for duckdb", {
+    ## mock .is_duckdb to return TRUE.
+    ## Using `setBackend()` from another backend: .create_from_spectra_data
+    ## should add that column.
+
+    ## Creating from mzML files: .insert_backend should do that - and in fact
+    ## also create proper, running values.
 })

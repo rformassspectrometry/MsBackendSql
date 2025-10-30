@@ -219,15 +219,25 @@ MsBackendSql <- function() {
     columns <- setdiff(columns, "spectrum_id_")
     pv <- .available_peaks_variables(x)
     sv <- setdiff(columns, pv)
+    ordr <- ""
     if (length(sv)) {
-        qry <- stri_c("select ",
-                      stri_c(union("msms_spectrum.spectrum_id_",
-                                   unique(columns)), collapse = ","),
-                      " from msms_spectrum")
-        if (any(pv %in% columns))
-            qry <- stri_c(
-                qry, " join msms_spectrum_peak on ",
+        jn <- ""
+        pid <- ""
+        if (any(pv %in% columns)) {
+            jn <- stri_c(
+                " join msms_spectrum_peak on ",
                 "(msms_spectrum.spectrum_id_=msms_spectrum_peak.spectrum_id_)")
+            if (.db_requires_peak_id(x@dbcon)) {
+                ## Need to order join results by peak_id_ for databases such
+                ## as duckdb.
+                ordr <- " order by peak_id_"
+                pid <- ", peak_id_"
+            }
+        }
+        qry <- stri_c("select ",
+                       stri_c(union("msms_spectrum.spectrum_id_",
+                                    unique(columns)), collapse = ","),
+                       pid, " from msms_spectrum", jn)
         what <- "msms_spectrum.spectrum_id_"
     } else {
         qry <- stri_c("select ", stri_c(union("spectrum_id_", unique(columns)),
@@ -236,7 +246,7 @@ MsBackendSql <- function() {
         what <- "msms_spectrum_peak.spectrum_id_"
     }
     qry <- stri_c(qry, " where ", what, " in (",
-                  stri_c(unique(x@spectraIds), collapse = ", ") , ")")
+                  stri_c(unique(x@spectraIds), collapse = ", ") , ")", ordr)
     res <- dbGetQuery(x@dbcon, qry)
     if (anyDuplicated(x@spectraIds)) { # use findMatches() only when needed
         m <- findMatches(x@spectraIds, res$spectrum_id_)
@@ -288,6 +298,9 @@ MsBackendSql <- function() {
                     ", spectrum_id_ INTEGER, PRIMARY KEY (spectrum_id_))")
     sql_b <- stri_c("CREATE TABLE msms_spectrum_peak (mz DOUBLE, intensity ",
                     "REAL, spectrum_id_ INTEGER")
+    ## DuckDB needs a peak_id_ column
+    if (.db_requires_peak_id(con))
+        sql_b <- stri_c(sql_b, ", peak_id_ INTEGER")
     ## MySQL/MariaDB supports partitioning
     if (.is_maria_db(con)) {
         sql_a <- stri_c(sql_a, " ENGINE=ARIA;")
@@ -420,24 +433,33 @@ MsBackendSql <- function() {
     file.remove(f)
 }
 
-#' Inserts the data of a single backend to a database.
+#' Inserts the data of a single backend to a database. Peaks data is stored in
+#' *long form*, i.e., one row per peak.
 #'
 #' @param con database
 #'
 #' @param x `MsBackend` or `Spectra`. Advantage of using a `Spectra` is that it
 #'     performs by default parallel processing also on the `peaksData` call.
 #'
-#' @param index `integer(1)` defining the last used spectrum_id for peaks.
+#' @param index `integer(1)` defining the last used spectrum_id_ for the peaks
+#'     table.
 #'
 #' @param partitionBy `character(1)` how and if the table should be partitioned.
 #'
 #' @param chunk `integer(1)` with the number of the current chunk.
 #'
-#' @return `integer(1)` last used spectrum_id
+#' @param peak_index `integer(1)` defining the last used peak_id_ for the peaks
+#'     table. Only used if the database requires peak IDs (i.e.,
+#'     `.db_requires_peak_id()` returns `TRUE`).
+#'
+#' @return `list()` with an `integer(1)` with last used spectrum_id
+#'     (`$spectrum_id`) and an `integer(1)` with the last used peak_id
+#'     `$peak_id`. These can be used in subsequent calls to ensure correct
+#'     primary keys are used.
 #'
 #' @noRd
-.insert_backend <- function(con, x, index = 0L,
-                            partitionBy = "none", chunk = 0L) {
+.insert_backend <- function(con, x, index = 0L, partitionBy = "none",
+                            chunk = 0L, peak_index = integer()) {
     sv <- spectraVariables(x)
     sv <- sv[!sv %in% c("mz", "intensity")]
     spd <- as.data.frame(spectraData(x, columns = sv))
@@ -453,11 +475,18 @@ MsBackendSql <- function() {
         ## the partitioning
         pks$partition_ <- chunk
     }
+    if (.db_requires_peak_id(con)) {
+        np <- nrow(pks)
+        pks$peak_id_ <- seq((peak_index + 1L), length.out = np)
+        peak_index <- pks$peak_id_[np]
+    }
     .insert_peaks(con, pks)
-    spectrum_id[length(spectrum_id)]
+    list(spectrum_id = spectrum_id[length(spectrum_id)],
+         peak_id = peak_index)
 }
 
-#' store m/z and intensity values as BLOB.
+#' Insert the data from the `Spectra` object `x` storing m/z and intensity
+#' values as BLOB. See `insert_backend()` for documentation and parameters.
 #'
 #' @noRd
 .insert_backend_blob <- function(con, x, index = 0L, xdr = FALSE, ...) {
@@ -477,10 +506,12 @@ MsBackendSql <- function() {
     pks_table$spectrum_id_ <- spectrum_id
     dbWriteTable(con, name = "msms_spectrum_peak_blob",
                  value = pks_table, append = TRUE)
-    spectrum_id[length(spectrum_id)]
+    list(spectrum_id = spectrum_id[length(spectrum_id)],
+         peak_id = NA_integer_)
 }
 
-#' store the peaks matrix as BLOB.
+#' Store the data from a `Spectra` or `MsBackend` `x` into a database storing
+#' the peaks **matrix** as BLOB. See `insert_backend()` for details.
 #'
 #' @noRd
 .insert_backend_blob2 <- function(con, x, index = 0L, xdr = FALSE, ...) {
@@ -495,7 +526,8 @@ MsBackendSql <- function() {
                               base::serialize, connection = NULL, xdr = xdr)
     dbWriteTable(con, name = "msms_spectrum_peak_blob2",
                  value = pks_table, append = TRUE)
-    spectrum_id[length(spectrum_id)]
+    list(spectrum_id = spectrum_id[length(spectrum_id)],
+         peak_id = NA_integer_)
 }
 
 #' Insert data sequentially from files provided by x and adds it to a database
@@ -575,7 +607,7 @@ MsBackendSql <- function() {
                peak_table <- "msms_spectrum_peak_blob2"
            })
     ## Loop over x to insert data.
-    index <- 0
+    index <- list(spectrum_id = 0L, peak_id = 0L)
     message("Importing data ... ")
     idxs <- seq_along(x)
     chunks <- split(idxs, ceiling(idxs / chunksize))
@@ -589,9 +621,11 @@ MsBackendSql <- function() {
         s <- Spectra(source = backend, x[chunks[[i]]], BPPARAM = bpparam())
         index <- switch(
             storage,
-            long = .insert_backend(con, s, index = index, partitionBy, i),
-            blob = .insert_backend_blob(con, s, index = index),
-            blob2 = .insert_backend_blob2(con, s, index = index))
+            long = .insert_backend(con, s, index = index$spectrum_id,
+                                   partitionBy = partitionBy, chunk = i,
+                                   peak_index = index$peak_id),
+            blob = .insert_backend_blob(con, s, index = index$spectrum_id),
+            blob2 = .insert_backend_blob2(con, s, index = index$spectrum_id))
         rm(s)
         gc()
         pb$tick(1)
@@ -653,7 +687,7 @@ MsBackendSql <- function() {
                peak_table <- "msms_spectrum_peak_blob2"
            })
     if (.is_maria_db(con)) .disable_mysql_keys(con, peak_table)
-    index <- 0
+    index <- list(spectrum_id = 0L, peak_id = 0L)
     message("Importing data ... ")
     pb <- progress_bar$new(format = stri_c("[:bar] :current/:",
                                            "total (:percent) in ",
@@ -663,11 +697,13 @@ MsBackendSql <- function() {
     pb$tick(0)
     for (l in levels(f)) {
         s <- Spectra(object@backend[f == l])
-        index <- switch(peaksStorageMode,
-                        long = .insert_backend(con, s, index = index),
-                        blob = .insert_backend_blob(con, s, index = index),
-                        blob2 = .insert_backend_blob2(con, s, index = index)
-                        )
+        index <- switch(
+            peaksStorageMode,
+            long = .insert_backend(con, s, index = index$spectrum_id,
+                                   peak_index = index$peak_id),
+            blob = .insert_backend_blob(con, s, index = index$spectrum_id),
+            blob2 = .insert_backend_blob2(con, s, index = index$spectrum_id)
+        )
         pb$tick(1)
     }
     .create_indices(con, peak_table)
@@ -882,8 +918,12 @@ createMsBackendSqlDatabase <-
         .insert_spectra_variables(dbcon, data)
         switch(peaksStorageMode,
                long = {
-                   pks <- data.frame(mz = unlist(mzs), intensity = unlist(ints))
+                   pks <- data.frame(
+                       mz = unlist(mzs, use.names = FALSE),
+                       intensity = unlist(ints, use.names = FALSE))
                    pks$spectrum_id_ <- rep(sid, lns)
+                   if (.db_requires_peak_id(dbcon))
+                       pks$peak_id_ <- seq_len(nrow(pks))
                    .insert_peaks(dbcon, pks)
                },
                blob = {
@@ -939,4 +979,33 @@ createMsBackendSqlDatabase <-
     if (length(x@.tables)) {
         any(names(x@.tables) == "msms_spectrum_peak")
     } else NA
+}
+
+#' function to return `TRUE` if the database needs peak IDs, such as DuckDb
+#' that does not guarantee any order of rows returned from a join query.
+#' Ideally, `.requires_peak_id()` should be sufficient as a peak ID is only
+#' required if the peaks data is stored in long form. This function is
+#' used internally by `insert_backend()` and helps collecting database types
+#' behaving similarly to duckdb in one function (for easier
+#' maintenance/extension).
+#'
+#' @param x DB connection
+#'
+#' @noRd
+.db_requires_peak_id <- function(x) {
+    .is_duckdb(x)
+}
+
+#' @return `TRUE` if the peaks data is in long form **and** the database
+#' requires additional sorting of the join query results.
+#'
+#' @param x backend.
+#'
+#' @noRd
+.requires_peak_id <- function(x) {
+    .db_is_long_form(x) && .db_requires_peak_id(x@dbcon)
+}
+
+.has_peak_id <- function(x) {
+    any(x@.tables$msms_spectrum_peak == "peak_id_")
 }

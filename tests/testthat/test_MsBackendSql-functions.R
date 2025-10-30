@@ -61,6 +61,22 @@ test_that(".insert_data et al work", {
     )
     dbDisconnect(db)
     file.remove(db_file)
+
+    ## .insert_data mocking a duckdb
+    tf <- tempfile()
+    con_test <- dbConnect(SQLite(), tf)
+    with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = expect_true(
+            .insert_data(con = con_test, c(mm8_file, mm14_file),
+                         storage = "long"))
+    )
+    res <- dbGetQuery(con_test, "select * from msms_spectrum_peak")
+    expect_equal(colnames(res), c("mz", "intensity", "spectrum_id_",
+                                  "peak_id_"))
+    expect_equal(res$peak_id_, seq_len(nrow(res)))
+    dbDisconnect(con_test)
+    unlink(tf)
 })
 
 test_that(".set_backend_insert_data works", {
@@ -135,6 +151,22 @@ test_that(".set_backend_insert_data works", {
 
     dbDisconnect(con_ref)
     dbDisconnect(con_test)
+
+    ## mocking duckdb and adding peak_id_ works.
+    tf <- tempfile()
+    con_test <- dbConnect(SQLite(), tf)
+    with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = expect_true(
+            .set_backend_insert_data(s, con = con_test, blob = FALSE,
+                                     peaksStorageMode = "long"))
+    )
+    res <- dbGetQuery(con_test, "select * from msms_spectrum_peak")
+    expect_equal(colnames(res), c("mz", "intensity", "spectrum_id_",
+                                  "peak_id_"))
+    expect_equal(res$peak_id_, seq_len(nrow(res)))
+    dbDisconnect(con_test)
+    unlink(tf)
 })
 
 test_that("createMsBackendSqlDatabase works", {
@@ -430,6 +462,27 @@ test_that(".initialize_tables works", {
         ".is_maria_db" = function(x) TRUE,
         code = .initialize_tables(a, cols = c(a = "TEXT"))
     )
+
+    tf <- tempfile()
+    tmp <- dbConnect(SQLite(), tf)
+    cols <- c(a = "INT", b = "DOUBLE", spectrumId = "TEXT")
+    .initialize_tables(tmp, cols = cols)
+    res <- dbGetQuery(tmp, "select * from msms_spectrum_peak")
+    expect_equal(colnames(res), c("mz", "intensity", "spectrum_id_"))
+    dbDisconnect(tmp)
+    unlink(tf)
+    ## peak_id_ column
+    tf <- tempfile()
+    tmp <- dbConnect(SQLite(), tf)
+    with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = .initialize_tables(tmp, cols = cols)
+    )
+    res <- dbGetQuery(tmp, "select * from msms_spectrum_peak")
+    expect_equal(colnames(res), c("mz", "intensity", "spectrum_id_",
+                                  "peak_id_"))
+    dbDisconnect(tmp)
+    unlink(tf)
 })
 
 test_that(".initialize_tables_sql works", {
@@ -505,9 +558,50 @@ test_that(".insert_backend works", {
         ".insert_peaks" = function(...) {},
         ".is_maria_db" = function(x) TRUE,
         code = expect_true(
-            length(.insert_backend(3, mm8_sps, partitionBy = "chunk", 1L)) == 1L
+            length(.insert_backend(3, mm8_sps, partitionBy = "chunk", 1L)) == 2L
         )
     )
+    ## Insert in long form
+    tf <- tempfile()
+    tmp <- dbConnect(SQLite(), tf)
+    sv <- spectraVariables(mm8_sps)
+    spd <- as.data.frame(spectraData(mm8_sps[1:2], columns = sv))
+    cols <- .db_data_type(tmp, spd)
+    .initialize_tables(tmp, cols)
+    res <- .insert_backend(tmp, mm8_sps, index = 77, peak_index = 13)
+    expect_true(is.list(res))
+    expect_equal(res$spectrum_id, length(mm8_sps) + 77)
+    expect_equal(res$peak_id, 13)
+    res <- dbGetQuery(tmp, "select * from msms_spectrum")
+    expect_equal(res$spectrum_id_, seq(78, length.out = nrow(res)))
+    res <- dbGetQuery(tmp, "select * from msms_spectrum_peak")
+    expect_true(all(res$spectrum_id_ %in% seq(78, length.out = nrow(res))))
+    dbDisconnect(tmp)
+    unlink(tf)
+
+    ## Insert with peak ID.
+    tf <- tempfile()
+    tmp <- dbConnect(SQLite(), tf)
+    sv <- spectraVariables(mm8_sps)
+    spd <- as.data.frame(spectraData(mm8_sps[1:2], columns = sv))
+    cols <- .db_data_type(tmp, spd)
+    with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = {
+            .initialize_tables(tmp, cols = cols)
+            l <- .insert_backend(tmp, mm8_sps, index = 77, peak_index = 13)
+        }
+    )
+    expect_true(is.list(l))
+    expect_equal(l$spectrum_id, length(mm8_sps) + 77)
+    res <- dbGetQuery(tmp, "select * from msms_spectrum")
+    expect_equal(res$spectrum_id_, seq(78, length.out = nrow(res)))
+    res <- dbGetQuery(tmp, "select * from msms_spectrum_peak")
+    expect_true(all(res$spectrum_id_ %in% seq(78, length.out = nrow(res))))
+    expect_equal(l$peak_id, nrow(res) + 13)
+    expect_equal(res$peak_id_, seq(14, length.out  = nrow(res)))
+    dbDisconnect(tmp)
+    unlink(tf)
 })
 
 
@@ -673,7 +767,7 @@ test_that("MsBackendSql works with duckdb", {
         ## long format
         db_file <- tempfile()
         db <- dbConnect(duckdb(), db_file)
-        MsBackendSql:::.insert_data(db, mm8_file, storage = "long")
+        .insert_data(db, mm8_file, storage = "long")
         res <- dbListTables(db)
         expect_equal(res, c("msms_spectrum", "msms_spectrum_peak"))
         tmp <- backendInitialize(MsBackendSql(), dbcon = db)
@@ -688,7 +782,7 @@ test_that("MsBackendSql works with duckdb", {
         ## blob2
         db_file <- tempfile()
         db <- dbConnect(duckdb(), db_file)
-        MsBackendSql:::.insert_data(db, mm8_file, storage = "blob2")
+        .insert_data(db, mm8_file, storage = "blob2")
         res <- dbListTables(db)
         expect_equal(res, c("msms_spectrum", "msms_spectrum_peak_blob2"))
         tmp <- backendInitialize(MsBackendSql(), dbcon = db)
@@ -712,7 +806,7 @@ test_that(".db_is_long_form works", {
 test_that(".fetch_long_form_sql works", {
     tmp <- mm8_be_long
     ## only spectra variables
-    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
     expect_equal(res$rtime, tmp$rtime)
@@ -720,7 +814,7 @@ test_that(".fetch_long_form_sql works", {
     ## arbitrary order
     idx <- c(4, 1, 9, 20)
     tmp <- mm8_be_long[idx]
-    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
     expect_equal(res$rtime, tmp$rtime)
@@ -728,7 +822,7 @@ test_that(".fetch_long_form_sql works", {
     ## duplicated order
     idx <- c(4, 1, 4, 9, 20, 4)
     tmp <- mm8_be_long[idx]
-    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
+    res <- .fetch_long_form_sql(tmp, c("rtime", "msLevel", "scanIndex"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("rtime", "msLevel", "scanIndex"))
     expect_equal(res$rtime, tmp$rtime)
@@ -736,7 +830,7 @@ test_that(".fetch_long_form_sql works", {
 
     ## only peak variables
     tmp <- mm8_be_long
-    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("mz"))
+    res <- .fetch_long_form_sql(tmp, c("mz"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("mz"))
     expect_equal(res$mz, unlist(tmp$mz))
@@ -744,7 +838,7 @@ test_that(".fetch_long_form_sql works", {
     ## arbitrary order
     idx <- c(3, 9, 1, 30, 5)
     tmp <- mm8_be_long[idx]
-    res <- MsBackendSql:::.fetch_long_form_sql(tmp, c("mz"))
+    res <- .fetch_long_form_sql(tmp, c("mz"))
     expect_true(is.data.frame(res))
     expect_equal(colnames(res), c("mz"))
     expect_equal(res$mz, unlist(tmp$mz)) # Does not work
@@ -785,4 +879,22 @@ test_that(".fetch_long_form_sql works", {
     expect_equal(res$intensity, unlist(tmp$intensity))
     expect_equal(res$scanIndex, rep(tmp$scanIndex, lengths(tmp)))
     expect_equal(res$rtime, rep(tmp$rtime, lengths(tmp)))
+
+    ## Require peak_id_ LLLL mock .db_requires_peak_id...
+})
+
+test_that(".requires_peak_id works", {
+    ## For not it returns only TRUE if a duckdb database is used.
+    expect_false(.requires_peak_id(mm8_be_long))
+    expect_false(.requires_peak_id(mm8_be_blob))
+})
+
+test_that(".has_peak_id works", {
+    expect_false(.has_peak_id(mm8_be_blob))
+    expect_false(.has_peak_id(mm8_be_long))
+    expect_false(.has_peak_id(MsBackendSql()))
+})
+
+test_that(".db_requires_peak_id works", {
+    expect_false(.db_requires_peak_id(mm8_be_long@dbcon))
 })

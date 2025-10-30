@@ -1,5 +1,9 @@
 # MsBackendSql 1.9
 
+- For storage mode of peaks data in long form (i.e., one row per peak), create a
+  incremental (unique) *peak_id_* database column if the database requires that
+  (e.g. for DuckDb).
+
 ## Changes in 1.9.4
 
 - Add additional unit tests to check results are similar to the reference

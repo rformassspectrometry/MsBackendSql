@@ -545,6 +545,9 @@ setMethod("backendInitialize", "MsBackendSql",
     } else {
         object@.tables[["msms_spectrum_peak"]] <- colnames(
             dbGetQuery(dbcon, "select * from msms_spectrum_peak limit 0"))
+        if (.db_requires_peak_id(dbcon) && !.has_peak_id(object))
+            stop("The type of SQL database respectively connection ('",
+                 class(dbcon)[1L], "') requires unique peak identifiers!")
     }
     ## Initialize cached backend
     object <- callNextMethod(
