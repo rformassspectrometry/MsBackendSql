@@ -32,6 +32,16 @@ test_that("backendInitialize works", {
       , "Replacing")
     expect_true(length(be2) == 0L)
     expect_equal(spectraVariables(be2), spectraVariables(be))
+
+    ## Error if peak_id_ is missing for databases require that column
+    with_mocked_bindings(
+        ".has_peak_id" = function(x) FALSE,
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = expect_error(backendInitialize(
+            MsBackendSql(), dbcon = dbConnect(SQLite(), tempfile()),
+            data = spectraData(be), peaksStorageMode = "long", blob = FALSE),
+            "The type of SQL database")
+    )
 })
 
 test_that("dataStorage works", {
@@ -752,4 +762,74 @@ test_that("MsBackendSql extracted data matches reference implementation", {
     res <- longForm(mm8_be_blob2, c("rtime"))
     ref <- longForm(ref_be, "rtime")
     expect_equal(res, ref)
+})
+
+test_that("long-form database with peak_id_ mocking duckdb", {
+    tf <- tempfile()
+    tmp <- dbConnect(SQLite(), tf)
+    be_l <- with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = setBackend(mm8_sps, MsBackendSql(), dbcon = tmp,
+                          peaksStorageMode = "long", blob = FALSE)
+    )
+    res <- dbGetQuery(tmp, "select * from msms_spectrum_peak limit 3")
+    expect_equal(colnames(res), c("mz", "intensity", "spectrum_id_","peak_id_"))
+    ## no join query involved
+    a <- spectraData(be_l, columns = c("rtime", "mz", "intensity"))
+    b <- with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = spectraData(be_l, columns = c("rtime", "mz", "intensity"))
+    )
+    expect_equal(a, b)
+    ## uses join query; mocking need for ordering by peak_id_
+    a <- longForm(be_l, columns = c("rtime", "mz", "intensity"))
+    b <- with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = longForm(be_l, columns = c("rtime", "mz", "intensity"))
+    )
+    expect_equal(a, b)
+    dbDisconnect(tmp)
+    unlink(tf)
+
+    tf <- tempfile()
+    tmp <- dbConnect(SQLite(), tf)
+    be_l <- with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = backendInitialize(
+            MsBackendSql(), data = spectraData(mm8_be_long), dbcon = tmp,
+            peaksStorageMode = "long", blob = FALSE)
+    )
+    res <- dbGetQuery(tmp, "select * from msms_spectrum_peak limit 3")
+    expect_equal(colnames(res), c("mz", "intensity", "spectrum_id_","peak_id_"))
+    ## uses join query; mocking need for ordering by peak_id_
+    a <- longForm(be_l, columns = c("rtime", "mz", "intensity"))
+    b <- with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = longForm(be_l, columns = c("rtime", "mz", "intensity"))
+    )
+    expect_equal(a, b)
+    dbDisconnect(tmp)
+    unlink(tf)
+
+    ## Creating from mzML files: .insert_backend should do that - and in fact
+    ## also create proper, running values.
+    tf <- tempfile()
+    tmp <- dbConnect(SQLite(), tf)
+    with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = createMsBackendSqlDatabase(
+            dbcon = tmp, mm8_file, peaksStorageMode = "long", blob = FALSE)
+      , .package = "MsBackendSql")
+    be_l <- backendInitialize(MsBackendSql(), tmp)
+    res <- dbGetQuery(tmp, "select * from msms_spectrum_peak limit 3")
+    expect_equal(colnames(res), c("mz", "intensity", "spectrum_id_","peak_id_"))
+    ## uses join query; mocking need for ordering by peak_id_
+    a <- longForm(be_l, columns = c("rtime", "mz", "intensity"))
+    b <- with_mocked_bindings(
+        ".db_requires_peak_id" = function(x) TRUE,
+        code = longForm(be_l, columns = c("rtime", "mz", "intensity"))
+    )
+    expect_equal(a, b)
+    dbDisconnect(tmp)
+    unlink(tf)
 })
