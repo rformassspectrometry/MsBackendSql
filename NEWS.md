@@ -1,4 +1,4 @@
-# MsBackendSql 1.11.1
+# MsBackendSql 1.10.1
 
 - For storage mode of peaks data in long form (i.e., one row per peak), create a
   incremental (unique) *peak_id_* database column if the database requires that
