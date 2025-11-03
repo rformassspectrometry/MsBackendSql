@@ -81,7 +81,6 @@ MsBackendSql <- function() {
     extractCOLS(res, columns)
 }
 
-
 #' @param x backend
 #'
 #' @param columns `character` with the column(s) to retrieve.
