@@ -1,9 +1,9 @@
-pandoc: 3.8.1
+pandoc: 3.8.2.1
 pkgdown: 2.1.3.9000
-pkgdown_sha: c5a9fc68f17e0dc2dcfe3e6f752a1840d515acbc
+pkgdown_sha: 274c1f4e8bb2141a217c9f1af28ce5ab108d4b2f
 articles:
   MsBackendSql: MsBackendSql.html
-last_built: 2025-10-16T12:19Z
+last_built: 2025-11-03T12:06Z
 urls:
   reference: https://rformassspectrometry.github.io/MsBackendSql/reference
   article: https://rformassspectrometry.github.io/MsBackendSql/articles
