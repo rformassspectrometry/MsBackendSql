@@ -1,8 +1,12 @@
-# MsBackendSql 1.9
+# MsBackendSql 1.11.1
 
 - For storage mode of peaks data in long form (i.e., one row per peak), create a
   incremental (unique) *peak_id_* database column if the database requires that
   (e.g. for DuckDb).
+- `longForm()` on a database requiring *peak_id_* (e.g. DuckDb) order results
+  based on the *peak_id_* column.
+
+# MsBackendSql 1.9
 
 ## Changes in 1.9.4
 
