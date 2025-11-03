@@ -21,10 +21,11 @@ For more information see the package
 
 ## Creating a database
 
-By providing the connection to an SQL database, the `createMsBackendSqlDatabase`
-imports raw MS data from provided file names and stores it into the dedicated
-database tables created during import. While `MsBackendSql` supports any type of
-SQL database, it is currently optimized for MySQL/MariaDB databases.
+By providing the connection to an SQL database, the
+`createMsBackendSqlDatabase()` imports raw MS data from provided file names and
+stores it into the dedicated database tables created during
+import. `MsBackendSql` supports any type of SQL database, with some
+optimizations for MySQL/MariaDB databases.
 
 ## Using a *MsBackendSql* database
 
@@ -42,6 +43,12 @@ sps <- Spectra(dbcon, source = MsBackendSql())
 
 For more information see the package
 [homepage](https://rformassspectrometry.github.io/MsBackendSql).
+
+## Changing to a *MsBackendSql* using the `setBackend()` function
+
+Finally, it is also possible to use the `setBackend()` method on a `Spectra`
+object to change to a `MsBackendSql` backend. This will take all the MS data of
+the `Spectra` object and store that into a new SQL database.
 
 
 # Installation
