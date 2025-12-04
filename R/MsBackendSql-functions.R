@@ -98,7 +98,7 @@ MsBackendSql <- function() {
             x@dbcon,
             stri_c("select spectrum_id_,", stri_c(columns, collapse = ","),
                    " from msms_spectrum_peak where spectrum_id_ in (",
-                   stri_c(unique(x@spectraIds), collapse = ","), ")"))
+                   stri_c(base::sort(x@spectraIds), collapse = ","), ")"))
         sid <- as.factor(p$spectrum_id)
         if (drop && length(columns == 1L)) {
             p <- split(p[, columns], sid)[as.character(x@spectraIds)]
@@ -131,7 +131,7 @@ MsBackendSql <- function() {
             x@dbcon,
             stri_c("select spectrum_id_,", stri_c(columns, collapse = ","),
                    " from msms_spectrum_peak_blob where spectrum_id_ in (",
-                   stri_c(unique(x@spectraIds), collapse = ","), ")"))
+                   stri_c(base::sort(x@spectraIds), collapse = ","), ")"))
         sid <- p$spectrum_id_
         attributes(sid) <- NULL
         if (!length(sid)) return(list())
@@ -147,7 +147,7 @@ MsBackendSql <- function() {
         if (identical(base::unname(x@spectraIds), sid))
             res
         else
-            res[fmatch(x@spectraIds, p$spectrum_id_)]
+            res[fmatch(x@spectraIds, sid)]
     } else list()
 }
 
@@ -164,7 +164,7 @@ MsBackendSql <- function() {
             x@dbcon,
             stri_c("select spectrum_id_, peaks",
                    " from msms_spectrum_peak_blob2 where spectrum_id_ in (",
-                   stri_c(unique(x@spectraIds), collapse = ","), ")"))
+                   stri_c(base::sort(x@spectraIds), collapse = ","), ")"))
         sid <- p$spectrum_id_
         attributes(sid) <- NULL
         if (!length(sid)) return(list())
@@ -180,7 +180,7 @@ MsBackendSql <- function() {
         if (identical(base::unname(x@spectraIds), sid))
             res
         else
-            res[fmatch(x@spectraIds, p$spectrum_id_)]
+            res[fmatch(x@spectraIds, sid)]
     } else list()
 }
 
@@ -193,10 +193,15 @@ MsBackendSql <- function() {
         x@dbcon,
         stri_c("select ", stri_c(sql_columns, collapse = ","), " from ",
                "msms_spectrum where spectrum_id_ in (",
-               stri_c(unique(x@spectraIds), collapse = ", ") , ")"))
-    idx <- fmatch(x@spectraIds, res$spectrum_id_)
-    if (is.unsorted(idx, strictly = TRUE) || anyNA(idx))
-        res <- res[idx[!is.na(idx)], , drop = FALSE]
+               stri_c(base::sort(x@spectraIds), collapse = ",") , ")"))
+    ## idx <- fmatch(x@spectraIds, res$spectrum_id_)
+    ## if (is.unsorted(idx, strictly = TRUE) || anyNA(idx)) {
+    ##     res <- res[idx[!is.na(idx)], , drop = FALSE]
+    ## }
+    sid <- res$spectrum_id_
+    attributes(sid) <- NULL
+    if (!identical(base::unname(x@spectraIds), sid))
+        res <- res[fmatch(x@spectraIds, sid), , drop = FALSE]
     rownames(res) <- NULL
     res[, orig_columns, drop = FALSE]
 }
@@ -245,7 +250,7 @@ MsBackendSql <- function() {
         what <- "msms_spectrum_peak.spectrum_id_"
     }
     qry <- stri_c(qry, " where ", what, " in (",
-                  stri_c(unique(x@spectraIds), collapse = ", ") , ")", ordr)
+                  stri_c(base::sort(x@spectraIds), collapse = ",") , ")", ordr)
     res <- dbGetQuery(x@dbcon, qry)
     if (anyDuplicated(x@spectraIds)) { # use findMatches() only when needed
         m <- findMatches(x@spectraIds, res$spectrum_id_)
