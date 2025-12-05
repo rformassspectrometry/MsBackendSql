@@ -5,7 +5,7 @@
 **Authors**: Johannes Rainer \[aut, cre\] (ORCID:
 <https://orcid.org/0000-0002-6977-7147>), Chong Tang \[ctb\], Laurent
 Gatto \[ctb\] (ORCID: <https://orcid.org/0000-0002-1520-2268>)  
-**Compiled**: Mon Nov 3 12:07:03 2025
+**Compiled**: Fri Dec 5 11:47:50 2025
 
 ## Introduction
 
@@ -123,7 +123,7 @@ sps
     ## 1862         1          NA         1
     ##  ... 35 more variables/columns.
     ##  Use  'spectraVariables' to list all of them.
-    ## Database: /tmp/RtmpGFApvq/fileef2322cd20e
+    ## Database: /tmp/RtmpyXsf7M/file1dd27f989a9a
 
 `Spectra` objects allow also to change the backend to any other backend
 (extending `MsBackend`) using the
@@ -153,7 +153,7 @@ sps_mem
     ## 1862         1   259.752       931
     ##  ... 35 more variables/columns.
     ## Processing:
-    ##  Switch backend from MsBackendOfflineSql to MsBackendMemory [Mon Nov  3 12:07:10 2025]
+    ##  Switch backend from MsBackendOfflineSql to MsBackendMemory [Fri Dec  5 11:47:56 2025]
 
 With this function it is also possible to change from any backend to a
 `MsBackendOfflineSql` (or `MsBackendSql`) in which case a new database
@@ -197,10 +197,10 @@ sps2
     ## 1862         1          NA         1
     ##  ... 35 more variables/columns.
     ##  Use  'spectraVariables' to list all of them.
-    ## Database: /tmp/RtmpGFApvq/fileef21ce61e67
+    ## Database: /tmp/RtmpyXsf7M/file1dd224043cf8
     ## Processing:
-    ##  Switch backend from MsBackendOfflineSql to MsBackendMemory [Mon Nov  3 12:07:10 2025]
-    ##  Switch backend from MsBackendMemory to MsBackendOfflineSql [Mon Nov  3 12:07:10 2025]
+    ##  Switch backend from MsBackendOfflineSql to MsBackendMemory [Fri Dec  5 11:47:56 2025]
+    ##  Switch backend from MsBackendMemory to MsBackendOfflineSql [Fri Dec  5 11:47:57 2025]
 
 Similar to any other `Spectra` object we can retrieve the available
 *spectra variables* using the
@@ -261,7 +261,7 @@ footprint for the `Spectra` object.
 print(object.size(sps), units = "KB")
 ```
 
-    ## 115 Kb
+    ## 116.4 Kb
 
 The backend supports also adding additional spectra variables or
 changing their values. Below we add 10 seconds to the retention time of
@@ -282,7 +282,7 @@ higher after changing that spectra variable.
 print(object.size(sps), units = "KB")
 ```
 
-    ## 129.6 Kb
+    ## 131 Kb
 
 Such `$<-` operations can also be used to *cache* spectra variables
 (temporarily) in memory which can eventually improve performance. Below
@@ -363,9 +363,11 @@ default storage mode (`peaksStorageMode = "blob2"`) stores the complete
 peaks matrix (i.e. the two-column numerical matrix of *m/z* and
 intensity values) of spectrum as one entity to the database. This entry
 is stored as a binary data type (BLOB) in the database table (one row
-per spectrum). This reduces the size of the database and well as the
-time to extract (peaks) data. On the downside, such databases will only
-be readable and usable with *MsBackendSql*.
+per spectrum). This has a positive impact on the performance of the
+database to extract peak data (which is much faster than from databases
+with the *long* peaks storage mode). In addition, also the size (disk
+space) of such databases are smaller. On the downside, these databases
+will only be readable and usable with *MsBackendSql* or R-based tools.
 
 For *MsBackendSql* in the *long* peaks storage mode it is suggested to
 use *duckdb* as database backend.
@@ -405,7 +407,7 @@ At first we compare the memory footprint of the 3 backends.
 print(object.size(sps), units = "KB")
 ```
 
-    ## 113.3 Kb
+    ## 114.7 Kb
 
 ``` r
 
@@ -439,10 +441,10 @@ microbenchmark(msLevel(sps),
 ```
 
     ## Unit: microseconds
-    ##              expr      min        lq       mean    median        uq      max
-    ##      msLevel(sps) 5099.312 5197.5805 5399.92681 5252.5980 5512.8195 9188.728
-    ##  msLevel(sps_mzr)  372.165  404.8655  427.70709  415.8015  443.6335  636.949
-    ##   msLevel(sps_im)   10.489   12.9340   19.52523   20.0480   22.3470   57.617
+    ##              expr      min        lq       mean    median       uq      max
+    ##      msLevel(sps) 4996.654 5069.6495 5269.10737 5119.0975 5357.507 8812.948
+    ##  msLevel(sps_mzr)  375.430  406.6835  430.40609  419.8375  438.327  686.950
+    ##   msLevel(sps_im)   10.079   12.8390   19.74415   20.2780   22.572   60.442
     ##  neval
     ##    100
     ##    100
@@ -464,14 +466,14 @@ microbenchmark(peaksData(sps, BPPARAM = SerialParam()),
 ```
 
     ## Unit: microseconds
-    ##                                         expr        min         lq      mean
-    ##      peaksData(sps, BPPARAM = SerialParam())  35548.619  45401.928 133085.07
-    ##  peaksData(sps_mzr, BPPARAM = SerialParam()) 484020.661 485190.435 513019.36
-    ##   peaksData(sps_im, BPPARAM = SerialParam())    332.982    352.157   1760.66
+    ##                                         expr       min         lq       mean
+    ##      peaksData(sps, BPPARAM = SerialParam())  35203.42  45264.497 130648.151
+    ##  peaksData(sps_mzr, BPPARAM = SerialParam()) 483105.12 484578.611 512697.684
+    ##   peaksData(sps_im, BPPARAM = SerialParam())    445.22    522.134   1840.107
     ##      median         uq       max neval
-    ##   51993.706 263136.088 268657.08    10
-    ##  491609.997 498077.969 711223.46    10
-    ##     663.234    761.963  12536.09    10
+    ##   53889.855 256976.644 261829.13    10
+    ##  489485.137 495757.980 706635.28    10
+    ##     657.055    778.892  12695.63    10
 
 As expected, the `MsBackendMemory` has the fasted access to the full
 peaks data. The `MsBackendSql` outperforms however the `MsBackendMzR`
@@ -493,14 +495,14 @@ microbenchmark(peaksData(sps, BPPARAM = m2),
 ```
 
     ## Unit: microseconds
-    ##                              expr        min         lq        mean      median
-    ##      peaksData(sps, BPPARAM = m2)  36615.101  48989.678  84057.7731  59040.4850
-    ##  peaksData(sps_mzr, BPPARAM = m2) 442654.344 465956.800 719433.6651 783246.1660
-    ##   peaksData(sps_im, BPPARAM = m2)    410.807    738.709    771.1649    800.7505
-    ##          uq         max neval
-    ##   67326.607  337546.954    10
-    ##  824711.354 1100012.445    10
-    ##     916.251     935.306    10
+    ##                              expr        min         lq       mean     median
+    ##      peaksData(sps, BPPARAM = m2)  37070.162  49483.201  85439.590  56991.020
+    ##  peaksData(sps_mzr, BPPARAM = m2) 429305.374 463357.951 725542.463 789983.252
+    ##   peaksData(sps_im, BPPARAM = m2)    632.951    792.417    860.927    832.758
+    ##         uq         max neval
+    ##   70012.56  354169.379    10
+    ##  824273.33 1113356.223    10
+    ##     954.72    1100.461    10
 
 We next compare the performance of subsetting operations.
 
@@ -513,13 +515,13 @@ microbenchmark(filterRt(sps, rt = c(50, 100)),
 
     ## Unit: microseconds
     ##                                expr      min       lq      mean    median
-    ##      filterRt(sps, rt = c(50, 100)) 1761.359 1805.517 1988.5741 1833.4290
-    ##  filterRt(sps_mzr, rt = c(50, 100)) 1239.234 1301.791 1486.5582 1335.3385
-    ##   filterRt(sps_im, rt = c(50, 100))  386.412  417.560  447.5003  437.6375
+    ##      filterRt(sps, rt = c(50, 100)) 1730.866 1791.695 1990.4894 1827.6020
+    ##  filterRt(sps_mzr, rt = c(50, 100)) 1240.002 1293.345 1494.9244 1331.9330
+    ##   filterRt(sps_im, rt = c(50, 100))  399.725  416.842  451.0776  437.2795
     ##        uq       max neval
-    ##  1876.825 14443.741   100
-    ##  1471.558  9151.458   100
-    ##   459.538  1031.486   100
+    ##  1880.265 14332.067   100
+    ##  1442.369  9180.873   100
+    ##   463.734  1016.705   100
 
 The two *on-disk* backends `MsBackendSql` and `MsBackendMzR` show a
 comparable performance for this operation. This filtering does involves
@@ -543,10 +545,10 @@ microbenchmark(sps[idx],
 ```
 
     ## Unit: microseconds
-    ##          expr     min      lq     mean  median       uq      max neval
-    ##      sps[idx] 132.107 139.716 150.0258 149.339 156.3370  201.857   100
-    ##  sps_mzr[idx] 657.768 684.007 705.2798 692.929 703.3175 1590.591   100
-    ##   sps_im[idx] 229.439 237.689 247.0975 246.846 252.8920  349.273   100
+    ##          expr     min       lq     mean   median       uq      max neval
+    ##      sps[idx] 133.339 140.6720 152.2515 151.9635 158.0345  198.370   100
+    ##  sps_mzr[idx] 661.253 684.3505 709.5362 699.4190 713.2790 1594.973   100
+    ##   sps_im[idx] 237.072 245.7335 255.6057 254.3890 260.3455  316.851   100
 
 Here the `MsBackendSql` outperforms the other backends because it does
 not keep any data in memory and hence does not need to subset these. The
@@ -570,14 +572,14 @@ microbenchmark(peaksData(sps_10),
 ```
 
     ## Unit: microseconds
-    ##                   expr       min        lq       mean    median        uq
-    ##      peaksData(sps_10)  1731.864  1945.493  2388.2116  2109.574  3006.454
-    ##  peaksData(sps_mzr_10) 50087.777 50528.140 51915.3793 51865.618 53176.986
-    ##   peaksData(sps_im_10)   385.049   417.249   544.1631   563.337   651.466
+    ##                   expr       min        lq       mean     median       uq
+    ##      peaksData(sps_10)  1904.360  2069.247  2584.1210  2221.4605  3272.27
+    ##  peaksData(sps_mzr_10) 53776.523 54172.592 55317.2798 55393.2870 55892.74
+    ##   peaksData(sps_im_10)   379.688   405.917   549.3042   588.9925   664.84
     ##        max neval
-    ##   3171.012    10
-    ##  53970.307    10
-    ##    682.013    10
+    ##   3441.796    10
+    ##  57751.904    10
+    ##    675.619    10
 
 The `MsBackendSql` outperforms the `MsBackendMzR` while, not
 unexpectedly, the `MsBackendMemory` provides fasted access.
@@ -647,7 +649,7 @@ result in a *download* of the full data to the user computer’s memory.
 sessionInfo()
 ```
 
-    ## R Under development (unstable) (2025-10-31 r88977)
+    ## R Under development (unstable) (2025-12-01 r89083)
     ## Platform: x86_64-pc-linux-gnu
     ## Running under: Ubuntu 24.04.3 LTS
     ## 
@@ -671,27 +673,27 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ## [1] microbenchmark_1.5.0 RSQLite_2.4.3        MsBackendSql_1.11.1 
+    ## [1] microbenchmark_1.5.0 RSQLite_2.4.5        MsBackendSql_1.11.2 
     ## [4] Spectra_1.21.0       BiocParallel_1.45.0  S4Vectors_0.49.0    
     ## [7] BiocGenerics_0.57.0  generics_0.1.4       BiocStyle_2.39.0    
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] sass_0.4.10            MsCoreUtils_1.21.0     stringi_1.8.7         
-    ##  [4] hms_1.1.4              digest_0.6.37          evaluate_1.0.5        
-    ##  [7] bookdown_0.45          blob_1.2.4             fastmap_1.2.0         
+    ##  [1] sass_0.4.10            MsCoreUtils_1.23.1     stringi_1.8.7         
+    ##  [4] hms_1.1.4              digest_0.6.39          evaluate_1.0.5        
+    ##  [7] bookdown_0.46          blob_1.2.4             fastmap_1.2.0         
     ## [10] jsonlite_2.0.0         ProtGenerics_1.43.0    progress_1.2.3        
-    ## [13] mzR_2.45.0             DBI_1.2.3              BiocManager_1.30.26   
+    ## [13] mzR_2.45.0             DBI_1.2.3              BiocManager_1.30.27   
     ## [16] codetools_0.2-20       textshaping_1.0.4      jquerylib_0.1.4       
     ## [19] cli_3.6.5              rlang_1.1.6            crayon_1.5.3          
     ## [22] Biobase_2.71.0         bit64_4.6.0-1          cachem_1.1.0          
-    ## [25] yaml_2.3.10            tools_4.6.0            parallel_4.6.0        
+    ## [25] yaml_2.3.11            tools_4.6.0            parallel_4.6.0        
     ## [28] memoise_2.0.1          ncdf4_1.24             fastmatch_1.1-6       
     ## [31] vctrs_0.6.5            R6_2.6.1               lifecycle_1.0.4       
     ## [34] fs_1.6.6               htmlwidgets_1.6.4      IRanges_2.45.0        
     ## [37] bit_4.6.0              clue_0.3-66            MASS_7.3-65           
     ## [40] ragg_1.5.0             cluster_2.1.8.1        pkgconfig_2.0.3       
-    ## [43] desc_1.4.3             pkgdown_2.1.3.9000     bslib_0.9.0           
+    ## [43] desc_1.4.3             pkgdown_2.2.0.9000     bslib_0.9.0           
     ## [46] Rcpp_1.1.0             data.table_1.17.8      systemfonts_1.3.1     
-    ## [49] xfun_0.54              knitr_1.50             htmltools_0.5.8.1     
+    ## [49] xfun_0.54              knitr_1.50             htmltools_0.5.9       
     ## [52] rmarkdown_2.30         compiler_4.6.0         prettyunits_1.2.0     
-    ## [55] MetaboCoreUtils_1.19.0
+    ## [55] MetaboCoreUtils_1.19.1

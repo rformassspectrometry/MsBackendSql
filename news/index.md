@@ -1,6 +1,15 @@
 # Changelog
 
-## MsBackendSql 1.11.1
+## MsBackendSql 1.11
+
+### Changes in 1.11.2
+
+- Small update to the internal function to extract the spectra data:
+  avoid `fmatch()` call if not needed.
+- Pass sorted spectra IDs to the SQL query, which can result in a tiny
+  performance gain.
+
+### Changes in 1.11.1
 
 - For storage mode of peaks data in long form (i.e., one row per peak),
   create a incremental (unique) *peak_id\_* database column if the
