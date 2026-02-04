@@ -2,7 +2,7 @@ library(testthat)
 library(MsBackendSql)
 library(Spectra)
 library(RSQLite)
-library(msdata)
+library(MsDataHub)
 
 setClass("DummySQL",
          contains = "SQLiteConnection")
@@ -12,22 +12,22 @@ setMethod("dbExecute", c("DummySQL", "character"),
               TRUE
           })
 
-mm8_file <- system.file("microtofq", "MM8.mzML", package = "msdata")
-mm8_sps <- Spectra(mm8_file)
-mm8_db_long <- dbConnect(SQLite(), tempfile())
-createMsBackendSqlDatabase(mm8_db_long, mm8_file, blob = FALSE,
+a_file <- MsDataHub::X20171016_POOL_POS_1_105.134.mzML()
+a_sps <- Spectra(a_file)
+a_db_long <- dbConnect(SQLite(), tempfile())
+createMsBackendSqlDatabase(a_db_long, a_file, blob = FALSE,
                            peaksStorageMode = "long")
-mm8_be_long <- backendInitialize(MsBackendSql(), mm8_db_long)
+a_be_long <- backendInitialize(MsBackendSql(), a_db_long)
 
-mm8_db_blob <- dbConnect(SQLite(), tempfile())
-createMsBackendSqlDatabase(mm8_db_blob, mm8_file, blob = TRUE,
+a_db_blob <- dbConnect(SQLite(), tempfile())
+createMsBackendSqlDatabase(a_db_blob, a_file, blob = TRUE,
                            peaksStorageMode = "blob")
-mm8_be_blob <- backendInitialize(MsBackendSql(), mm8_db_blob)
+a_be_blob <- backendInitialize(MsBackendSql(), a_db_blob)
 
-mm8_db_blob2 <- dbConnect(SQLite(), tempfile())
-createMsBackendSqlDatabase(mm8_db_blob2, mm8_file, blob = TRUE,
+a_db_blob2 <- dbConnect(SQLite(), tempfile())
+createMsBackendSqlDatabase(a_db_blob2, a_file, blob = TRUE,
                            peaksStorageMode = "blob2")
-mm8_be_blob2 <- backendInitialize(MsBackendSql(), mm8_db_blob2)
+a_be_blob2 <- backendInitialize(MsBackendSql(), a_db_blob2)
 
 ################################################################################
 ##
@@ -50,12 +50,12 @@ mm8_be_blob2 <- backendInitialize(MsBackendSql(), mm8_db_blob2)
 ##
 ################################################################################
 
-mm14_file <- system.file("microtofq", "MM14.mzML", package = "msdata")
+b_file <- MsDataHub::X20171016_POOL_POS_3_105.134.mzML()
 mm_db <- dbConnect(SQLite(), tempfile())
-createMsBackendSqlDatabase(mm_db, c(mm8_file, mm14_file), blob = FALSE)
+createMsBackendSqlDatabase(mm_db, c(a_file, b_file), blob = FALSE)
 mm_be <- backendInitialize(MsBackendSql(), mm_db)
 
-tmt_file <- proteomics(full.names = TRUE)[4L]
+tmt_file <- MsDataHub::TMT_Erwinia_1uLSike_Top10HCD_isol2_45stepped_60min_01.20141210.mzML.gz()
 tmt_mzr <- backendInitialize(MsBackendMzR(), tmt_file)
 tmt_db <- dbConnect(SQLite(), tempfile())
 createMsBackendSqlDatabase(tmt_db, tmt_file, blob = FALSE)
@@ -66,14 +66,14 @@ test_check("MsBackendSql")
 test_suite <- system.file("test_backends", "test_MsBackend",
                           package = "Spectra")
 
-be <- mm8_be_blob
+be <- a_be_blob
 test_dir(test_suite, stop_on_failure = TRUE)
 
 be <- tmt_be[sample(seq_along(tmt_be), 300)]
 test_dir(test_suite, stop_on_failure = TRUE)
 
-dbDisconnect(mm8_db_long)
-dbDisconnect(mm8_db_blob)
-dbDisconnect(mm8_db_blob2)
+dbDisconnect(a_db_long)
+dbDisconnect(a_db_blob)
+dbDisconnect(a_db_blob2)
 dbDisconnect(mm_db)
 dbDisconnect(tmt_db)

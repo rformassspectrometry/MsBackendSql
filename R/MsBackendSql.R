@@ -412,7 +412,7 @@
 #' ## Create a new MsBackendSql database
 #'
 #' ## Define a file from which to import the data
-#' data_file <- system.file("microtofq", "MM8.mzML", package = "msdata")
+#' data_file <- MsDataHub::X20171016_POOL_POS_3_105.134.mzML()
 #'
 #' ## Create a database/connection to a database
 #' library(RSQLite)
