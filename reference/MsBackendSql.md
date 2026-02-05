@@ -614,7 +614,9 @@ Johannes Rainer
 ## Create a new MsBackendSql database
 
 ## Define a file from which to import the data
-data_file <- system.file("microtofq", "MM8.mzML", package = "msdata")
+data_file <- MsDataHub::X20171016_POOL_POS_3_105.134.mzML()
+#> see ?MsDataHub and browseVignettes('MsDataHub') for documentation
+#> loading from cache
 
 ## Create a database/connection to a database
 library(RSQLite)
@@ -625,7 +627,7 @@ dbc <- dbConnect(SQLite(), db_file)
 createMsBackendSqlDatabase(dbc, data_file)
 #> Importing data ... 
 #> 
-#> [==========================================================] 1/1 (100%) in  1s
+#> [==========================================================] 1/1 (100%) in  2s
 #> 
 #> Creating indices 
 #> .
@@ -641,7 +643,7 @@ dbc <- dbConnect(SQLite(), db_file)
 be <- backendInitialize(MsBackendSql(), dbc)
 
 be
-#> MsBackendSql with 198 spectra
+#> MsBackendSql with 931 spectra
 #>       msLevel precursorMz  polarity
 #>     <integer>   <numeric> <integer>
 #> 1           1          NA         1
@@ -650,60 +652,60 @@ be
 #> 4           1          NA         1
 #> 5           1          NA         1
 #> ...       ...         ...       ...
-#> 194         1          NA         1
-#> 195         1          NA         1
-#> 196         1          NA         1
-#> 197         1          NA         1
-#> 198         1          NA         1
+#> 927         1          NA         1
+#> 928         1          NA         1
+#> 929         1          NA         1
+#> 930         1          NA         1
+#> 931         1          NA         1
 #>  ... 35 more variables/columns.
 #>  Use  'spectraVariables' to list all of them.
-#> Database: /tmp/RtmpWGx4jo/file1d1237c9bab7
+#> Database: /tmp/RtmpDEx8im/file16b77de1154e
 
 ## Original data source
 head(be$dataOrigin)
-#> [1] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"
-#> [2] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"
-#> [3] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"
-#> [4] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"
-#> [5] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"
-#> [6] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"
+#> [1] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"
+#> [2] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"
+#> [3] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"
+#> [4] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"
+#> [5] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"
+#> [6] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"
 
 ## Data storage
 head(dataStorage(be))
-#> [1] "/tmp/RtmpWGx4jo/file1d1237c9bab7" "/tmp/RtmpWGx4jo/file1d1237c9bab7"
-#> [3] "/tmp/RtmpWGx4jo/file1d1237c9bab7" "/tmp/RtmpWGx4jo/file1d1237c9bab7"
-#> [5] "/tmp/RtmpWGx4jo/file1d1237c9bab7" "/tmp/RtmpWGx4jo/file1d1237c9bab7"
+#> [1] "/tmp/RtmpDEx8im/file16b77de1154e" "/tmp/RtmpDEx8im/file16b77de1154e"
+#> [3] "/tmp/RtmpDEx8im/file16b77de1154e" "/tmp/RtmpDEx8im/file16b77de1154e"
+#> [5] "/tmp/RtmpDEx8im/file16b77de1154e" "/tmp/RtmpDEx8im/file16b77de1154e"
 
 ## Access all spectra data
 spd <- spectraData(be)
 spd
-#> DataFrame with 198 rows and 38 columns
-#>       msLevel     rtime acquisitionNum scanIndex                             mz
-#>     <integer> <numeric>      <integer> <integer>                  <NumericList>
-#> 1           1     0.486              1         1    104.554,106.996,107.966,...
-#> 2           1     0.822              2         2    107.960,109.964,112.027,...
-#> 3           1     1.159              3         3    107.963,112.021,113.035,...
-#> 4           1     1.495              4         4    105.971,109.984,112.028,...
-#> 5           1     1.832              5         5    104.474,107.000,109.968,...
-#> ...       ...       ...            ...       ...                            ...
-#> 194         1   65.4360            194       194    106.992,111.459,112.022,...
-#> 195         1   65.7720            195       195  99.0797,109.0031,112.0232,...
-#> 196         1   66.1092            196       196    102.927,108.970,112.028,...
-#> 197         1   66.4458            197       197    111.058,112.026,113.029,...
-#> 198         1   66.7818            198       198    111.044,112.024,112.518,...
+#> DataFrame with 931 rows and 38 columns
+#>       msLevel     rtime acquisitionNum scanIndex                          mz
+#>     <integer> <numeric>      <integer> <integer>               <NumericList>
+#> 1           1     0.275              1         1 108.078,108.080,108.081,...
+#> 2           1     0.554              2         2 105.040,105.041,105.043,...
+#> 3           1     0.833              3         3 105.037,105.038,105.040,...
+#> 4           1     1.112              4         4 105.037,105.038,105.040,...
+#> 5           1     1.391              5         5 105.034,105.035,105.037,...
+#> ...       ...       ...            ...       ...                         ...
+#> 927         1   258.636            927       927 105.008,105.009,105.010,...
+#> 928         1   258.915            928       928 105.009,105.010,105.012,...
+#> 929         1   259.194            929       929 105.010,105.012,105.013,...
+#> 930         1   259.473            930       930 105.012,105.013,105.015,...
+#> 931         1   259.752            931       931 105.012,105.013,105.015,...
 #>           intensity            dataStorage             dataOrigin centroided
 #>       <NumericList>            <character>            <character>  <logical>
-#> 1      23,35,50,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
-#> 2    35, 24,140,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
-#> 3    28,179,350,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
-#> 4    25, 28,131,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
-#> 5      26,30,25,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
+#> 1     0,412,  0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
+#> 2     0,110,110,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
+#> 3     0,156,156,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
+#> 4     0,127,  0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
+#> 5     0,123,123,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
 #> ...             ...                    ...                    ...        ...
-#> 194    34,24,86,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
-#> 195  24, 22,198,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
-#> 196    29,22,98,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
-#> 197  31,124,189,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
-#> 198    67,84,22,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE
+#> 927     0,22,67,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
+#> 928     0,21, 0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
+#> 929     0,26, 0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
+#> 930     0,23, 0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
+#> 931     0,25, 0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE
 #>      smoothed  polarity precScanNum precursorMz precursorIntensity
 #>     <logical> <integer>   <integer>   <numeric>          <numeric>
 #> 1          NA         1          NA          NA                 NA
@@ -712,11 +714,11 @@ spd
 #> 4          NA         1          NA          NA                 NA
 #> 5          NA         1          NA          NA                 NA
 #> ...       ...       ...         ...         ...                ...
-#> 194        NA         1          NA          NA                 NA
-#> 195        NA         1          NA          NA                 NA
-#> 196        NA         1          NA          NA                 NA
-#> 197        NA         1          NA          NA                 NA
-#> 198        NA         1          NA          NA                 NA
+#> 927        NA         1          NA          NA                 NA
+#> 928        NA         1          NA          NA                 NA
+#> 929        NA         1          NA          NA                 NA
+#> 930        NA         1          NA          NA                 NA
+#> 931        NA         1          NA          NA                 NA
 #>     precursorCharge collisionEnergy isolationWindowLowerMz
 #>           <integer>       <numeric>              <numeric>
 #> 1                NA              NA                     NA
@@ -725,63 +727,63 @@ spd
 #> 4                NA              NA                     NA
 #> 5                NA              NA                     NA
 #> ...             ...             ...                    ...
-#> 194              NA              NA                     NA
-#> 195              NA              NA                     NA
-#> 196              NA              NA                     NA
-#> 197              NA              NA                     NA
-#> 198              NA              NA                     NA
+#> 927              NA              NA                     NA
+#> 928              NA              NA                     NA
+#> 929              NA              NA                     NA
+#> 930              NA              NA                     NA
+#> 931              NA              NA                     NA
 #>     isolationWindowTargetMz isolationWindowUpperMz peaksCount totIonCurrent
 #>                   <numeric>              <numeric>  <integer>     <numeric>
-#> 1                        NA                     NA       1743         97322
-#> 2                        NA                     NA       1708         98590
-#> 3                        NA                     NA       1708         96425
-#> 4                        NA                     NA       1747         97144
-#> 5                        NA                     NA       1730         94631
+#> 1                        NA                     NA        542        725013
+#> 2                        NA                     NA       1777       1115422
+#> 3                        NA                     NA       1360        979255
+#> 4                        NA                     NA       1626        992255
+#> 5                        NA                     NA       1694       1018768
 #> ...                     ...                    ...        ...           ...
-#> 194                      NA                     NA       2267        142472
-#> 195                      NA                     NA       2488        167102
-#> 196                      NA                     NA       2324        137565
-#> 197                      NA                     NA       2105        113086
-#> 198                      NA                     NA       1996         97257
+#> 927                      NA                     NA       3528        418159
+#> 928                      NA                     NA       3662        429930
+#> 929                      NA                     NA       3442        413427
+#> 930                      NA                     NA       3564        447033
+#> 931                      NA                     NA       3517        441025
 #>     basePeakMZ basePeakIntensity electronBeamEnergy ionisationEnergy     lowMZ
 #>      <numeric>         <numeric>          <numeric>        <numeric> <numeric>
-#> 1      144.050              7250                 NA                0   104.554
-#> 2      144.050              7064                 NA                0   107.960
-#> 3      144.050              7124                 NA                0   107.963
-#> 4      144.051              7067                 NA                0   105.971
-#> 5      144.051              6891                 NA                0   104.474
+#> 1      124.087            127807                 NA                0   108.078
+#> 2      124.086            202258                 NA                0   105.040
+#> 3      124.086            166954                 NA                0   105.037
+#> 4      124.086            163449                 NA                0   105.037
+#> 5      124.086            170723                 NA                0   105.034
 #> ...        ...               ...                ...              ...       ...
-#> 194    144.051              4615                 NA                0  106.9921
-#> 195    144.051              3812                 NA                0   99.0797
-#> 196    144.050              3526                 NA                0  102.9272
-#> 197    144.050              3902                 NA                0  111.0582
-#> 198    144.051              3587                 NA                0  111.0437
+#> 927    123.090             28544                 NA                0   105.008
+#> 928    123.090             29164                 NA                0   105.009
+#> 929    123.090             28724                 NA                0   105.010
+#> 930    123.091             28743                 NA                0   105.012
+#> 931    123.091             27503                 NA                0   105.012
 #>        highMZ mergedScan mergedResultScanNum mergedResultStartScanNum
 #>     <numeric>  <integer>           <integer>                <integer>
-#> 1    1004.470         NA                  NA                       NA
-#> 2    1002.799         NA                  NA                       NA
-#> 3     993.959         NA                  NA                       NA
-#> 4     986.756         NA                  NA                       NA
-#> 5    1003.469         NA                  NA                       NA
+#> 1     133.988         NA                  NA                       NA
+#> 2     133.982         NA                  NA                       NA
+#> 3     133.987         NA                  NA                       NA
+#> 4     133.987         NA                  NA                       NA
+#> 5     133.992         NA                  NA                       NA
 #> ...       ...        ...                 ...                      ...
-#> 194  1003.828         NA                  NA                       NA
-#> 195  1003.270         NA                  NA                       NA
-#> 196  1000.594         NA                  NA                       NA
-#> 197   984.228         NA                  NA                       NA
-#> 198  1000.851         NA                  NA                       NA
-#>     mergedResultEndScanNum injectionTime filterString  spectrumId
-#>                  <integer>     <numeric>  <character> <character>
-#> 1                       NA             0           NA      scan=1
-#> 2                       NA             0           NA      scan=2
-#> 3                       NA             0           NA      scan=3
-#> 4                       NA             0           NA      scan=4
-#> 5                       NA             0           NA      scan=5
-#> ...                    ...           ...          ...         ...
-#> 194                     NA             0           NA    scan=194
-#> 195                     NA             0           NA    scan=195
-#> 196                     NA             0           NA    scan=196
-#> 197                     NA             0           NA    scan=197
-#> 198                     NA             0           NA    scan=198
+#> 927   134.000         NA                  NA                       NA
+#> 928   134.000         NA                  NA                       NA
+#> 929   134.000         NA                  NA                       NA
+#> 930   133.998         NA                  NA                       NA
+#> 931   133.997         NA                  NA                       NA
+#>     mergedResultEndScanNum injectionTime filterString             spectrumId
+#>                  <integer>     <numeric>  <character>            <character>
+#> 1                       NA             0           NA sample=1 period=1 cy..
+#> 2                       NA             0           NA sample=1 period=1 cy..
+#> 3                       NA             0           NA sample=1 period=1 cy..
+#> 4                       NA             0           NA sample=1 period=1 cy..
+#> 5                       NA             0           NA sample=1 period=1 cy..
+#> ...                    ...           ...          ...                    ...
+#> 927                     NA             0           NA sample=1 period=1 cy..
+#> 928                     NA             0           NA sample=1 period=1 cy..
+#> 929                     NA             0           NA sample=1 period=1 cy..
+#> 930                     NA             0           NA sample=1 period=1 cy..
+#> 931                     NA             0           NA sample=1 period=1 cy..
 #>     ionMobilityDriftTime scanWindowLowerLimit scanWindowUpperLimit spectrum_id_
 #>                <numeric>            <numeric>            <numeric>    <integer>
 #> 1                     NA                   NA                   NA            1
@@ -790,11 +792,11 @@ spd
 #> 4                     NA                   NA                   NA            4
 #> 5                     NA                   NA                   NA            5
 #> ...                  ...                  ...                  ...          ...
-#> 194                   NA                   NA                   NA          194
-#> 195                   NA                   NA                   NA          195
-#> 196                   NA                   NA                   NA          196
-#> 197                   NA                   NA                   NA          197
-#> 198                   NA                   NA                   NA          198
+#> 927                   NA                   NA                   NA          927
+#> 928                   NA                   NA                   NA          928
+#> 929                   NA                   NA                   NA          929
+#> 930                   NA                   NA                   NA          930
+#> 931                   NA                   NA                   NA          931
 
 ## Available variables
 spectraVariables(be)
@@ -820,19 +822,19 @@ spectraVariables(be)
 
 ## Access mz values
 mz(be)
-#> NumericList of length 198
-#> [[1]] 104.553733825684 106.996170043945 ... 1002.67761230469 1004.47033691406
-#> [[2]] 107.959617614746 109.964324951172 ... 991.343811035156 1002.79937744141
-#> [[3]] 107.962753295898 112.021392822266 ... 964.238586425781 993.959167480469
-#> [[4]] 105.970863342285 109.984230041504 ... 979.084838867188 986.755981445312
-#> [[5]] 104.473876953125 106.999610900879 ... 1003.185546875 1003.46936035156
-#> [[6]] 102.036674499512 107.963928222656 ... 993.781127929688 994.755920410156
-#> [[7]] 104.272621154785 112.024925231934 ... 996.248046875 1001.64440917969
-#> [[8]] 98.9297180175781 106.506416320801 ... 991.034484863281 997.045837402344
-#> [[9]] 107.966445922852 109.385284423828 ... 995.031494140625 995.600463867188
-#> [[10]] 108.965042114258 109.974197387695 ... 982.596313476562 989.777404785156
+#> NumericList of length 931
+#> [[1]] 108.078350457464 108.079816722562 ... 133.985926725175 133.987559287009
+#> [[2]] 105.039628321505 105.04107382602 ... 133.980645512489 133.982278040861
+#> [[3]] 105.036737362206 105.038182846829 ... 133.985543127443 133.987175685653
+#> [[4]] 105.036737362206 105.038182846829 ... 133.985543127443 133.987175685653
+#> [[5]] 105.033846442691 105.035291907422 ... 133.990440831911 133.992073419959
+#> [[6]] 105.033846442691 105.035291907422 ... 133.983910579179 133.985543127443
+#> [[7]] 105.033846442691 105.035291907422 ... 133.982278040861 133.983910579179
+#> [[8]] 105.036737362206 105.038182846829 ... 133.988808253809 133.990440831911
+#> [[9]] 105.036737362206 105.038182846829 ... 133.985543127443 133.987175685653
+#> [[10]] 105.039628321505 105.04107382602 ... 133.993706017952 133.995338625892
 #> ...
-#> <188 more elements>
+#> <921 more elements>
 
 ## Subset the object to spectra in arbitrary order
 be_sub <- be[c(5, 1, 1, 2, 4, 100)]
@@ -848,7 +850,7 @@ be_sub
 #> 6         1          NA         1
 #>  ... 35 more variables/columns.
 #>  Use  'spectraVariables' to list all of them.
-#> Database: /tmp/RtmpWGx4jo/file1d1237c9bab7
+#> Database: /tmp/RtmpDEx8im/file16b77de1154e
 
 ## The internal spectrum IDs (primary keys from the database)
 be_sub$spectrum_id_

@@ -13,7 +13,7 @@ createMsBackendSqlDatabase()."><meta property="og:image" content="https://rforma
 
     <a class="navbar-brand me-2" href="../index.html">MsBackendSql</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.11.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.11.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -569,7 +569,9 @@ increasing the memory demand of the object.</p>
 <span class="r-in"><span><span class="co">## Create a new MsBackendSql database</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Define a file from which to import the data</span></span></span>
-<span class="r-in"><span><span class="va">data_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"microtofq"</span>, <span class="st">"MM8.mzML"</span>, package <span class="op">=</span> <span class="st">"msdata"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">data_file</span> <span class="op">&lt;-</span> <span class="fu">MsDataHub</span><span class="fu">::</span><span class="fu"><a href="https://rformassspectrometry.github.io/MsDataHub/reference/sciex.html" class="external-link">X20171016_POOL_POS_3_105.134.mzML</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> see ?MsDataHub and browseVignettes('MsDataHub') for documentation</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> loading from cache</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Create a database/connection to a database</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rsqlite.r-dbi.org" class="external-link">RSQLite</a></span><span class="op">)</span></span></span>
@@ -580,7 +582,7 @@ increasing the memory demand of the object.</p>
 <span class="r-in"><span><span class="fu">createMsBackendSqlDatabase</span><span class="op">(</span><span class="va">dbc</span>, <span class="va">data_file</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Importing data ... </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [==========================================================] 1/1 (100%) in  1s</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [==========================================================] 1/1 (100%) in  2s</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Creating indices </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> .</span>
@@ -596,7 +598,7 @@ increasing the memory demand of the object.</p>
 <span class="r-in"><span><span class="va">be</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/backendInitialize.html" class="external-link">backendInitialize</a></span><span class="op">(</span><span class="fu">MsBackendSql</span><span class="op">(</span><span class="op">)</span>, <span class="va">dbc</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">be</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> MsBackendSql with 198 spectra</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> MsBackendSql with 931 spectra</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       msLevel precursorMz  polarity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;integer&gt;   &lt;numeric&gt; &lt;integer&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1           1          NA         1</span>
@@ -605,60 +607,60 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4           1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5           1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...       ...         ...       ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194         1          NA         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195         1          NA         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196         1          NA         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197         1          NA         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930         1          NA         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 35 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpWGx4jo/file1d1237c9bab7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpDEx8im/file16b77de1154e</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Original data source</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">be</span><span class="op">$</span><span class="va">dataOrigin</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [6] "/__w/_temp/Library/msdata/microtofq/MM8.mzML"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [6] "/github/home/.cache/R/ExperimentHub/102835a6d416_7860"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Data storage</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">dataStorage</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpWGx4jo/file1d1237c9bab7" "/tmp/RtmpWGx4jo/file1d1237c9bab7"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpWGx4jo/file1d1237c9bab7" "/tmp/RtmpWGx4jo/file1d1237c9bab7"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpWGx4jo/file1d1237c9bab7" "/tmp/RtmpWGx4jo/file1d1237c9bab7"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpDEx8im/file16b77de1154e" "/tmp/RtmpDEx8im/file16b77de1154e"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmpDEx8im/file16b77de1154e" "/tmp/RtmpDEx8im/file16b77de1154e"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmpDEx8im/file16b77de1154e" "/tmp/RtmpDEx8im/file16b77de1154e"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access all spectra data</span></span></span>
 <span class="r-in"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraData</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">spd</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 198 rows and 38 columns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       msLevel     rtime acquisitionNum scanIndex                             mz</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;integer&gt; &lt;numeric&gt;      &lt;integer&gt; &lt;integer&gt;                  &lt;NumericList&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1     0.486              1         1    104.554,106.996,107.966,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           1     0.822              2         2    107.960,109.964,112.027,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           1     1.159              3         3    107.963,112.021,113.035,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4           1     1.495              4         4    105.971,109.984,112.028,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5           1     1.832              5         5    104.474,107.000,109.968,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ...       ...       ...            ...       ...                            ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194         1   65.4360            194       194    106.992,111.459,112.022,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195         1   65.7720            195       195  99.0797,109.0031,112.0232,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196         1   66.1092            196       196    102.927,108.970,112.028,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197         1   66.4458            197       197    111.058,112.026,113.029,...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198         1   66.7818            198       198    111.044,112.024,112.518,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> DataFrame with 931 rows and 38 columns</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       msLevel     rtime acquisitionNum scanIndex                          mz</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;integer&gt; &lt;numeric&gt;      &lt;integer&gt; &lt;integer&gt;               &lt;NumericList&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1     0.275              1         1 108.078,108.080,108.081,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           1     0.554              2         2 105.040,105.041,105.043,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           1     0.833              3         3 105.037,105.038,105.040,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           1     1.112              4         4 105.037,105.038,105.040,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           1     1.391              5         5 105.034,105.035,105.037,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ...       ...       ...            ...       ...                         ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927         1   258.636            927       927 105.008,105.009,105.010,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928         1   258.915            928       928 105.009,105.010,105.012,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929         1   259.194            929       929 105.010,105.012,105.013,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930         1   259.473            930       930 105.012,105.013,105.015,...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931         1   259.752            931       931 105.012,105.013,105.015,...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           intensity            dataStorage             dataOrigin centroided</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;NumericList&gt;            &lt;character&gt;            &lt;character&gt;  &lt;logical&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      23,35,50,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    35, 24,140,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    28,179,350,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    25, 28,131,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      26,30,25,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0,412,  0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     0,110,110,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     0,156,156,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     0,127,  0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     0,123,123,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...             ...                    ...                    ...        ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194    34,24,86,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195  24, 22,198,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196    29,22,98,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197  31,124,189,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198    67,84,22,... /tmp/RtmpWGx4jo/file.. /__w/_temp/Library/m..       TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927     0,22,67,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928     0,21, 0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929     0,26, 0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930     0,23, 0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931     0,25, 0,... /tmp/RtmpDEx8im/file.. /github/home/.cache/..      FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      smoothed  polarity precScanNum precursorMz precursorIntensity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;logical&gt; &lt;integer&gt;   &lt;integer&gt;   &lt;numeric&gt;          &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          NA         1          NA          NA                 NA</span>
@@ -667,11 +669,11 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4          NA         1          NA          NA                 NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5          NA         1          NA          NA                 NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...       ...       ...         ...         ...                ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194        NA         1          NA          NA                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195        NA         1          NA          NA                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196        NA         1          NA          NA                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197        NA         1          NA          NA                 NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198        NA         1          NA          NA                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927        NA         1          NA          NA                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928        NA         1          NA          NA                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929        NA         1          NA          NA                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930        NA         1          NA          NA                 NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931        NA         1          NA          NA                 NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     precursorCharge collisionEnergy isolationWindowLowerMz</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           &lt;integer&gt;       &lt;numeric&gt;              &lt;numeric&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                NA              NA                     NA</span>
@@ -680,63 +682,63 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                NA              NA                     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                NA              NA                     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...             ...             ...                    ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194              NA              NA                     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195              NA              NA                     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196              NA              NA                     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197              NA              NA                     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198              NA              NA                     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927              NA              NA                     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928              NA              NA                     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929              NA              NA                     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930              NA              NA                     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931              NA              NA                     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     isolationWindowTargetMz isolationWindowUpperMz peaksCount totIonCurrent</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   &lt;numeric&gt;              &lt;numeric&gt;  &lt;integer&gt;     &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                        NA                     NA       1743         97322</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                        NA                     NA       1708         98590</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                        NA                     NA       1708         96425</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                        NA                     NA       1747         97144</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                        NA                     NA       1730         94631</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                        NA                     NA        542        725013</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                        NA                     NA       1777       1115422</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                        NA                     NA       1360        979255</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                        NA                     NA       1626        992255</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                        NA                     NA       1694       1018768</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...                     ...                    ...        ...           ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194                      NA                     NA       2267        142472</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195                      NA                     NA       2488        167102</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196                      NA                     NA       2324        137565</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197                      NA                     NA       2105        113086</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198                      NA                     NA       1996         97257</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927                      NA                     NA       3528        418159</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928                      NA                     NA       3662        429930</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929                      NA                     NA       3442        413427</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930                      NA                     NA       3564        447033</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931                      NA                     NA       3517        441025</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     basePeakMZ basePeakIntensity electronBeamEnergy ionisationEnergy     lowMZ</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;numeric&gt;         &lt;numeric&gt;          &lt;numeric&gt;        &lt;numeric&gt; &lt;numeric&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      144.050              7250                 NA                0   104.554</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      144.050              7064                 NA                0   107.960</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      144.050              7124                 NA                0   107.963</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4      144.051              7067                 NA                0   105.971</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5      144.051              6891                 NA                0   104.474</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      124.087            127807                 NA                0   108.078</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      124.086            202258                 NA                0   105.040</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      124.086            166954                 NA                0   105.037</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      124.086            163449                 NA                0   105.037</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      124.086            170723                 NA                0   105.034</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...        ...               ...                ...              ...       ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194    144.051              4615                 NA                0  106.9921</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195    144.051              3812                 NA                0   99.0797</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196    144.050              3526                 NA                0  102.9272</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197    144.050              3902                 NA                0  111.0582</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198    144.051              3587                 NA                0  111.0437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927    123.090             28544                 NA                0   105.008</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928    123.090             29164                 NA                0   105.009</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929    123.090             28724                 NA                0   105.010</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930    123.091             28743                 NA                0   105.012</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931    123.091             27503                 NA                0   105.012</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        highMZ mergedScan mergedResultScanNum mergedResultStartScanNum</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;numeric&gt;  &lt;integer&gt;           &lt;integer&gt;                &lt;integer&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1004.470         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1002.799         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     993.959         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     986.756         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    1003.469         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     133.988         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     133.982         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     133.987         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     133.987         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     133.992         NA                  NA                       NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...       ...        ...                 ...                      ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194  1003.828         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195  1003.270         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196  1000.594         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197   984.228         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198  1000.851         NA                  NA                       NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     mergedResultEndScanNum injectionTime filterString  spectrumId</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;integer&gt;     &lt;numeric&gt;  &lt;character&gt; &lt;character&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                       NA             0           NA      scan=1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                       NA             0           NA      scan=2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                       NA             0           NA      scan=3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                       NA             0           NA      scan=4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                       NA             0           NA      scan=5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ...                    ...           ...          ...         ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194                     NA             0           NA    scan=194</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195                     NA             0           NA    scan=195</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196                     NA             0           NA    scan=196</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197                     NA             0           NA    scan=197</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198                     NA             0           NA    scan=198</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927   134.000         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928   134.000         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929   134.000         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930   133.998         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931   133.997         NA                  NA                       NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mergedResultEndScanNum injectionTime filterString             spectrumId</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;integer&gt;     &lt;numeric&gt;  &lt;character&gt;            &lt;character&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                       NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                       NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                       NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                       NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                       NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ...                    ...           ...          ...                    ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927                     NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928                     NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929                     NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930                     NA             0           NA sample=1 period=1 cy..</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931                     NA             0           NA sample=1 period=1 cy..</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     ionMobilityDriftTime scanWindowLowerLimit scanWindowUpperLimit spectrum_id_</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;numeric&gt;            &lt;numeric&gt;            &lt;numeric&gt;    &lt;integer&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                     NA                   NA                   NA            1</span>
@@ -745,11 +747,11 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                     NA                   NA                   NA            4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                     NA                   NA                   NA            5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...                  ...                  ...                  ...          ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 194                   NA                   NA                   NA          194</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 195                   NA                   NA                   NA          195</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 196                   NA                   NA                   NA          196</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 197                   NA                   NA                   NA          197</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 198                   NA                   NA                   NA          198</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 927                   NA                   NA                   NA          927</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 928                   NA                   NA                   NA          928</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 929                   NA                   NA                   NA          929</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 930                   NA                   NA                   NA          930</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 931                   NA                   NA                   NA          931</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Available variables</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">spectraVariables</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
@@ -775,19 +777,19 @@ increasing the memory demand of the object.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Access mz values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/pkg/ProtGenerics/man/protgenerics.html" class="external-link">mz</a></span><span class="op">(</span><span class="va">be</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> NumericList of length 198</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]] 104.553733825684 106.996170043945 ... 1002.67761230469 1004.47033691406</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]] 107.959617614746 109.964324951172 ... 991.343811035156 1002.79937744141</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[3]] 107.962753295898 112.021392822266 ... 964.238586425781 993.959167480469</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[4]] 105.970863342285 109.984230041504 ... 979.084838867188 986.755981445312</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[5]] 104.473876953125 106.999610900879 ... 1003.185546875 1003.46936035156</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[6]] 102.036674499512 107.963928222656 ... 993.781127929688 994.755920410156</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[7]] 104.272621154785 112.024925231934 ... 996.248046875 1001.64440917969</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[8]] 98.9297180175781 106.506416320801 ... 991.034484863281 997.045837402344</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[9]] 107.966445922852 109.385284423828 ... 995.031494140625 995.600463867188</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [[10]] 108.965042114258 109.974197387695 ... 982.596313476562 989.777404785156</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NumericList of length 931</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]] 108.078350457464 108.079816722562 ... 133.985926725175 133.987559287009</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[2]] 105.039628321505 105.04107382602 ... 133.980645512489 133.982278040861</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[3]] 105.036737362206 105.038182846829 ... 133.985543127443 133.987175685653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[4]] 105.036737362206 105.038182846829 ... 133.985543127443 133.987175685653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[5]] 105.033846442691 105.035291907422 ... 133.990440831911 133.992073419959</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[6]] 105.033846442691 105.035291907422 ... 133.983910579179 133.985543127443</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[7]] 105.033846442691 105.035291907422 ... 133.982278040861 133.983910579179</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[8]] 105.036737362206 105.038182846829 ... 133.988808253809 133.990440831911</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[9]] 105.036737362206 105.038182846829 ... 133.985543127443 133.987175685653</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[10]] 105.039628321505 105.04107382602 ... 133.993706017952 133.995338625892</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;188 more elements&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;921 more elements&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## Subset the object to spectra in arbitrary order</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span> <span class="op">&lt;-</span> <span class="va">be</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">100</span><span class="op">)</span><span class="op">]</span></span></span>
@@ -803,7 +805,7 @@ increasing the memory demand of the object.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6         1          NA         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ... 35 more variables/columns.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Use  'spectraVariables' to list all of them.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpWGx4jo/file1d1237c9bab7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Database: /tmp/RtmpDEx8im/file16b77de1154e</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">## The internal spectrum IDs (primary keys from the database)</span></span></span>
 <span class="r-in"><span><span class="va">be_sub</span><span class="op">$</span><span class="va">spectrum_id_</span></span></span>

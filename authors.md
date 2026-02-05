@@ -15,14 +15,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/RforMassSpectrometry/MsBackendSql/blob/main/DESCRIPTION)
 
-Rainer J (2025). *MsBackendSql: SQL-based Mass Spectrometry Data
-Backend*. R package version 1.11.2,
+Rainer J (2026). *MsBackendSql: SQL-based Mass Spectrometry Data
+Backend*. R package version 1.11.3,
 <https://github.com/RforMassSpectrometry/MsBackendSql>.
 
     @Manual{,
       title = {MsBackendSql: SQL-based Mass Spectrometry Data Backend},
       author = {Johannes Rainer},
-      year = {2025},
-      note = {R package version 1.11.2},
+      year = {2026},
+      note = {R package version 1.11.3},
       url = {https://github.com/RforMassSpectrometry/MsBackendSql},
     }
