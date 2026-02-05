@@ -8,7 +8,7 @@ vignette: >
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
     %\VignettePackage{MsBackendSql}
-    %\VignetteDepends{MsBackendSql,BiocStyle,RSQLite,msdata,microbenchmark,mzR}
+    %\VignetteDepends{MsBackendSql,BiocStyle,RSQLite,MsDataHub,microbenchmark,mzR}
 ---
 
 ```{r style, echo = FALSE, results = 'asis', message=FALSE}
@@ -60,8 +60,8 @@ example we use the `createMsBackendSqlDatabase()` function to import the full MS
 data from the provided MS data files into an (empty) database. Below we first
 create an empty SQLite database (in a temporary file) and use the
 `createMsBackendSqlDatabase()` function to create all necessary tables in that
-database and import the MS data from two mzML files (from the `r
-Biocpkg("msdata")` package).
+database and import the MS data from two mzML files (provided throuth the `r
+Biocpkg("MsDataHub")` package).
 
 ```{r, message = FALSE, results = "hide"}
 library(RSQLite)
@@ -71,7 +71,8 @@ con <- dbConnect(SQLite(), dbfile)
 
 library(Spectra)
 library(MsBackendSql)
-fls <- dir(system.file("sciex", package = "msdata"), full.names = TRUE)
+fls <- c(MsDataHub::X20171016_POOL_POS_1_105.134.mzML(),
+         MsDataHub::X20171016_POOL_POS_3_105.134.mzML())
 createMsBackendSqlDatabase(con, fls)
 dbDisconnect(con)
 ```

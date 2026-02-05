@@ -1,6 +1,6 @@
 Package: MsBackendSql
 Title: SQL-based Mass Spectrometry Data Backend
-Version: 1.11.2
+Version: 1.11.3
 Authors@R:
     c(person(given = "Johannes", family = "Rainer",
              email = "Johannes.Rainer@eurac.edu",
@@ -41,7 +41,7 @@ Suggests:
     roxygen2,
     BiocStyle (>= 2.5.19),
     RSQLite,
-    msdata,
+    MsDataHub,
     rmarkdown,
     microbenchmark,
     mzR

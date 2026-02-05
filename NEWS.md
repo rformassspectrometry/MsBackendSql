@@ -1,5 +1,10 @@
 # MsBackendSql 1.11
 
+## Changes in 1.11.3
+
+- Remove dependency from the *msdata* package: load test data from the
+  *MsDataHub* package.
+
 ## Changes in 1.11.2
 
 - Small update to the internal function to extract the spectra data: avoid
